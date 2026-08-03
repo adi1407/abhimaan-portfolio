@@ -1,0 +1,7 @@
+{
+  "count": 250,
+  "pattern": "/film-frames/frame-{i}.webp",
+  "pad": 3,
+  "indexBase": 1,
+  "source": "abhi.mp4"
+}

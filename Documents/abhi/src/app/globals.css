@@ -1696,7 +1696,14 @@ body.has-nav-cursor {
     justify-content: flex-start;
     padding: calc(var(--nav-h) + 1.25rem) 0 2.5rem;
     min-height: auto;
+    /* overflow-x alone forces the y-axis into the same clipping mode
+       (the CSS overflow spec auto-morphs an unset axis), which was
+       quietly cropping the ID card's natural bottom overhang — the
+       card's floor size (176x246) is taller than the reserved badge
+       slot (217px), so some overhang past the slot is expected here,
+       same as the decorative oversized type elsewhere on the site. */
     overflow-x: clip;
+    overflow-y: visible;
   }
 
   .hero__inner {
@@ -1912,6 +1919,10 @@ body.has-nav-cursor {
   perspective: 1400px;
   pointer-events: auto;
   cursor: grab;
+  /* Without this, touch input defaults to page-pan: the browser can
+     start scrolling the page on the same gesture the drag physics is
+     trying to capture, so the card never reliably swings on mobile. */
+  touch-action: none;
   /* Tilt is RAF-lerped; flip transition only while data-flipping. */
   transition: none;
   transform: translateZ(0) rotateX(var(--tiltx, 0deg))
@@ -4211,6 +4222,36 @@ a.creators__card:hover .creators__avatar {
     padding-left: 0;
     padding-top: 1.25rem;
   }
+
+  /* The single-column mobile box is much shorter than the desktop
+     two-column one, so the desktop bottom:-18% offset pushes the
+     ghost mark entirely past .bb__desk's overflow:hidden edge —
+     it was rendering fully invisible on every phone. */
+  .bb__ghost {
+    right: -4%;
+    bottom: -4%;
+    font-size: clamp(6rem, 26vw, 9rem);
+  }
+
+  .bb__cta {
+    min-height: 44px;
+  }
+
+  .bb__cut-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0.4rem 0;
+  }
+}
+
+.bb__cta:active {
+  transform: translateY(0) scale(0.97);
+}
+
+.bb__cut-link:active {
+  color: #fff;
+  border-bottom-color: #fff;
 }
 
 

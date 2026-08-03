@@ -85,11 +85,18 @@ export function HeroCargo() {
 
   // Phone: hang inside the in-flow badge slot — the plane is hidden there.
   // No flight context: same ceiling hang as the pre-carrier card.
+  //
+  // The card's floor size (176x246, from IdCard's narrow-mode clamp) is
+  // taller than the reserved slot itself, so anchor + rope are tuned
+  // together to rest the card as high as the swing allows — short of
+  // that it bleeds under the next section's opaque background, since
+  // that section is a later DOM sibling of the hero, not a descendant
+  // overflow-y can hold back.
   if (!flight || mobileHang) {
     return (
       <IdCard
-        anchorRatio={0.5}
-        ropeLength={(stage) => Math.max(72, Math.min(140, stage.h * 0.28))}
+        anchor={(stage, card) => ({ x: stage.w * 0.5, y: -(card.h * 0.3) })}
+        ropeLength={() => 56}
       />
     );
   }

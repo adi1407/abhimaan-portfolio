@@ -1,0 +1,76 @@
+{"timestamp":"01:46:22.483","source":"Server","level":"ERROR","message":"⨯ Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:23.374","source":"Server","level":"ERROR","message":"Error: EPERM: operation not permitted, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app\\api\\inquiries'"}
+{"timestamp":"01:46:23.384","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: EPERM: operation not permitted, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app\\api\\inquiries'"}
+{"timestamp":"01:46:23.390","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: EPERM: operation not permitted, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app\\api\\inquiries'"}
+{"timestamp":"01:46:23.406","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.412","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.416","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.490","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.507","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.538","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.697","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.714","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.729","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.847","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.849","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.851","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.939","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.942","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.947","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.956","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.994","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.997","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection:\" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:23.999","source":"Server","level":"ERROR","message":"⨯ \"unhandledRejection: \" Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve './node_modules/next/dist/client/next-dev.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve './node_modules/next/dist/client/app-next-dev.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\compiled\\@next\\react-refresh-utils\\dist\\runtime.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\client\\router.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-client-pages-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-client-pages-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\compiled\\@next\\react-refresh-utils\\dist\\runtime.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve './node_modules/next/dist/client/next-dev.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve './node_modules/next/dist/client/app-next-dev.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\compiled\\@next\\react-refresh-utils\\dist\\runtime.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\client\\router.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-client-pages-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'next-client-pages-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.027","source":"Browser","level":"ERROR","message":"Module not found: Error: Can't resolve 'C:\\Users\\adity\\Documents\\abhi\\frontend\\node_modules\\next\\dist\\compiled\\@next\\react-refresh-utils\\dist\\runtime.js' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}
+{"timestamp":"01:46:24.147","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.150","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.162","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.166","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.334","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.338","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.348","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.353","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.396","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.399","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.499","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.504","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.605","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.609","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.646","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:24.650","source":"Server","level":"ERROR","message":"Error: ENOENT: no such file or directory, scandir 'C:\\Users\\adity\\Documents\\abhi\\frontend\\src\\app'"}
+{"timestamp":"01:46:25.050","source":"Server","level":"ERROR","message":"⨯ Module not found: Error: Can't resolve 'next-flight-client-entry-loader' in 'C:\\Users\\adity\\Documents\\abhi\\frontend'"}

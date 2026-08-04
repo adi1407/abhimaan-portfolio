@@ -56,24 +56,11 @@ export function PageTransition() {
         } as CSSProperties
       }
     >
-      {/* Soft outer pulse — reads as ink spreading from the click. */}
+      {/* Remount every trip so the circle always expands from the click. */}
       <div
+        key={`wipe-${transition.runId}`}
         className={cn(
-          "page-transition__ring",
-          expanding && "is-expanding",
-          collapsing && "is-collapsing",
-        )}
-        style={{
-          left: transition.x,
-          top: transition.y,
-          width: maxDim * 0.42,
-          height: maxDim * 0.42,
-        }}
-      />
-
-      <div
-        className={cn(
-          "page-transition__circle",
+          "page-transition__wipe",
           expanding && "is-expanding",
           collapsing && "is-collapsing",
         )}
@@ -84,14 +71,17 @@ export function PageTransition() {
           height: maxDim,
         }}
       >
-        <div
-          className="page-transition__media"
-          style={{
-            backgroundImage: transition.poster
-              ? `url("${transition.poster}")`
-              : undefined,
-          }}
-        />
+        <div className="page-transition__media">
+          {transition.poster ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={transition.poster}
+              alt=""
+              draggable={false}
+              decoding="async"
+            />
+          ) : null}
+        </div>
         <div className="page-transition__scrim" />
         <div className="page-transition__grain" />
         <div className="page-transition__shine" />
@@ -113,14 +103,21 @@ export function PageTransition() {
         <div className="page-transition__title">
           {transition.label.split("").map((char, i) => (
             <span
-              key={`${transition.label}-${char}-${i}`}
+              key={`${transition.runId}-${char}-${i}`}
               style={{ ["--i" as string]: i }}
             >
               {char === " " ? "\u00A0" : char}
             </span>
           ))}
         </div>
-        <p className="page-transition__cue">Behance · selected work</p>
+        {transition.posterTitle ? (
+          <p className="page-transition__cue">
+            <span>{transition.posterTitle}</span>
+            {transition.posterNote ? (
+              <em> — {transition.posterNote}</em>
+            ) : null}
+          </p>
+        ) : null}
       </div>
     </div>
   );

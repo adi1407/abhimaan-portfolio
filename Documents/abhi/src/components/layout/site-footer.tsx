@@ -22,7 +22,7 @@ const COLUMNS = [
       { label: "About", href: "/about" },
       { label: "Work", href: "/work" },
       { label: "Experience", href: "/works" },
-      { label: "Services", href: "/services" },
+      { label: "Contact", href: "/contact" },
     ],
   },
   {

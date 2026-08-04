@@ -15,6 +15,5 @@ export const ROUTES = {
   /** Dedicated film → panels → gallery page. */
   work: "/work",
   works: "/works",
-  services: "/services",
   contact: "/contact",
 } as const;

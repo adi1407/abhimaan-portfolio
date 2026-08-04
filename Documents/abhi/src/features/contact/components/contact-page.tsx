@@ -45,6 +45,9 @@ export function ContactPage() {
 
   return (
     <section className="contact-page" aria-labelledby="contact-page-heading">
+      <span className="contact-page__ruler contact-page__ruler--x" aria-hidden />
+      <span className="contact-page__ruler contact-page__ruler--y" aria-hidden />
+
       <Container className="contact-page__shell">
         <p className="contact-page__eyebrow">05 — Contact</p>
 

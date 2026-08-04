@@ -96,7 +96,7 @@ export function HeroCargo() {
     return (
       <IdCard
         anchor={(stage, card) => ({ x: stage.w * 0.5, y: -(card.h * 0.3) })}
-        ropeLength={() => 56}
+        ropeLength={() => 62}
       />
     );
   }

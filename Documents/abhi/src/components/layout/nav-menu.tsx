@@ -11,7 +11,6 @@ const PREVIEWS: Record<string, string> = {
   "/about": "Portrait",
   "/work": "Selected",
   "/works": "Roles",
-  "/services": "Offer",
   "/contact": "→",
 };
 

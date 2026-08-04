@@ -26,9 +26,13 @@ type TransitionState = {
   label: string;
   index: string;
   poster: string;
+  posterTitle: string;
+  posterNote: string;
   x: number;
   y: number;
   phase: TransitionPhase;
+  /** Bumps each trip so the circle DOM remounts and expand always replays. */
+  runId: number;
 };
 
 type NavContextValue = {
@@ -46,20 +50,22 @@ type NavContextValue = {
 const NavContext = createContext<NavContextValue | null>(null);
 
 /** Keep CSS `--pt-*` vars in sync with these. */
-export const PT_EXPAND_MS = 560;
-export const PT_LABEL_MS = 340;
-/** Beat after the page lands — poster breathes before the wipe opens. */
-export const PT_HOLD_MS = 420;
-export const PT_COLLAPSE_MS = 480;
+export const PT_EXPAND_MS = 680;
+export const PT_LABEL_MS = 360;
+export const PT_HOLD_MS = 480;
+export const PT_COLLAPSE_MS = 520;
 
 const IDLE: TransitionState = {
   active: false,
   label: "",
   index: "",
   poster: NAV_POSTERS[0] ?? "/one.png",
+  posterTitle: "",
+  posterNote: "",
   x: 0,
   y: 0,
   phase: "idle",
+  runId: 0,
 };
 
 function prefersReducedMotion() {
@@ -72,6 +78,7 @@ function prefersReducedMotion() {
 export function NavProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const busy = useRef(false);
+  const runId = useRef(0);
   const timers = useRef<number[]>([]);
   const [menuOpen, setMenuOpenState] = useState(false);
   const [cursorExpanded, setCursorExpanded] = useState(false);
@@ -87,10 +94,8 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
     timers.current.push(id);
   }, []);
 
-  // Warm Behance poster decode so the first wipe never flashes empty.
   useEffect(() => {
-    const unique = [...new Set(NAV_POSTERS)];
-    unique.forEach((src) => {
+    NAV_POSTERS.forEach((src) => {
       const img = new window.Image();
       img.decoding = "async";
       img.src = src;
@@ -123,9 +128,9 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       clearTimers();
 
       const navItem = getNavItemByHref(item.href);
-      const poster = navItem.poster || item.poster;
       const x = origin?.x ?? window.innerWidth / 2;
       const y = origin?.y ?? window.innerHeight / 2;
+      const nextRun = (runId.current += 1);
 
       router.prefetch(item.href);
 
@@ -134,21 +139,25 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       const labelMs = reduced ? 16 : PT_LABEL_MS;
       const holdMs = reduced ? 16 : PT_HOLD_MS;
       const collapseMs = reduced ? 16 : PT_COLLAPSE_MS;
-      const pushAt = reduced ? 16 : Math.round(expandMs * 0.88);
+      // Cover must be opaque before the route swaps underneath.
+      const pushAt = reduced ? 16 : Math.round(expandMs * 0.72);
 
       setTransition({
         active: true,
         label: navItem.label,
         index: navItem.index,
-        poster,
+        poster: navItem.poster || item.poster,
+        posterTitle: navItem.posterTitle || item.posterTitle,
+        posterNote: navItem.posterNote || item.posterNote,
         x,
         y,
         phase: "expand",
+        runId: nextRun,
       });
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "label" }));
-      }, expandMs * 0.38);
+      }, expandMs * 0.42);
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "navigate" }));
@@ -157,7 +166,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "hold" }));
-      }, expandMs + labelMs * 0.55);
+      }, expandMs + labelMs * 0.35);
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "collapse" }));
@@ -167,6 +176,9 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
         setTransition((t) => ({
           ...IDLE,
           poster: t.poster,
+          posterTitle: t.posterTitle,
+          posterNote: t.posterNote,
+          runId: t.runId,
         }));
         busy.current = false;
       }, expandMs + labelMs + holdMs + collapseMs);

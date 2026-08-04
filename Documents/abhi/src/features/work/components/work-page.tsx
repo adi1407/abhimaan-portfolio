@@ -7,7 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { WorkHero } from "@/features/work/components/work-hero";
+import { WorkFilm } from "@/features/work/components/work-film";
 import { GalleryWall } from "@/features/work/components/gallery-wall";
 import { BehanceBridge } from "@/features/work/components/behance-bridge";
 import type { WorkCategoryId } from "@/lib/work";
@@ -47,14 +47,19 @@ export function WorkPage({ initialCategory = null }: WorkPageProps) {
 
   useEffect(() => {
     if (!initialCategory) return;
-    setCategory(initialCategory);
-    const id = window.setTimeout(scrollToGallery, 280);
+    const id = window.setTimeout(() => {
+      setCategory(initialCategory);
+      scrollToGallery();
+    }, 280);
     return () => window.clearTimeout(id);
   }, [initialCategory, scrollToGallery]);
 
   return (
     <div className="work-page">
-      <WorkHero onSelectCategory={onSelectCategory} />
+      <WorkFilm
+        onSelectCategory={onSelectCategory}
+        intro={initialCategory ? "splash" : "full"}
+      />
       <div
         ref={galleryRef}
         id="work-gallery"

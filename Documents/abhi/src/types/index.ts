@@ -1,10 +1,12 @@
+export type NavTheme = "home" | "about" | "work" | "works" | "contact";
+
 export type NavItem = {
   label: string;
   href: string;
   index: string;
-  /** Full-bleed Behance poster used by the route circle wipe. */
-  poster: string;
-  /** Project name shown under the route label during the wipe. */
-  posterTitle: string;
-  posterNote: string;
+  /** Short editorial line under the route title during the wipe. */
+  cue: string;
+  /** Accent used by the wipe field + nav theming. */
+  accent: string;
+  theme: NavTheme;
 };

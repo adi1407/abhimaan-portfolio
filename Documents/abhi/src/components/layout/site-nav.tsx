@@ -7,6 +7,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import { cn } from "@/lib/cn";
 import { SITE } from "@/lib/constants";
@@ -259,7 +260,7 @@ export function SiteNav() {
     leaveTimer.current = setTimeout(() => {
       setExpanded(false);
       leaveTimer.current = null;
-    }, 180);
+    }, 220);
   };
 
   const onLogoClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -287,8 +288,14 @@ export function SiteNav() {
         compact ? "site-nav--compact" : "site-nav--top",
         compact && open && "site-nav--expanded",
         pinned && "site-nav--pinned",
+        `site-nav--theme-${active.theme}`,
       )}
-      style={{ ["--nav-progress" as string]: progress }}
+      style={
+        {
+          ["--nav-progress" as string]: progress,
+          ["--nav-accent" as string]: active.accent,
+        } as CSSProperties
+      }
     >
       <div
         ref={shellRef}

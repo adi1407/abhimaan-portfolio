@@ -10,8 +10,8 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import type { NavItem } from "@/types";
-import { getNavItemByHref, NAV_POSTERS } from "@/lib/nav";
+import type { NavItem, NavTheme } from "@/types";
+import { getNavItemByHref } from "@/lib/nav";
 
 type TransitionPhase =
   | "idle"
@@ -25,9 +25,9 @@ type TransitionState = {
   active: boolean;
   label: string;
   index: string;
-  poster: string;
-  posterTitle: string;
-  posterNote: string;
+  cue: string;
+  accent: string;
+  theme: NavTheme;
   x: number;
   y: number;
   phase: TransitionPhase;
@@ -50,18 +50,18 @@ type NavContextValue = {
 const NavContext = createContext<NavContextValue | null>(null);
 
 /** Keep CSS `--pt-*` vars in sync with these. */
-export const PT_EXPAND_MS = 680;
-export const PT_LABEL_MS = 360;
-export const PT_HOLD_MS = 480;
-export const PT_COLLAPSE_MS = 520;
+export const PT_EXPAND_MS = 760;
+export const PT_LABEL_MS = 380;
+export const PT_HOLD_MS = 420;
+export const PT_COLLAPSE_MS = 560;
 
 const IDLE: TransitionState = {
   active: false,
   label: "",
   index: "",
-  poster: NAV_POSTERS[0] ?? "/one.png",
-  posterTitle: "",
-  posterNote: "",
+  cue: "",
+  accent: "#2f6bff",
+  theme: "home",
   x: 0,
   y: 0,
   phase: "idle",
@@ -92,14 +92,6 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
   const schedule = useCallback((fn: () => void, ms: number) => {
     const id = window.setTimeout(fn, ms);
     timers.current.push(id);
-  }, []);
-
-  useEffect(() => {
-    NAV_POSTERS.forEach((src) => {
-      const img = new window.Image();
-      img.decoding = "async";
-      img.src = src;
-    });
   }, []);
 
   useEffect(() => () => clearTimers(), [clearTimers]);
@@ -140,15 +132,15 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       const holdMs = reduced ? 16 : PT_HOLD_MS;
       const collapseMs = reduced ? 16 : PT_COLLAPSE_MS;
       // Cover must be opaque before the route swaps underneath.
-      const pushAt = reduced ? 16 : Math.round(expandMs * 0.72);
+      const pushAt = reduced ? 16 : Math.round(expandMs * 0.74);
 
       setTransition({
         active: true,
         label: navItem.label,
         index: navItem.index,
-        poster: navItem.poster || item.poster,
-        posterTitle: navItem.posterTitle || item.posterTitle,
-        posterNote: navItem.posterNote || item.posterNote,
+        cue: navItem.cue || item.cue,
+        accent: navItem.accent || item.accent,
+        theme: navItem.theme || item.theme,
         x,
         y,
         phase: "expand",
@@ -157,7 +149,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "label" }));
-      }, expandMs * 0.42);
+      }, expandMs * 0.4);
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "navigate" }));
@@ -166,7 +158,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "hold" }));
-      }, expandMs + labelMs * 0.35);
+      }, expandMs + labelMs * 0.3);
 
       schedule(() => {
         setTransition((t) => ({ ...t, phase: "collapse" }));
@@ -175,9 +167,8 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
       schedule(() => {
         setTransition((t) => ({
           ...IDLE,
-          poster: t.poster,
-          posterTitle: t.posterTitle,
-          posterNote: t.posterNote,
+          accent: t.accent,
+          theme: t.theme,
           runId: t.runId,
         }));
         busy.current = false;

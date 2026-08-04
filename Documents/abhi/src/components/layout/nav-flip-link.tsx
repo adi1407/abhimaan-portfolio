@@ -37,7 +37,7 @@ export function NavFlipLink({
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left - rect.width / 2;
     const y = e.clientY - rect.top - rect.height / 2;
-    magRef.current.style.transform = `translate(${x * 0.22}px, ${y * 0.26}px)`;
+    magRef.current.style.transform = `translate(${x * 0.18}px, ${y * 0.2}px)`;
   };
 
   const enter = () => {

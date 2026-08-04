@@ -9,6 +9,10 @@ import {
   useNav,
 } from "@/components/layout/nav-provider";
 
+/**
+ * Click-origin circle wipe — same choreography as before, but filled with
+ * page-tinted abstract fields (gradients, rings, grid) instead of poster images.
+ */
 export function PageTransition() {
   const { transition } = useNav();
   const [maxDim, setMaxDim] = useState(3000);
@@ -46,6 +50,7 @@ export function PageTransition() {
         idle && "is-idle",
         holding && "is-holding",
         collapsing && "is-leaving",
+        `page-transition--${transition.theme}`,
       )}
       aria-hidden
       style={
@@ -53,10 +58,10 @@ export function PageTransition() {
           ["--pt-expand" as string]: `${PT_EXPAND_MS}ms`,
           ["--pt-collapse" as string]: `${PT_COLLAPSE_MS}ms`,
           ["--pt-hold" as string]: `${PT_HOLD_MS}ms`,
+          ["--pt-accent" as string]: transition.accent,
         } as CSSProperties
       }
     >
-      {/* Remount every trip so the circle always expands from the click. */}
       <div
         key={`wipe-${transition.runId}`}
         className={cn(
@@ -71,16 +76,14 @@ export function PageTransition() {
           height: maxDim,
         }}
       >
-        <div className="page-transition__media">
-          {transition.poster ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={transition.poster}
-              alt=""
-              draggable={false}
-              decoding="async"
-            />
-          ) : null}
+        <div className="page-transition__field">
+          <span className="page-transition__orb page-transition__orb--a" />
+          <span className="page-transition__orb page-transition__orb--b" />
+          <span className="page-transition__orb page-transition__orb--c" />
+          <span className="page-transition__mesh" />
+          <span className="page-transition__grid" />
+          <span className="page-transition__ring" />
+          <span className="page-transition__ring page-transition__ring--late" />
         </div>
         <div className="page-transition__scrim" />
         <div className="page-transition__grain" />
@@ -110,12 +113,9 @@ export function PageTransition() {
             </span>
           ))}
         </div>
-        {transition.posterTitle ? (
+        {transition.cue ? (
           <p className="page-transition__cue">
-            <span>{transition.posterTitle}</span>
-            {transition.posterNote ? (
-              <em> — {transition.posterNote}</em>
-            ) : null}
+            <span>{transition.cue}</span>
           </p>
         ) : null}
       </div>

@@ -5006,6 +5006,29 @@ a.creators__card:hover .creators__avatar {
   }
 }
 
+/* Real 3D still-life of Photoshop tools, staged in the empty space to
+   the right of the headline — sits behind the text/form (z-index below
+   .contact-page__shell's 1) so it never fights legibility. */
+.contact-scene {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* Pinned to the initial hero-height band, not the section's full
+     scrollable height (which includes the whole form below) — inset:0
+     would stretch the canvas to that full height and badly distort
+     the camera's aspect ratio, pushing objects out of frame. */
+  height: 100svh;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .contact-scene {
+    display: none;
+  }
+}
+
 .contact-page__eyebrow {
   font-family: var(--font-sf-pro);
   font-size: 0.72rem;

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Container } from "@/components/layout/container";
 import { RoleCycle } from "@/components/motion/role-cycle";
+import { ContactScene } from "@/features/contact/components/contact-scene";
 import { InquiryForm } from "@/features/contact/components/inquiry-form";
 import { EMAIL, SITE } from "@/lib/constants";
 
@@ -16,6 +17,7 @@ const LINES = [
 
 export function ContactPage() {
   const [copied, setCopied] = useState(false);
+  const [focusedField, setFocusedField] = useState<string | null>(null);
   const mailRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -47,6 +49,7 @@ export function ContactPage() {
     <section className="contact-page" aria-labelledby="contact-page-heading">
       <span className="contact-page__ruler contact-page__ruler--x" aria-hidden />
       <span className="contact-page__ruler contact-page__ruler--y" aria-hidden />
+      <ContactScene focusedField={focusedField} />
 
       <Container className="contact-page__shell">
         <p className="contact-page__eyebrow">05 — Contact</p>
@@ -99,7 +102,7 @@ export function ContactPage() {
           direction.
         </p>
 
-        <InquiryForm />
+        <InquiryForm onFieldFocus={setFocusedField} />
       </Container>
     </section>
   );

@@ -39,7 +39,11 @@ const FIELD_META: { key: keyof FormState; label: string; icon: LayerIconType }[]
 
 const FLATTEN_MS = 460;
 
-export function InquiryForm() {
+export function InquiryForm({
+  onFieldFocus,
+}: {
+  onFieldFocus?: (key: string | null) => void;
+} = {}) {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">(
     "idle",
@@ -69,8 +73,14 @@ export function InquiryForm() {
     };
 
   const focusHandlers = (key: keyof FormState) => ({
-    onFocus: () => setFocused(key),
-    onBlur: () => setFocused((f) => (f === key ? null : f)),
+    onFocus: () => {
+      setFocused(key);
+      onFieldFocus?.(key);
+    },
+    onBlur: () => {
+      setFocused((f) => (f === key ? null : f));
+      onFieldFocus?.(null);
+    },
   });
 
   const layers: LayerItem[] = FIELD_META.map((f) => ({

@@ -1,5 +1,4 @@
 import { AboutBoot } from "@/features/about/components/about-boot";
-import { AboutBadge } from "@/features/about/components/about-badge";
 import { KineticCreate } from "@/features/about/components/kinetic-create";
 import { AboutManifesto } from "@/features/about/components/about-manifesto";
 import { AboutToolkit } from "@/features/about/components/about-toolkit";
@@ -21,10 +20,6 @@ export function AboutPage() {
 
       <div id="act-intro">
         <AboutBoot />
-      </div>
-
-      <div id="act-story">
-        <AboutBadge />
       </div>
 
       <div id="act-create">

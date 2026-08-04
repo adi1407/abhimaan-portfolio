@@ -1,103 +1,135 @@
 "use client";
 
-import { Reveal } from "@/components/motion/reveal";
+import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import { ScrambleText } from "@/components/motion/scramble-text";
-import { RoleCycle } from "@/components/motion/role-cycle";
-import { HeroCargo } from "@/features/home/components/hero-cargo";
-import { HeroSignature } from "@/features/home/components/hero-signature";
-import { HeroStage } from "@/features/home/components/hero-stage";
+import { PosterWall } from "@/features/home/components/poster-wall";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { ROUTES, SITE } from "@/lib/constants";
+import { cn } from "@/lib/cn";
 
-const ROLES = [
-  "Art Designer",
-  "Graphic Designer",
-  "Visual Designer",
-] as const;
+const BRAND = "ABHIMAAN";
 
-const META = ["Identity", "Editorial", "Art Direction"] as const;
-
-const LEAD_WORDS = [
-  "Creating",
-  "identities,",
-  "stories",
-  "&",
-  "visual",
-  "systems",
-  "—",
-] as const;
+/**
+ * Intro phases (ms from mount):
+ *  tiles → brand → copy → idle (parallax / sheen armed)
+ */
+const T_BRAND = 520;
+const T_COPY = 980;
+const T_IDLE = 1280;
 
 export function HomeHero() {
+  const reduced = useReducedMotion();
+  const [phase, setPhase] = useState<"hold" | "brand" | "copy" | "idle">(
+    "hold",
+  );
+  const ctaRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (reduced) {
+      const id = window.setTimeout(() => setPhase("idle"), 0);
+      return () => window.clearTimeout(id);
+    }
+
+    const a = window.setTimeout(() => setPhase("brand"), T_BRAND);
+    const b = window.setTimeout(() => setPhase("copy"), T_COPY);
+    const c = window.setTimeout(() => setPhase("idle"), T_IDLE);
+    return () => {
+      window.clearTimeout(a);
+      window.clearTimeout(b);
+      window.clearTimeout(c);
+    };
+  }, [reduced]);
+
+  const onCtaMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const el = ctaRef.current;
+    if (!el || reduced) return;
+    if (window.matchMedia("(pointer: coarse)").matches) return;
+    const r = el.getBoundingClientRect();
+    const x = e.clientX - r.left - r.width / 2;
+    const y = e.clientY - r.top - r.height / 2;
+    el.style.transform = `translate(${x * 0.12}px, ${y * 0.18}px)`;
+  };
+
+  const onCtaLeave = () => {
+    if (ctaRef.current) ctaRef.current.style.transform = "";
+  };
+
+  const showBrand = phase !== "hold" || reduced;
+  const showCopy = phase === "copy" || phase === "idle" || reduced;
+  const idle = phase === "idle" || reduced;
+
   return (
-    <section className="hero">
-      <HeroStage />
-      <span className="hero__orb" aria-hidden />
+    <section
+      className={cn(
+        "hero",
+        showBrand && "is-brand",
+        showCopy && "is-copy",
+        idle && "is-idle",
+      )}
+      aria-labelledby="hero-brand"
+    >
+      <PosterWall idle={idle} />
 
       <div className="hero__inner">
-        <div className="hero__copy">
-          <Reveal immediate delay={0} from="up" className="hero__eyebrow-wrap">
-            <p className="hero__eyebrow">
-              <span className="hero__pulse" aria-hidden />
-              <ScrambleText>PORTFOLIO — 2026</ScrambleText>
-            </p>
-          </Reveal>
+        <p
+          className={cn("hero__eyebrow", showCopy && "is-in")}
+        >
+          <span className="hero__pulse" aria-hidden />
+          <ScrambleText>PORTFOLIO — 2026</ScrambleText>
+        </p>
 
-          <Reveal immediate delay={300} from="up" className="hero__hello">
-            <p>
-              Hello I am
-              <span className="hero__hello-line" aria-hidden />
-            </p>
-          </Reveal>
-
-          <h1 className="hero__title">
-            <span className="hero__word-wrap">
-              <HeroSignature className="hero__word" />
-            </span>
-            <Reveal immediate delay={1750} from="up" className="hero__role-row">
-              <span className="hero__title-prefix" aria-hidden>
-                a
-              </span>
-              <span className="sr-only">a {ROLES.join(", ")}</span>
-              <RoleCycle roles={ROLES} className="hero__role" />
-            </Reveal>
-          </h1>
-
-          <Reveal immediate delay={2000} from="up" className="hero__lead">
-            <p className="hero__lead-split" aria-label="Creating identities, stories & visual systems">
-              {LEAD_WORDS.map((word, i) => (
-                <span
-                  key={`${word}-${i}`}
-                  className="hero__lead-word"
-                  style={{ ["--i" as string]: i }}
-                  aria-hidden
-                >
-                  {word}
-                  {i < LEAD_WORDS.length - 1 ? "\u00A0" : ""}
-                </span>
-              ))}
-            </p>
-            <span className="hero__lead-serif"> composed, never templated.</span>
-          </Reveal>
-
-          <Reveal immediate delay={2200} from="up" className="hero__meta">
-            {META.map((label, i) => (
-              <span key={label} style={{ ["--i" as string]: i }}>
-                {label}
+        <h1 id="hero-brand" className="hero__brand">
+          <span className="sr-only">{SITE.name}</span>
+          <span
+            className={cn("hero__brand-line", showBrand && "is-in")}
+            aria-hidden
+          >
+            {BRAND.split("").map((char, i) => (
+              <span
+                key={`${char}-${i}`}
+                className="hero__brand-char"
+                style={{ ["--i" as string]: i }}
+              >
+                {char}
               </span>
             ))}
-          </Reveal>
+            <span className="hero__brand-sheen" />
+          </span>
+        </h1>
+
+        <div className={cn("hero__lead", showCopy && "is-in")}>
+          <p>
+            Art direction, identity &amp; visual systems — composed, never
+            templated.
+          </p>
+        </div>
+
+        <div className={cn("hero__cta", showCopy && "is-in")}>
+          <Link
+            ref={ctaRef}
+            href={ROUTES.work}
+            className="hero__cta-primary"
+            onMouseMove={onCtaMove}
+            onMouseLeave={onCtaLeave}
+          >
+            <span className="hero__cta-chip" aria-hidden />
+            <span className="hero__cta-label">
+              View work
+              <span aria-hidden>→</span>
+            </span>
+          </Link>
+          <Link href={ROUTES.contact} className="hero__cta-secondary">
+            Start a brief
+          </Link>
         </div>
       </div>
 
-      {/*
-        Desktop: absolute over the reserved right column.
-        Mobile: in-flow slot under the copy (see .hero__badge-slot).
-      */}
-      <div className="hero__badge-slot">
-        <HeroCargo />
-      </div>
-
-      <div className="hero__scroll" aria-hidden>
+      <div className={cn("hero__scroll", showCopy && "is-in")} aria-hidden>
+        <span className="hero__scroll-rail">
+          <span className="hero__scroll-thumb" />
+        </span>
         <span>Scroll</span>
-        <span className="hero__scroll-line" />
       </div>
     </section>
   );

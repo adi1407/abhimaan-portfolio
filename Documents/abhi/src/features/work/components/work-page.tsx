@@ -7,7 +7,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
-import { WorkFilm } from "@/features/work/components/work-film";
+import { WorkHero } from "@/features/work/components/work-hero";
 import { GalleryWall } from "@/features/work/components/gallery-wall";
 import { BehanceBridge } from "@/features/work/components/behance-bridge";
 import type { WorkCategoryId } from "@/lib/work";
@@ -54,10 +54,7 @@ export function WorkPage({ initialCategory = null }: WorkPageProps) {
 
   return (
     <div className="work-page">
-      <WorkFilm
-        onSelectCategory={onSelectCategory}
-        intro={initialCategory ? "splash" : "full"}
-      />
+      <WorkHero onSelectCategory={onSelectCategory} />
       <div
         ref={galleryRef}
         id="work-gallery"

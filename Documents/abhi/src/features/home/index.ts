@@ -1,5 +1,5 @@
 export { HomeHero } from "./components/home-hero";
-export { PosterWall } from "./components/poster-wall";
+export { HeroPosterField } from "./components/hero-poster-field";
 export { ProcessPoster } from "./components/process-poster";
 export { CreatorsStrip } from "./components/creators-strip";
 export { FunPlayground } from "./components/fun-playground";

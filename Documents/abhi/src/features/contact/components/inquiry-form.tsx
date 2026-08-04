@@ -39,19 +39,25 @@ const FIELD_META: { key: keyof FormState; label: string; icon: LayerIconType }[]
 
 const FLATTEN_MS = 460;
 
+export type InquiryStatus = "idle" | "sending" | "ok" | "error";
+
 export function InquiryForm({
   onFieldFocus,
+  onStatusChange,
 }: {
   onFieldFocus?: (key: string | null) => void;
+  onStatusChange?: (status: InquiryStatus) => void;
 } = {}) {
   const [form, setForm] = useState<FormState>(INITIAL);
-  const [status, setStatus] = useState<"idle" | "sending" | "ok" | "error">(
-    "idle",
-  );
+  const [status, setStatus] = useState<InquiryStatus>("idle");
   const [error, setError] = useState("");
   const [focused, setFocused] = useState<keyof FormState | null>(null);
   const [flattening, setFlattening] = useState(false);
   const prevStatus = useRef(status);
+
+  useEffect(() => {
+    onStatusChange?.(status);
+  }, [status, onStatusChange]);
 
   useEffect(() => {
     if (prevStatus.current !== "ok" && status === "ok") {
@@ -136,11 +142,11 @@ export function InquiryForm({
 
         <div className="inquiry-form__body">
           <header className="inquiry-form__head">
-            <p className="inquiry-form__eyebrow">Project brief</p>
-            <h2 className="inquiry-form__title">Photoshop or post request</h2>
+            <p className="inquiry-form__eyebrow">New layer · Project brief</p>
+            <h2 className="inquiry-form__title">Export a request</h2>
             <p className="inquiry-form__lede">
-              Tell me what you need — stills, motion, or both. Submissions land
-              in the studio inbox.
+              Fill the stack — stills, motion, or both. Flatten sends it to the
+              studio inbox.
             </p>
           </header>
 
@@ -276,7 +282,7 @@ export function InquiryForm({
               onPointerDown={onSubmitPointerDown}
             >
               <span className="inquiry-form__submit-label">
-                {status === "sending" ? "Sending…" : "Send request"}
+                {status === "sending" ? "Flattening…" : "Flatten & send"}
               </span>
             </button>
 

@@ -4943,90 +4943,102 @@ a.creators__card:hover .creators__avatar {
    Contact page â€” verb cycle + email
    ================================================================== */
 
+/* ==================================================================
+   Contact — Floating Tools Hero (dark pasteboard + glass artboard)
+   ================================================================== */
+
 .contact-page {
+  --contact-ink: #0b1f4d;
+  --contact-spark: #2563ff;
+  --contact-cream: #f7f4ec;
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.95fr);
   flex: 1;
-  align-items: flex-start;
+  align-items: stretch;
   min-height: 100svh;
-  padding: calc(var(--nav-h) + 2.5rem) 0 5rem;
+  padding: 0;
   background:
-    radial-gradient(90% 70% at 78% 18%, rgba(11, 31, 77, 0.06) 0%, transparent 55%),
-    linear-gradient(165deg, #f7f9fc 0%, #ffffff 50%, #eef2f9 100%);
-  color: var(--primary);
-  overflow: hidden;
+    radial-gradient(70% 55% at 22% 40%, rgba(37, 99, 255, 0.16) 0%, transparent 55%),
+    radial-gradient(50% 40% at 70% 80%, rgba(11, 31, 77, 0.55) 0%, transparent 60%),
+    linear-gradient(160deg, #12161f 0%, #1a2233 42%, #0d121c 100%);
+  color: var(--contact-ink);
+  overflow: clip;
 }
 
-.contact-page__shell {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  padding-top: clamp(1rem, 4vw, 3rem);
-}
-
-/* Decorative Photoshop-canvas rulers along the section's top/left edges. */
-.contact-page__ruler {
-  position: absolute;
+.contact-page__stage {
+  position: sticky;
+  top: 0;
   z-index: 0;
+  height: 100svh;
+  min-height: 100svh;
+  pointer-events: auto;
+}
+
+.contact-page__stage-tag {
+  position: absolute;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  margin: 0;
+  z-index: 1;
+  font-family: var(--font-sf-pro);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 236, 0.42);
   pointer-events: none;
-  opacity: 0.55;
 }
 
-.contact-page__ruler--x {
-  top: calc(var(--nav-h) + 0.5rem);
-  left: 0;
-  right: 0;
-  height: 13px;
-  background-image: repeating-linear-gradient(
-    90deg,
-    color-mix(in srgb, var(--primary) 32%, transparent) 0 1px,
-    transparent 1px 40px
-  );
-  background-position: 0 100%;
-  background-repeat: repeat-x;
-}
-
-.contact-page__ruler--y {
-  top: calc(var(--nav-h) + 0.5rem);
-  left: 0;
-  bottom: 0;
-  width: 13px;
-  background-image: repeating-linear-gradient(
-    0deg,
-    color-mix(in srgb, var(--primary) 32%, transparent) 0 1px,
-    transparent 1px 40px
-  );
-  background-position: 100% 0;
-  background-repeat: repeat-y;
-}
-
-@media (max-width: 900px) {
-  .contact-page__ruler {
-    display: none;
-  }
-}
-
-/* Real 3D still-life of Photoshop tools, staged in the empty space to
-   the right of the headline — sits behind the text/form (z-index below
-   .contact-page__shell's 1) so it never fights legibility. */
 .contact-scene {
   position: absolute;
+  inset: 0;
   z-index: 0;
-  top: 0;
-  left: 0;
-  right: 0;
-  /* Pinned to the initial hero-height band, not the section's full
-     scrollable height (which includes the whole form below) — inset:0
-     would stretch the canvas to that full height and badly distort
-     the camera's aspect ratio, pushing objects out of frame. */
-  height: 100svh;
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  pointer-events: auto;
 }
 
-@media (max-width: 900px) {
-  .contact-scene {
-    display: none;
-  }
+.contact-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.contact-page__board {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  margin: calc(var(--nav-h) + 1rem) 1rem 1.25rem 0;
+  padding: clamp(1.35rem, 3vw, 2rem) clamp(1.25rem, 3vw, 2.1rem)
+    clamp(1.75rem, 4vw, 2.75rem);
+  border: 1px solid rgba(247, 244, 236, 0.14);
+  background:
+    linear-gradient(165deg, rgba(247, 244, 236, 0.94) 0%, rgba(255, 255, 255, 0.9) 100%);
+  box-shadow:
+    0 28px 80px -28px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(11, 31, 77, 0.06) inset;
+  backdrop-filter: blur(18px) saturate(1.15);
+  -webkit-backdrop-filter: blur(18px) saturate(1.15);
+  color: var(--contact-ink);
+  overflow: auto;
+}
+
+.contact-page__board-chrome {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: -0.35rem 0 1.15rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid color-mix(in srgb, var(--contact-ink) 12%, transparent);
+  font-family: var(--font-sf-pro);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--contact-ink) 48%, transparent);
 }
 
 .contact-page__eyebrow {
@@ -5035,22 +5047,22 @@ a.creators__card:hover .creators__avatar {
   font-weight: 500;
   letter-spacing: 0.26em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--primary) 48%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 48%, transparent);
 }
 
 .contact-page__title {
-  margin-top: 1.25rem;
+  margin-top: 0.85rem;
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 0.22em 0.28em;
-  max-width: 18ch;
+  gap: 0.18em 0.24em;
+  max-width: 14ch;
   font-family: var(--font-sf-pro);
-  font-size: clamp(2.6rem, 9vw, 6.4rem);
+  font-size: clamp(2.2rem, 5.5vw, 3.8rem);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.045em;
-  color: var(--primary);
+  color: var(--contact-ink);
 }
 
 .contact-page__static {
@@ -5060,14 +5072,14 @@ a.creators__card:hover .creators__avatar {
 .contact-page__verb {
   display: inline-grid;
   vertical-align: baseline;
-  color: var(--primary);
+  color: var(--contact-spark);
   min-width: 4.2ch;
 }
 
 .contact-page__verb .role-cycle__text,
 .contact-page__verb .role-cycle__measure,
 .contact-page__verb .role-cycle__char {
-  color: var(--primary);
+  color: var(--contact-spark);
   -webkit-text-stroke: 0;
   font-weight: 700;
 }
@@ -5113,37 +5125,37 @@ a.creators__card:hover .creators__avatar {
 }
 
 .contact-page__lines {
-  margin-top: 1.75rem;
+  margin-top: 1.1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.35rem;
   max-width: 34rem;
 }
 
 .contact-page__line {
   margin: 0;
   font-family: var(--font-sf-pro);
-  font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+  font-size: clamp(0.95rem, 1.6vw, 1.1rem);
   font-weight: 400;
   line-height: 1.45;
   letter-spacing: -0.015em;
-  color: color-mix(in srgb, var(--primary) 62%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 62%, transparent);
 }
 
 .contact-page__line--accent {
   font-weight: 500;
-  color: color-mix(in srgb, var(--primary) 78%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 82%, transparent);
 }
 
 .contact-page__mail {
   display: inline-flex;
   align-items: center;
-  gap: 0.85rem;
-  margin-top: 3rem;
-  color: var(--primary);
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+  color: var(--contact-ink);
   text-decoration: none;
   font-family: var(--font-sf-pro);
-  font-size: clamp(1.35rem, 4vw, 2.75rem);
+  font-size: clamp(1.05rem, 2.4vw, 1.55rem);
   font-weight: 600;
   letter-spacing: -0.03em;
   will-change: transform;
@@ -5165,6 +5177,7 @@ a.creators__card:hover .creators__avatar {
 .contact-page__mail-arrow {
   display: inline-block;
   font-size: 0.72em;
+  color: var(--contact-spark);
   transition: transform 520ms var(--ease-spring);
 }
 
@@ -5176,19 +5189,19 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 1.25rem;
-  margin-top: 1.75rem;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
 .contact-page__copy {
-  border: 1px solid color-mix(in srgb, var(--primary) 28%, transparent);
-  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--contact-ink) 28%, transparent);
+  border-radius: 0;
   background: transparent;
-  padding: 0.65rem 1.3rem;
-  color: var(--primary);
+  padding: 0.55rem 1.1rem;
+  color: var(--contact-ink);
   cursor: pointer;
   font-family: var(--font-sf-pro);
-  font-size: 0.74rem;
+  font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -5199,18 +5212,41 @@ a.creators__card:hover .creators__avatar {
 }
 
 .contact-page__copy:hover {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: var(--primary-foreground);
+  background: var(--contact-ink);
+  border-color: var(--contact-ink);
+  color: #fff;
 }
 
 .contact-page__note {
-  margin-top: 3rem;
+  margin-top: 1.25rem;
   max-width: 42ch;
   font-family: var(--font-sf-pro);
-  font-size: 0.95rem;
+  font-size: 0.88rem;
   line-height: 1.55;
-  color: color-mix(in srgb, var(--primary) 52%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 52%, transparent);
+}
+
+@media (max-width: 900px) {
+  .contact-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(42svh, 46svh) auto;
+  }
+
+  .contact-page__stage {
+    position: relative;
+    height: 46svh;
+    min-height: 42svh;
+  }
+
+  .contact-page__board {
+    margin: -1.5rem 0.75rem 1rem;
+    min-height: 0;
+  }
+
+  .contact-page__stage-tag {
+    left: 0.85rem;
+    bottom: 2rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -5223,14 +5259,12 @@ a.creators__card:hover .creators__avatar {
 
 .inquiry-form {
   position: relative;
-  margin-top: clamp(3.5rem, 8vw, 5.5rem);
-  max-width: 58rem;
-  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
-  background: color-mix(in srgb, #fff 88%, transparent);
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  max-width: none;
+  border: 1px solid color-mix(in srgb, var(--contact-ink) 14%, transparent);
+  background: color-mix(in srgb, #fff 72%, transparent);
 }
 
-/* A Photoshop-style precision cursor while working inside the form —
-   desktop/mouse only, so it never leaks onto touch input. */
 @media (hover: hover) and (pointer: fine) {
   .inquiry-form {
     cursor:
@@ -5242,24 +5276,24 @@ a.creators__card:hover .creators__avatar {
 
 .inquiry-form__stage {
   display: grid;
-  grid-template-columns: 12.5rem 1fr;
+  grid-template-columns: 11.5rem 1fr;
   align-items: start;
-  gap: 1.75rem;
-  padding: clamp(1.5rem, 4vw, 2.25rem);
+  gap: 1.25rem;
+  padding: clamp(1.1rem, 2.5vw, 1.6rem);
 }
 
 .inquiry-form__body {
   min-width: 0;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .inquiry-form__stage {
     grid-template-columns: 1fr;
   }
 }
 
 .inquiry-form__head {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.35rem;
 }
 
 .inquiry-form__eyebrow {
@@ -5269,31 +5303,31 @@ a.creators__card:hover .creators__avatar {
   font-weight: 500;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--primary) 48%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 48%, transparent);
 }
 
 .inquiry-form__title {
   margin: 0 0 0.55rem;
   font-family: var(--font-sf-pro);
-  font-size: clamp(1.45rem, 3vw, 1.9rem);
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
   font-weight: 650;
   letter-spacing: -0.03em;
-  color: var(--primary);
+  color: var(--contact-ink);
 }
 
 .inquiry-form__lede {
   margin: 0;
   max-width: 36ch;
   font-family: var(--font-sf-pro);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   line-height: 1.5;
-  color: color-mix(in srgb, var(--primary) 58%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 58%, transparent);
 }
 
 .inquiry-form__grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem 1.1rem;
+  gap: 0.9rem 1rem;
 }
 
 .inquiry-form__field {
@@ -5301,11 +5335,11 @@ a.creators__card:hover .creators__avatar {
   flex-direction: column;
   gap: 0.4rem;
   font-family: var(--font-sf-pro);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--primary) 62%, transparent);
+  color: color-mix(in srgb, var(--contact-ink) 62%, transparent);
 }
 
 .inquiry-form__field em {
@@ -5323,33 +5357,32 @@ a.creators__card:hover .creators__avatar {
 .inquiry-form__field select,
 .inquiry-form__field textarea {
   width: 100%;
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--contact-ink) 18%, transparent);
   border-radius: 0;
-  background: #fff;
-  padding: 0.75rem 0.85rem;
-  color: var(--primary);
+  background: rgba(255, 255, 255, 0.88);
+  padding: 0.7rem 0.8rem;
+  color: var(--contact-ink);
   font-family: var(--font-sf-pro);
-  font-size: 0.95rem;
+  font-size: 0.92rem;
   font-weight: 400;
   letter-spacing: -0.01em;
   text-transform: none;
   outline: none;
-  transition: border-color 200ms ease;
+  transition: border-color 200ms ease, background-color 200ms ease;
 }
 
 .inquiry-form__field textarea {
   resize: vertical;
-  min-height: 8rem;
+  min-height: 7rem;
 }
 
 .inquiry-form__field input:focus,
 .inquiry-form__field select:focus,
 .inquiry-form__field textarea:focus {
-  border-color: var(--primary);
+  border-color: transparent;
+  background: #fff;
 }
 
-/* Marching-ants selection marquee around the focused field — four
-   independently-scrolling dashed edges, the classic PS marquee. */
 .inquiry-form__control {
   position: relative;
 }
@@ -5361,11 +5394,11 @@ a.creators__card:hover .creators__avatar {
   pointer-events: none;
   opacity: 0;
   background-image:
-    repeating-linear-gradient(90deg, var(--primary) 0 4px, transparent 0 8px),
-    repeating-linear-gradient(90deg, var(--primary) 0 4px, transparent 0 8px),
-    repeating-linear-gradient(0deg, var(--primary) 0 4px, transparent 0 8px),
-    repeating-linear-gradient(0deg, var(--primary) 0 4px, transparent 0 8px);
-  background-size: 8px 1.4px, 8px 1.4px, 1.4px 8px, 1.4px 8px;
+    repeating-linear-gradient(90deg, var(--contact-spark) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(90deg, var(--contact-spark) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(0deg, var(--contact-spark) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(0deg, var(--contact-spark) 0 4px, transparent 0 8px);
+  background-size: 8px 1.5px, 8px 1.5px, 1.5px 8px, 1.5px 8px;
   background-position: 0 0, 0 100%, 0 0, 100% 0;
   background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
   transition: opacity 160ms ease;
@@ -5388,29 +5421,41 @@ a.creators__card:hover .creators__avatar {
   }
 }
 
-/* ------------------------------------------------------------------
-   Layers panel — the decorative Photoshop-style palette that mirrors
-   the form's own fill state, field by field.
-   ------------------------------------------------------------------ */
-
 .layers-panel {
   position: sticky;
-  top: calc(var(--nav-h) + 1rem);
-  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
-  background: color-mix(in srgb, #fff 92%, transparent);
-  padding: 0.85rem 0.7rem;
+  top: 0.5rem;
+  border: 1px solid color-mix(in srgb, var(--contact-ink) 16%, transparent);
+  background: color-mix(in srgb, #1a2233 92%, #0b1f4d);
+  padding: 0.7rem 0.55rem;
+  color: var(--contact-cream);
+}
+
+.layers-panel__chrome {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.4rem;
+  margin-bottom: 0.55rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1px solid rgba(247, 244, 236, 0.12);
 }
 
 .layers-panel__title {
-  margin: 0 0 0.6rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  margin: 0;
   font-family: var(--font-sf-pro);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 600;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: color-mix(in srgb, var(--primary) 55%, transparent);
+  color: rgba(247, 244, 236, 0.62);
+}
+
+.layers-panel__badge {
+  font-family: var(--font-sf-pro);
+  font-size: 0.55rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(125, 211, 252, 0.75);
 }
 
 .layers-panel__list {
@@ -5419,35 +5464,35 @@ a.creators__card:hover .creators__avatar {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.15rem;
+  gap: 0.1rem;
 }
 
 .layers-panel__row {
   display: flex;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.4rem 0.4rem;
-  color: color-mix(in srgb, var(--primary) 45%, transparent);
-  opacity: 0.55;
+  gap: 0.4rem;
+  padding: 0.35rem 0.3rem;
+  color: rgba(247, 244, 236, 0.42);
+  opacity: 0.7;
   transition: opacity 260ms ease, background-color 220ms ease, color 220ms ease;
 }
 
 .layers-panel__row.is-filled {
   opacity: 1;
-  color: var(--primary);
+  color: rgba(247, 244, 236, 0.9);
 }
 
 .layers-panel__row.is-active {
-  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  background: color-mix(in srgb, var(--contact-spark) 28%, transparent);
   opacity: 1;
-  color: var(--primary);
+  color: #fff;
 }
 
 .layers-panel__eye {
   flex: none;
-  width: 1rem;
-  height: 1rem;
-  color: color-mix(in srgb, var(--primary) 35%, transparent);
+  width: 0.95rem;
+  height: 0.95rem;
+  color: rgba(247, 244, 236, 0.35);
 }
 
 .layers-panel__eye svg {
@@ -5458,7 +5503,7 @@ a.creators__card:hover .creators__avatar {
 
 .layers-panel__row.is-filled .layers-panel__eye,
 .layers-panel__row.is-active .layers-panel__eye {
-  color: var(--primary);
+  color: #7dd3fc;
 }
 
 .layers-panel__row:not(.is-filled):not(.is-active) .layers-panel__eye circle {
@@ -5472,9 +5517,9 @@ a.creators__card:hover .creators__avatar {
 
 .layers-panel__thumb {
   flex: none;
-  width: 1.1rem;
-  height: 1.1rem;
-  color: color-mix(in srgb, var(--primary) 55%, transparent);
+  width: 1rem;
+  height: 1rem;
+  color: rgba(247, 244, 236, 0.55);
 }
 
 .layers-panel__thumb svg {
@@ -5487,12 +5532,13 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  flex: 1;
   line-height: 1.15;
 }
 
 .layers-panel__name {
   font-family: var(--font-sf-pro);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.02em;
   white-space: nowrap;
@@ -5500,14 +5546,32 @@ a.creators__card:hover .creators__avatar {
 
 .layers-panel__preview {
   font-family: var(--font-sf-pro);
-  font-size: 0.62rem;
+  font-size: 0.58rem;
   letter-spacing: 0;
   text-transform: none;
-  color: color-mix(in srgb, var(--primary) 48%, transparent);
+  color: rgba(247, 244, 236, 0.45);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 9rem;
+  max-width: 7.5rem;
+}
+
+.layers-panel__lock {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  opacity: 0.25;
+  color: rgba(247, 244, 236, 0.7);
+}
+
+.layers-panel__lock svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.layers-panel__row.is-active .layers-panel__lock {
+  opacity: 0.55;
 }
 
 .layers-panel.is-flattening .layers-panel__row {
@@ -5532,7 +5596,7 @@ a.creators__card:hover .creators__avatar {
   }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1100px) {
   .layers-panel {
     position: static;
   }
@@ -5540,7 +5604,7 @@ a.creators__card:hover .creators__avatar {
   .layers-panel__list {
     flex-direction: row;
     overflow-x: auto;
-    gap: 0.3rem;
+    gap: 0.25rem;
     padding-bottom: 0.15rem;
   }
 
@@ -5548,7 +5612,8 @@ a.creators__card:hover .creators__avatar {
     flex: none;
   }
 
-  .layers-panel__preview {
+  .layers-panel__preview,
+  .layers-panel__lock {
     display: none;
   }
 }
@@ -5559,7 +5624,7 @@ a.creators__card:hover .creators__avatar {
   }
 
   .layers-panel__row {
-    padding: 0.5rem;
+    padding: 0.45rem;
   }
 }
 
@@ -5568,7 +5633,7 @@ a.creators__card:hover .creators__avatar {
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem 1.25rem;
-  margin-top: 1.5rem;
+  margin-top: 1.35rem;
 }
 
 .inquiry-form__submit {
@@ -5577,20 +5642,19 @@ a.creators__card:hover .creators__avatar {
   align-items: center;
   gap: 0.6rem;
   overflow: hidden;
-  border: 1px solid var(--primary);
-  background: var(--primary);
+  border: 1px solid var(--contact-ink);
+  background: var(--contact-ink);
   color: #fff;
-  padding: 0.8rem 1.5rem;
+  padding: 0.75rem 1.35rem;
   cursor: pointer;
   font-family: var(--font-sf-pro);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: opacity 200ms ease;
 }
 
-/* A little foreground-color swatch, like Photoshop's fill/color chip. */
 .inquiry-form__submit::before {
   content: "";
   position: relative;
@@ -5599,17 +5663,16 @@ a.creators__card:hover .creators__avatar {
   width: 0.8rem;
   height: 0.8rem;
   border-radius: 2px;
-  background: linear-gradient(135deg, var(--spark, #2563ff) 0%, #7dd3fc 100%);
+  background: linear-gradient(135deg, var(--contact-spark) 0%, #7dd3fc 100%);
   border: 1px solid rgba(255, 255, 255, 0.55);
 }
 
-/* Bucket-fill wipe from the point of contact on press. */
 .inquiry-form__submit::after {
   content: "";
   position: absolute;
   z-index: 0;
   inset: 0;
-  background: color-mix(in srgb, var(--primary) 55%, black 25%);
+  background: color-mix(in srgb, var(--contact-ink) 55%, black 25%);
   clip-path: circle(0% at var(--fx, 50%) var(--fy, 50%));
   transition: clip-path 520ms var(--ease-editorial);
   pointer-events: none;
@@ -5638,11 +5701,11 @@ a.creators__card:hover .creators__avatar {
 .inquiry-form__status {
   margin: 0;
   font-family: var(--font-sf-pro);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .inquiry-form__status--ok {
-  color: color-mix(in srgb, var(--primary) 78%, #0a7a3e);
+  color: color-mix(in srgb, var(--contact-ink) 70%, #0a7a3e);
 }
 
 .inquiry-form__status--err {
@@ -6220,9 +6283,11 @@ a.creators__card:hover .creators__avatar {
   }
 
   .contact-page {
-    padding: calc(var(--nav-h) + 1.5rem + env(safe-area-inset-top, 0)) 0
-      calc(3.5rem + env(safe-area-inset-bottom, 0));
     overflow-x: clip;
+  }
+
+  .contact-page__board {
+    margin-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
   }
 
   .contact-page__mail,

@@ -2,21 +2,26 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import type { InquiryStatus } from "@/features/contact/components/inquiry-form";
 
 /* ================================================================== *
- * Contact scene — a small still-life of Photoshop tools, rendered in
- * real 3D (raw Three.js, matching the CreatorsParticles pattern used
- * on the home page). Five recognisable objects — layers stack, pen
- * nib, eyedropper, crop corners, colour swatch — idle in space, drift
- * toward the cursor, and step forward when their matching form field
- * is focused.
+ * Contact scene — Floating Tools Hero
+ *
+ * Cinematic still-life of Photoshop tools. Idle orbit + pointer magnet,
+ * assemble-on-enter, focus dolly, and a brief gather on form success.
  * ================================================================== */
 
 const INK = 0x0b1f4d;
 const SPARK = 0x2563ff;
 const CREAM = 0xf7f4ec;
+const METAL = 0xc8d0dc;
 
-export type ContactObjectKey = "layers" | "pen" | "eyedropper" | "crop" | "swatch";
+export type ContactObjectKey =
+  | "layers"
+  | "pen"
+  | "eyedropper"
+  | "crop"
+  | "swatch";
 
 const FIELD_TO_OBJECT: Record<string, ContactObjectKey> = {
   name: "layers",
@@ -28,6 +33,33 @@ const FIELD_TO_OBJECT: Record<string, ContactObjectKey> = {
   deliverable: "crop",
   budget: "swatch",
 };
+
+const ALL_KEYS: ContactObjectKey[] = [
+  "layers",
+  "pen",
+  "eyedropper",
+  "crop",
+  "swatch",
+];
+
+type Pose = { x: number; y: number; z: number; scale: number };
+
+const REST: Record<ContactObjectKey, Pose> = {
+  layers: { x: -1.35, y: 0.95, z: 0.1, scale: 1.25 },
+  pen: { x: 1.45, y: 0.35, z: 0.4, scale: 1.2 },
+  eyedropper: { x: -0.55, y: -1.35, z: -0.15, scale: 1.2 },
+  crop: { x: 1.05, y: 1.55, z: -0.35, scale: 1.1 },
+  swatch: { x: 1.55, y: -1.25, z: 0.2, scale: 1.1 },
+};
+
+function explode(p: Pose): Pose {
+  return {
+    x: p.x * 2.35,
+    y: p.y * 2.2,
+    z: p.z - 2.4,
+    scale: p.scale * 0.55,
+  };
+}
 
 function edged(geo: THREE.BufferGeometry, color: number, opacity = 0.35) {
   const edges = new THREE.EdgesGeometry(geo);
@@ -54,121 +86,181 @@ function roundedRect(w: number, h: number, r: number) {
 
 function makeLayers() {
   const g = new THREE.Group();
-  const tones = [0x0b1f4d, 0x1a3568, 0x3d5f9e];
-  for (let i = 0; i < 3; i++) {
-    const geo = new THREE.BoxGeometry(1.15, 0.8, 0.05);
+  const tones = [0x0b1f4d, 0x1a3568, 0x3d5f9e, 0x2563ff];
+  for (let i = 0; i < 4; i++) {
+    const shape = roundedRect(1.2, 0.85, 0.06);
+    const geo = new THREE.ExtrudeGeometry(shape, {
+      depth: 0.06,
+      bevelEnabled: true,
+      bevelThickness: 0.015,
+      bevelSize: 0.012,
+      bevelSegments: 2,
+    });
+    geo.center();
     const mesh = new THREE.Mesh(
       geo,
-      new THREE.MeshStandardMaterial({ color: tones[i], roughness: 0.55, metalness: 0.08 }),
+      new THREE.MeshStandardMaterial({
+        color: tones[i],
+        roughness: 0.45,
+        metalness: 0.12,
+      }),
     );
-    mesh.position.set(i * 0.1, -i * 0.12, i * 0.09);
-    mesh.rotation.z = i * 0.035;
+    mesh.position.set(i * 0.08, -i * 0.11, i * 0.08);
+    mesh.rotation.z = i * 0.03;
     g.add(mesh);
-    g.add(edged(geo, 0xffffff, 0.22));
-    g.children[g.children.length - 1].position.copy(mesh.position);
-    g.children[g.children.length - 1].rotation.copy(mesh.rotation);
+    const edge = edged(geo, 0xffffff, 0.18);
+    edge.position.copy(mesh.position);
+    edge.rotation.copy(mesh.rotation);
+    g.add(edge);
   }
   return g;
 }
 
 function makePen() {
-  const s = new THREE.Shape();
-  s.moveTo(0, 0.58);
-  s.lineTo(0.15, 0.06);
-  s.lineTo(0, -0.58);
-  s.lineTo(-0.15, 0.06);
-  s.closePath();
-  const geo = new THREE.ExtrudeGeometry(s, {
-    depth: 0.09,
-    bevelEnabled: true,
-    bevelThickness: 0.02,
-    bevelSize: 0.015,
-    bevelSegments: 3,
-  });
-  geo.center();
-  const mesh = new THREE.Mesh(
-    geo,
-    new THREE.MeshStandardMaterial({ color: INK, roughness: 0.4, metalness: 0.15 }),
-  );
   const g = new THREE.Group();
-  g.add(mesh);
+  const shaft = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.07, 0.09, 0.95, 12),
+    new THREE.MeshStandardMaterial({
+      color: METAL,
+      roughness: 0.28,
+      metalness: 0.65,
+    }),
+  );
+  shaft.position.y = 0.15;
+
+  const grip = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.1, 0.1, 0.28, 12),
+    new THREE.MeshStandardMaterial({
+      color: INK,
+      roughness: 0.5,
+      metalness: 0.15,
+    }),
+  );
+  grip.position.y = 0.55;
+
+  const tip = new THREE.Mesh(
+    new THREE.ConeGeometry(0.09, 0.38, 10),
+    new THREE.MeshStandardMaterial({
+      color: SPARK,
+      roughness: 0.35,
+      metalness: 0.25,
+      emissive: SPARK,
+      emissiveIntensity: 0.15,
+    }),
+  );
+  tip.position.y = -0.48;
+
+  g.add(shaft, grip, tip);
+  g.rotation.z = -0.55;
   return g;
 }
 
 function makeEyedropper() {
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: SPARK, roughness: 0.35, metalness: 0.2 });
-  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.16, 20, 16), mat);
-  bulb.position.y = 0.5;
-  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.06, 0.6, 16), mat);
+  const glass = new THREE.MeshStandardMaterial({
+    color: 0xa8c4ff,
+    roughness: 0.15,
+    metalness: 0.35,
+    transparent: true,
+    opacity: 0.85,
+  });
+  const ink = new THREE.MeshStandardMaterial({
+    color: SPARK,
+    roughness: 0.3,
+    metalness: 0.2,
+  });
+
+  const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 18), glass);
+  bulb.position.y = 0.58;
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.065, 0.7, 18), glass);
   body.position.y = 0.12;
-  const tip = new THREE.Mesh(
-    new THREE.ConeGeometry(0.055, 0.26, 16),
-    new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5, metalness: 0.1 }),
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(0.055, 0.28, 16), ink);
+  tip.position.y = -0.38;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.09, 0.018, 8, 20),
+    new THREE.MeshStandardMaterial({
+      color: METAL,
+      roughness: 0.3,
+      metalness: 0.7,
+    }),
   );
-  tip.position.y = -0.32;
-  g.add(bulb, body, tip);
-  g.rotation.z = -0.22;
+  ring.position.y = 0.38;
+  ring.rotation.x = Math.PI / 2;
+
+  g.add(bulb, body, tip, ring);
+  g.rotation.z = -0.28;
   return g;
 }
 
 function makeCrop() {
   const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5, metalness: 0.1 });
+  const mat = new THREE.MeshStandardMaterial({
+    color: CREAM,
+    roughness: 0.4,
+    metalness: 0.15,
+  });
+  const accent = new THREE.MeshStandardMaterial({
+    color: SPARK,
+    roughness: 0.35,
+    metalness: 0.2,
+  });
 
-  function corner() {
+  function corner(useAccent: boolean) {
     const c = new THREE.Group();
-    const barA = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.06, 0.06), mat);
-    barA.position.x = 0.31;
-    const barB = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.62, 0.06), mat);
-    barB.position.y = 0.31;
+    const m = useAccent ? accent : mat;
+    const barA = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.07, 0.07), m);
+    barA.position.x = 0.35;
+    const barB = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.7, 0.07), m);
+    barB.position.y = 0.35;
     c.add(barA, barB);
     return c;
   }
 
-  const tl = corner();
-  tl.position.set(-0.55, 0.55, 0);
-  const br = corner();
+  const tl = corner(true);
+  tl.position.set(-0.6, 0.6, 0);
+  const br = corner(false);
   br.rotation.z = Math.PI;
-  br.position.set(0.55, -0.55, 0);
+  br.position.set(0.6, -0.6, 0);
+  const tr = corner(false);
+  tr.rotation.z = -Math.PI / 2;
+  tr.position.set(0.6, 0.6, 0);
+  const bl = corner(true);
+  bl.rotation.z = Math.PI / 2;
+  bl.position.set(-0.6, -0.6, 0);
 
-  g.add(tl, br);
+  g.add(tl, br, tr, bl);
   return g;
 }
 
 function makeSwatch() {
   const g = new THREE.Group();
-  const backGeo = new THREE.ExtrudeGeometry(roundedRect(0.62, 0.62, 0.08), {
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.012,
-    bevelSize: 0.012,
-    bevelSegments: 2,
-  });
-  backGeo.center();
-  const back = new THREE.Mesh(
-    backGeo,
-    new THREE.MeshStandardMaterial({ color: INK, roughness: 0.5, metalness: 0.1 }),
-  );
-  back.position.set(-0.12, -0.12, -0.03);
+  const colors = [INK, SPARK, CREAM, 0x7dd3fc];
+  const offsets = [
+    [-0.22, 0.22, 0.08],
+    [0.22, 0.22, 0.02],
+    [-0.22, -0.22, -0.02],
+    [0.22, -0.22, 0.12],
+  ] as const;
 
-  const frontGeo = new THREE.ExtrudeGeometry(roundedRect(0.62, 0.62, 0.08), {
-    depth: 0.05,
-    bevelEnabled: true,
-    bevelThickness: 0.012,
-    bevelSize: 0.012,
-    bevelSegments: 2,
+  offsets.forEach(([x, y, z], i) => {
+    const geo = new THREE.BoxGeometry(0.52, 0.52, 0.52);
+    const mesh = new THREE.Mesh(
+      geo,
+      new THREE.MeshStandardMaterial({
+        color: colors[i],
+        roughness: 0.35,
+        metalness: 0.18,
+      }),
+    );
+    mesh.position.set(x, y, z);
+    mesh.rotation.set(0.12 * i, 0.2 * i, 0.08 * i);
+    g.add(mesh);
+    const edge = edged(geo, 0xffffff, 0.2);
+    edge.position.copy(mesh.position);
+    edge.rotation.copy(mesh.rotation);
+    g.add(edge);
   });
-  frontGeo.center();
-  const front = new THREE.Mesh(
-    frontGeo,
-    new THREE.MeshStandardMaterial({ color: CREAM, roughness: 0.3, metalness: 0.05 }),
-  );
-  front.position.set(0.12, 0.12, 0.03);
 
-  g.add(back, front);
-  g.add(edged(frontGeo, 0x0b1f4d, 0.3));
-  g.children[g.children.length - 1].position.copy(front.position);
   return g;
 }
 
@@ -180,14 +272,6 @@ const BUILDERS: Record<ContactObjectKey, () => THREE.Group> = {
   swatch: makeSwatch,
 };
 
-const LAYOUT: Record<ContactObjectKey, { x: number; y: number; z: number; scale: number }> = {
-  layers: { x: 4.9, y: 1.5, z: 0, scale: 1.15 },
-  pen: { x: 5.6, y: -0.3, z: 0.35, scale: 1.1 },
-  eyedropper: { x: 3.9, y: -1.85, z: -0.25, scale: 1.1 },
-  crop: { x: 4.05, y: 1.95, z: -0.3, scale: 1.05 },
-  swatch: { x: 5.7, y: -1.55, z: 0.2, scale: 1 },
-};
-
 function createShadowTexture() {
   const size = 128;
   const canvas = document.createElement("canvas");
@@ -196,8 +280,8 @@ function createShadowTexture() {
   const ctx = canvas.getContext("2d");
   if (!ctx) return null;
   const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
-  g.addColorStop(0, "rgba(11,31,77,0.45)");
-  g.addColorStop(1, "rgba(11,31,77,0)");
+  g.addColorStop(0, "rgba(0,0,0,0.55)");
+  g.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, size, size);
   const tex = new THREE.CanvasTexture(canvas);
@@ -205,80 +289,137 @@ function createShadowTexture() {
   return tex;
 }
 
-export function ContactScene({ focusedField }: { focusedField: string | null }) {
+function easeOutCubic(t: number) {
+  return 1 - (1 - t) ** 3;
+}
+
+type Item = {
+  key: ContactObjectKey;
+  group: THREE.Group;
+  shadow: THREE.Sprite;
+  rest: Pose;
+  start: Pose;
+  phase: number;
+  rotSpeed: number;
+  boost: number;
+  visible: boolean;
+};
+
+export function ContactScene({
+  focusedField,
+  formStatus = "idle",
+}: {
+  focusedField: string | null;
+  formStatus?: InquiryStatus;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const focusedRef = useRef<ContactObjectKey | null>(null);
+  const statusRef = useRef<InquiryStatus>("idle");
+  const gatherRef = useRef(0);
 
   useEffect(() => {
-    focusedRef.current = focusedField ? (FIELD_TO_OBJECT[focusedField] ?? null) : null;
+    focusedRef.current = focusedField
+      ? (FIELD_TO_OBJECT[focusedField] ?? null)
+      : null;
   }, [focusedField]);
+
+  useEffect(() => {
+    if (formStatus === "ok" && statusRef.current !== "ok") {
+      gatherRef.current = 1;
+    }
+    statusRef.current = formStatus;
+  }, [formStatus]);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (reduceMotion.matches) return;
+    const mobileMq = window.matchMedia("(max-width: 900px)");
+    const isMobile = () => mobileMq.matches;
+    const reduced = () => reduceMotion.matches;
 
     const width = () => Math.max(host.clientWidth, 1);
     const height = () => Math.max(host.clientHeight, 1);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, width() / height(), 0.1, 30);
-    camera.position.set(0, 0, 9.5);
+    const camera = new THREE.PerspectiveCamera(40, width() / height(), 0.1, 40);
+    camera.position.set(0, 0.15, isMobile() ? 8.2 : 7.4);
 
     const renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobile(),
       alpha: true,
       powerPreference: "high-performance",
     });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const dprCap = isMobile() ? 1 : 1.5;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap));
     renderer.setSize(width(), height());
     renderer.setClearColor(0x000000, 0);
     host.appendChild(renderer.domElement);
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.65));
-    const key = new THREE.DirectionalLight(0xffffff, 0.9);
-    key.position.set(3, 4, 5);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xffffff, 1.05);
+    key.position.set(4, 5, 6);
     scene.add(key);
-    const fill = new THREE.DirectionalLight(0x9fc4ff, 0.35);
-    fill.position.set(-4, -2, 3);
+    const fill = new THREE.DirectionalLight(0x6aa0ff, 0.4);
+    fill.position.set(-5, -1, 3);
     scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffffff, 0.25);
+    rim.position.set(0, 2, -4);
+    scene.add(rim);
 
     const rig = new THREE.Group();
     scene.add(rig);
 
     const shadowTex = createShadowTexture();
-    const items = (Object.keys(BUILDERS) as ContactObjectKey[]).map((key2) => {
-      const group = BUILDERS[key2]();
-      const layout = LAYOUT[key2];
-      group.position.set(layout.x, layout.y, layout.z);
-      group.scale.setScalar(layout.scale);
+    const activeKeys: ContactObjectKey[] = isMobile()
+      ? ["layers", "pen", "eyedropper"]
+      : ALL_KEYS;
+
+    const items: Item[] = activeKeys.map((keyName) => {
+      const group = BUILDERS[keyName]();
+      const rest = { ...REST[keyName] };
+      if (isMobile()) {
+        rest.x *= 0.72;
+        rest.y *= 0.72;
+        rest.scale *= 0.9;
+      }
+      const start = reduced() ? { ...rest } : explode(rest);
+      group.position.set(start.x, start.y, start.z);
+      group.scale.setScalar(start.scale);
       rig.add(group);
 
       const shadow = new THREE.Sprite(
-        new THREE.SpriteMaterial({ map: shadowTex ?? undefined, transparent: true, opacity: 0.5, depthWrite: false }),
+        new THREE.SpriteMaterial({
+          map: shadowTex ?? undefined,
+          transparent: true,
+          opacity: 0.45,
+          depthWrite: false,
+        }),
       );
-      shadow.scale.set(1.3, 1.3, 1);
-      shadow.position.set(layout.x, layout.y - 0.05, layout.z - 0.6);
+      shadow.scale.set(1.5, 1.5, 1);
+      shadow.position.set(rest.x, rest.y - 0.85, rest.z - 0.5);
       rig.add(shadow);
 
       return {
-        key: key2,
+        key: keyName,
         group,
-        base: { ...layout },
+        shadow,
+        rest,
+        start,
         phase: Math.random() * Math.PI * 2,
-        rotSpeed: 0.12 + Math.random() * 0.1,
-        current: 0,
+        rotSpeed: 0.1 + Math.random() * 0.12,
+        boost: 0,
+        visible: true,
       };
     });
 
-    let visible = true;
+    let onScreen = true;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        visible = entry.isIntersecting;
+        onScreen = entry.isIntersecting;
       },
-      { rootMargin: "80px", threshold: 0.01 },
+      { rootMargin: "100px", threshold: 0.01 },
     );
     observer.observe(host);
 
@@ -287,6 +428,8 @@ export function ContactScene({ focusedField }: { focusedField: string | null }) 
       const h = height();
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
+      const cap = isMobile() ? 1 : 1.5;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, cap));
       renderer.setSize(w, h);
     };
     const resizeObs = new ResizeObserver(onResize);
@@ -295,76 +438,140 @@ export function ContactScene({ focusedField }: { focusedField: string | null }) 
     const pointerTarget = { x: 0, y: 0 };
     const pointerCurrent = { x: 0, y: 0 };
     const onPointerMove = (e: PointerEvent) => {
+      if (isMobile()) return;
       const r = host.getBoundingClientRect();
       pointerTarget.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      pointerTarget.y = ((e.clientY - r.top) / r.height) * 2 - 1;
+      pointerTarget.y = -(((e.clientY - r.top) / r.height) * 2 - 1);
     };
-    window.addEventListener("pointermove", onPointerMove, { passive: true });
+    host.addEventListener("pointermove", onPointerMove, { passive: true });
+
+    const camTarget = new THREE.Vector3(0, 0.1, 0);
+    const camPos = new THREE.Vector3().copy(camera.position);
+    const look = new THREE.Vector3(0, 0.1, 0);
 
     let raf = 0;
     let last = performance.now();
+    const born = performance.now();
+    const ASSEMBLE_MS = reduced() ? 0 : 1400;
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      if (!visible) {
+      if (!onScreen) {
         last = now;
         return;
       }
+
       const dt = Math.min((now - last) / 1000, 0.05);
       last = now;
       const t = now * 0.001;
+      const assemble = reduced()
+        ? 1
+        : easeOutCubic(Math.min(1, (now - born) / ASSEMBLE_MS));
 
-      pointerCurrent.x += (pointerTarget.x - pointerCurrent.x) * Math.min(dt * 2.4, 1);
-      pointerCurrent.y += (pointerTarget.y - pointerCurrent.y) * Math.min(dt * 2.4, 1);
-      rig.rotation.y = pointerCurrent.x * 0.12;
-      rig.rotation.x = -pointerCurrent.y * 0.08;
+      if (gatherRef.current > 0) {
+        gatherRef.current = Math.max(0, gatherRef.current - dt * 0.85);
+      }
+      const gather = gatherRef.current;
+      const gatherEase = Math.sin(gather * Math.PI);
+
+      pointerCurrent.x +=
+        (pointerTarget.x - pointerCurrent.x) * Math.min(dt * 2.2, 1);
+      pointerCurrent.y +=
+        (pointerTarget.y - pointerCurrent.y) * Math.min(dt * 2.2, 1);
+
+      if (!reduced()) {
+        rig.rotation.y = pointerCurrent.x * 0.18 + Math.sin(t * 0.22) * 0.06;
+        rig.rotation.x = -pointerCurrent.y * 0.1 + Math.cos(t * 0.18) * 0.04;
+      } else {
+        rig.rotation.set(0, 0, 0);
+      }
 
       const active = focusedRef.current;
+      let focusPos: THREE.Vector3 | null = null;
+
       for (const item of items) {
         const isActive = active === item.key;
         const targetBoost = isActive ? 1 : 0;
-        item.current += (targetBoost - item.current) * Math.min(dt * 5, 1);
+        item.boost += (targetBoost - item.boost) * Math.min(dt * 5.5, 1);
 
-        const bob = Math.sin(t * 0.6 + item.phase) * 0.08;
-        const sway = Math.cos(t * 0.4 + item.phase) * 0.05;
-        const forward = item.current * 0.55;
+        const sx = item.start.x + (item.rest.x - item.start.x) * assemble;
+        const sy = item.start.y + (item.rest.y - item.start.y) * assemble;
+        const sz = item.start.z + (item.rest.z - item.start.z) * assemble;
+        const ss =
+          item.start.scale + (item.rest.scale - item.start.scale) * assemble;
 
-        item.group.position.set(
-          item.base.x + sway,
-          item.base.y + bob + item.current * 0.12,
-          item.base.z + forward,
-        );
-        item.group.rotation.y = t * item.rotSpeed + item.current * 0.3;
-        item.group.rotation.x = Math.sin(t * 0.3 + item.phase) * 0.08;
-        const s = item.base.scale * (1 + item.current * 0.18);
-        item.group.scale.setScalar(s);
+        const bob = reduced() ? 0 : Math.sin(t * 0.7 + item.phase) * 0.1;
+        const sway = reduced() ? 0 : Math.cos(t * 0.45 + item.phase) * 0.07;
+        const forward = item.boost * 0.7;
 
-        const dim = active && !isActive ? 0.55 : 1;
+        let px = sx + sway * assemble;
+        let py = sy + bob * assemble + item.boost * 0.15;
+        let pz = sz + forward;
+
+        if (gatherEase > 0.01) {
+          px += (0 - px) * gatherEase * 0.85;
+          py += (0 - py) * gatherEase * 0.85;
+          pz += (0.4 - pz) * gatherEase * 0.85;
+        }
+
+        item.group.position.set(px, py, pz);
+        item.group.rotation.y = reduced()
+          ? item.boost * 0.25
+          : t * item.rotSpeed + item.boost * 0.35;
+        item.group.rotation.x = reduced()
+          ? 0
+          : Math.sin(t * 0.35 + item.phase) * 0.1;
+        const scaleMul = 1 + item.boost * 0.22 + gatherEase * 0.15;
+        item.group.scale.setScalar(ss * scaleMul);
+
+        item.shadow.position.set(px, py - 0.9, pz - 0.55);
+        item.shadow.material.opacity = 0.35 + item.boost * 0.2;
+
+        if (isActive) {
+          focusPos = new THREE.Vector3(px, py, pz);
+        }
+
+        const dim = active && !isActive ? 0.4 : 1;
         item.group.traverse((child) => {
           if (child instanceof THREE.Mesh) {
             const mat = child.material as THREE.MeshStandardMaterial;
             if (mat.emissive) {
-              mat.emissive.setHex(isActive ? SPARK : 0x000000);
-              mat.emissiveIntensity = item.current * 0.45;
+              mat.emissive.setHex(isActive || gatherEase > 0.2 ? SPARK : 0x000000);
+              mat.emissiveIntensity =
+                item.boost * 0.55 + gatherEase * 0.4;
             }
             mat.opacity = dim;
             mat.transparent = dim < 1;
           } else if (child instanceof THREE.LineSegments) {
             const mat = child.material as THREE.LineBasicMaterial;
-            mat.opacity = 0.25 * dim;
+            mat.opacity = 0.22 * dim;
           }
         });
       }
 
+      const baseZ = isMobile() ? 8.2 : 7.4;
+      if (focusPos && !reduced()) {
+        camTarget.set(focusPos.x * 0.35, focusPos.y * 0.3, baseZ - 1.1);
+        look.set(focusPos.x * 0.45, focusPos.y * 0.4, 0);
+      } else {
+        camTarget.set(0, 0.15, baseZ);
+        look.set(0, 0.1, 0);
+      }
+
+      camPos.lerp(camTarget, Math.min(dt * 2.8, 1));
+      camera.position.copy(camPos);
+      camera.lookAt(look);
+
       renderer.render(scene, camera);
     };
+
     raf = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(raf);
       observer.disconnect();
       resizeObs.disconnect();
-      window.removeEventListener("pointermove", onPointerMove);
+      host.removeEventListener("pointermove", onPointerMove);
       shadowTex?.dispose();
       scene.traverse((obj) => {
         if (obj instanceof THREE.Mesh || obj instanceof THREE.LineSegments) {
@@ -372,6 +579,10 @@ export function ContactScene({ focusedField }: { focusedField: string | null }) 
           const mat = obj.material;
           if (Array.isArray(mat)) mat.forEach((m) => m.dispose());
           else mat.dispose();
+        } else if (obj instanceof THREE.Sprite) {
+          const mat = obj.material;
+          mat.map?.dispose();
+          mat.dispose();
         }
       });
       renderer.dispose();

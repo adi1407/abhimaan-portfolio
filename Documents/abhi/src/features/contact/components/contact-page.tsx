@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Container } from "@/components/layout/container";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import { ContactScene } from "@/features/contact/components/contact-scene";
-import { InquiryForm } from "@/features/contact/components/inquiry-form";
+import {
+  InquiryForm,
+  type InquiryStatus,
+} from "@/features/contact/components/inquiry-form";
 import { EMAIL, SITE } from "@/lib/constants";
 
 const VERBS = ["build", "create", "link", "craft", "design"] as const;
@@ -12,12 +14,12 @@ const VERBS = ["build", "create", "link", "craft", "design"] as const;
 const LINES = [
   "Something worth looking at.",
   "Identity, stories & visual systems — composed, never templated.",
-  "Selected collaborations for this year.",
 ] as const;
 
 export function ContactPage() {
   const [copied, setCopied] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const [formStatus, setFormStatus] = useState<InquiryStatus>("idle");
   const mailRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
@@ -47,18 +49,25 @@ export function ContactPage() {
 
   return (
     <section className="contact-page" aria-labelledby="contact-page-heading">
-      <span className="contact-page__ruler contact-page__ruler--x" aria-hidden />
-      <span className="contact-page__ruler contact-page__ruler--y" aria-hidden />
-      <ContactScene focusedField={focusedField} />
+      <div className="contact-page__stage">
+        <ContactScene focusedField={focusedField} formStatus={formStatus} />
+        <p className="contact-page__stage-tag" aria-hidden>
+          Untitled-1 · Tools
+        </p>
+      </div>
 
-      <Container className="contact-page__shell">
-        <p className="contact-page__eyebrow">05 — Contact</p>
+      <div className="contact-page__board">
+        <div className="contact-page__board-chrome" aria-hidden>
+          <span>RGB/8</span>
+          <span>05 — Contact</span>
+          <span>100%</span>
+        </div>
+
+        <p className="contact-page__eyebrow">Brief request</p>
 
         <h1 id="contact-page-heading" className="contact-page__title">
           <span className="contact-page__static">Let&apos;s</span>
-          <span className="sr-only">
-            {VERBS.join(", ")}
-          </span>
+          <span className="sr-only">{VERBS.join(", ")}</span>
           <RoleCycle roles={VERBS} className="contact-page__verb" holdMs={2200} />
           <span className="contact-page__static">together</span>
         </h1>
@@ -68,7 +77,9 @@ export function ContactPage() {
             <p
               key={line}
               className={
-                i === 0 ? "contact-page__line contact-page__line--accent" : "contact-page__line"
+                i === 0
+                  ? "contact-page__line contact-page__line--accent"
+                  : "contact-page__line"
               }
             >
               {line}
@@ -102,8 +113,11 @@ export function ContactPage() {
           direction.
         </p>
 
-        <InquiryForm onFieldFocus={setFocusedField} />
-      </Container>
+        <InquiryForm
+          onFieldFocus={setFocusedField}
+          onStatusChange={setFormStatus}
+        />
+      </div>
     </section>
   );
 }

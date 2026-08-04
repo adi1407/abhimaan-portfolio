@@ -124,7 +124,10 @@ export function LayersPanel({
 }) {
   return (
     <aside className={`layers-panel${flattening ? " is-flattening" : ""}`} aria-hidden>
-      <p className="layers-panel__title">Layers</p>
+      <div className="layers-panel__chrome">
+        <p className="layers-panel__title">Layers</p>
+        <span className="layers-panel__badge">Artboard 1</span>
+      </div>
       <ul className="layers-panel__list">
         {layers.map((layer, i) => (
           <li
@@ -156,6 +159,25 @@ export function LayersPanel({
               {layer.filled ? (
                 <span className="layers-panel__preview">{layer.value}</span>
               ) : null}
+            </span>
+            <span className="layers-panel__lock" aria-hidden>
+              <svg viewBox="0 0 24 24" fill="none">
+                <rect
+                  x="6"
+                  y="11"
+                  width="12"
+                  height="9"
+                  rx="1.4"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                />
+                <path
+                  d="M9 11V8.5a3 3 0 0 1 6 0V11"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
             </span>
           </li>
         ))}

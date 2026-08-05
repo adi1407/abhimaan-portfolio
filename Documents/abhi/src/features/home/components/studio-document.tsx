@@ -1,38 +1,18 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { RoleCycle } from "@/components/motion/role-cycle";
-import { ScrambleText } from "@/components/motion/scramble-text";
 import { HeroToolbar, type ToolId } from "@/features/home/components/hero-toolbar";
 import { HeroLayersPanel, LAYERS, type LayerId } from "@/features/home/components/hero-layers";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { ROUTES } from "@/lib/constants";
 import { WORK_ITEMS } from "@/lib/work";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
- * Studio document — interactive Photoshop-style composite (moved off hero).
+ * Studio document — Photoshop-themed poster composite.
  *
- * Two acts:
- *  A) On load the composite BUILDS itself — layers land bottom-up,
- *     each with its real blend mode, and the Layers panel ticks them
- *     on in sequence. Afterwards the eye toggles stay live.
- *  B) The toolbar is real. The selected tool changes what the pointer
- *     DOES on the artboard: marquee cuts a selection that reveals the
- *     alternate plate, the eyedropper samples the art and retints the
- *     whole site, the brush paints that plate back in, hand pans and
- *     zoom scales.
+ * Sits after Letter Craft. Layers land one-by-one on the artboard
+ * (scroll-armed), then the real tools stay live for exploration.
  * ================================================================== */
-
-const ROLES = [
-  "Graphic Designer",
-  "Brand Identity Designer",
-  "Visual Storyteller",
-  "3D Artist",
-  "Creative Director",
-  "Motion Designer",
-] as const;
 
 /** Two plates: the composite you land on, and what's hiding under it. */
 function plates() {
@@ -44,8 +24,8 @@ function plates() {
   return { top: unique[0], under: unique[1] ?? unique[0] };
 }
 
-/** Layer land cadence for act A. */
-const BUILD_STEP_MS = 260;
+/** Layer land cadence — slow enough to read each step. */
+const BUILD_STEP_MS = 340;
 const BRUSH_RADIUS = 46;
 const ZOOM_STEPS = [60, 80, 100, 130, 170, 220];
 
@@ -59,11 +39,13 @@ export function StudioDocument() {
   const reduced = useReducedMotion();
   const { top: TOP_PLATE, under: UNDER_PLATE } = plates();
 
+  const sectionRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const underImgRef = useRef<HTMLImageElement | null>(null);
   const sampleRef = useRef<HTMLCanvasElement | null>(null);
 
+  const [armed, setArmed] = useState(false);
   const [tool, setTool] = useState<ToolId>("move");
   const [built, setBuilt] = useState(0);
   const [hidden, setHidden] = useState<Set<LayerId>>(new Set());
@@ -75,25 +57,34 @@ export function StudioDocument() {
 
   const zoom = ZOOM_STEPS[zoomIdx];
 
-  /* --- Act A: land the layers one at a time --------------------- */
+  /* Arm the build when the document enters view (not on page load). */
   useEffect(() => {
-    if (reduced) return;
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setArmed(true);
+      },
+      { threshold: 0.22 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  /* Act A: land layers bottom-up once armed. */
+  useEffect(() => {
+    if (reduced || !armed) return;
     if (built >= LAYERS.length) return;
     const id = window.setTimeout(
       () => setBuilt((n) => n + 1),
-      built === 0 ? 420 : BUILD_STEP_MS,
+      built === 0 ? 280 : BUILD_STEP_MS,
     );
     return () => window.clearTimeout(id);
-  }, [built, reduced]);
+  }, [armed, built, reduced]);
 
-  /* useReducedMotion resolves after first paint, so `built` always starts
-     at 0. Deriving the shown count (rather than seeding state from
-     `reduced`) means a reduced-motion visitor gets the finished composite
-     instead of a document stuck permanently at zero layers. */
   const shown = reduced ? LAYERS.length : built;
   const done = shown >= LAYERS.length;
 
-  /* --- Offscreen copy of the art, so the dropper can read pixels -- */
   useEffect(() => {
     const img = new window.Image();
     img.crossOrigin = "anonymous";
@@ -118,7 +109,6 @@ export function StudioDocument() {
     if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
   }, []);
 
-  /* --- Keyboard shortcuts, the real Photoshop letters ------------ */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement | null;
@@ -137,7 +127,6 @@ export function StudioDocument() {
         setTool(next);
         return;
       }
-      // Cmd-D deselect is taken by the browser; plain Escape is safer.
       if (e.key === "Escape") {
         setSelection(null);
         clearBrush();
@@ -147,7 +136,6 @@ export function StudioDocument() {
     return () => window.removeEventListener("keydown", onKey);
   }, [clearBrush]);
 
-  /* --- Size the paint canvas to the stage ------------------------ */
   useEffect(() => {
     const stage = stageRef.current;
     const c = canvasRef.current;
@@ -173,13 +161,10 @@ export function StudioDocument() {
     return { x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height };
   };
 
-  /* --- Brush: paint the hidden plate back in --------------------- */
   const dab = useCallback((x: number, y: number, w: number, h: number) => {
     const ctx = canvasRef.current?.getContext("2d");
     const img = underImgRef.current;
     if (!ctx || !img) return;
-    // Cover-fit the plate to the stage, then clip the draw to the dab —
-    // so a stroke exposes the layer beneath rather than smearing paint.
     const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
     const dw = img.naturalWidth * scale;
     const dh = img.naturalHeight * scale;
@@ -191,7 +176,6 @@ export function StudioDocument() {
     ctx.restore();
   }, []);
 
-  /* --- Pointer routing: the tool decides what a drag means -------- */
   const drag = useRef<{ x: number; y: number; pan: { x: number; y: number } } | null>(
     null,
   );
@@ -199,12 +183,10 @@ export function StudioDocument() {
   const onDown = (e: React.PointerEvent) => {
     if (!done) return;
     const p = local(e);
-    // Capture is a nicety for drags that leave the stage; a pointer that
-    // is already gone throws NotFoundError, which must not kill the tool.
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
     } catch {
-      /* no capture available — the drag still tracks via pointermove */
+      /* no capture */
     }
 
     if (tool === "marquee") {
@@ -258,12 +240,9 @@ export function StudioDocument() {
     }
     drag.current = null;
     setPainting(false);
-    // A stray click with the marquee clears the selection instead of
-    // leaving a zero-size marching-ants artefact on the canvas.
     setSelection((s) => (s && (s.w < 4 || s.h < 4) ? null : s));
   };
 
-  /* --- Eyedropper: sample the art, retint the site --------------- */
   const pick = (p: { x: number; y: number; w: number; h: number }) => {
     const c = sampleRef.current;
     if (!c) return;
@@ -300,20 +279,31 @@ export function StudioDocument() {
 
   return (
     <section
+      ref={sectionRef}
       className={cn("psh", done && "is-done", `psh--${tool}`)}
       aria-labelledby="studio-doc-title"
       id="studio-document"
     >
-      {/* Document chrome */}
+      <h2 id="studio-doc-title" className="sr-only">
+        Poster composite — layers build one by one
+      </h2>
+
       <div className="psh__titlebar" aria-hidden>
         <span className="psh__doc">
-          studio-composite.psd
+          poster-composite.psd
           <em>@ {zoom}%</em>
           <em>RGB/8</em>
+          {!done ? <em className="psh__building">Building…</em> : null}
         </span>
         <span className="psh__hint">
-          Pick a tool — <kbd>V</kbd> <kbd>M</kbd> <kbd>I</kbd> <kbd>B</kbd>{" "}
-          <kbd>H</kbd> <kbd>Z</kbd>
+          {done ? (
+            <>
+              Pick a tool — <kbd>V</kbd> <kbd>M</kbd> <kbd>I</kbd> <kbd>B</kbd>{" "}
+              <kbd>H</kbd> <kbd>Z</kbd>
+            </>
+          ) : (
+            <>Layers placing — watch the stack</>
+          )}
         </span>
       </div>
 
@@ -326,7 +316,6 @@ export function StudioDocument() {
         disabled={!done}
       />
 
-      {/* The artboard */}
       <div className="psh__viewport">
         <div
           ref={stageRef}
@@ -341,7 +330,6 @@ export function StudioDocument() {
         >
           <span className="psh__checker" aria-hidden />
 
-          {/* Layers, bottom-up — each lands in act A, each toggleable after */}
           <span className={layerCls("wash")} aria-hidden />
           <span
             className={layerCls("plate")}
@@ -351,14 +339,12 @@ export function StudioDocument() {
           <span className={layerCls("grain")} aria-hidden />
           <span className={layerCls("duotone")} aria-hidden />
 
-          {/* Brush-revealed plate underneath */}
           <canvas
             ref={canvasRef}
             className={cn("psh__paint", visible("plate") && "is-live")}
             aria-hidden
           />
 
-          {/* Marquee selection — the cut shows the alternate plate */}
           {selection && selection.w > 4 && selection.h > 4 ? (
             <span
               className="psh__marquee"
@@ -382,43 +368,23 @@ export function StudioDocument() {
 
           <span className={layerCls("curves")} aria-hidden />
 
-          {/* Type layer */}
-          <div className={cn(layerCls("type"), "psh__type")}>
-            <p className="psh__eyebrow">
-              <span className="psh__pulse" aria-hidden />
-              <ScrambleText>STUDIO DOCUMENT</ScrambleText>
-            </p>
-
-            <h2 id="studio-doc-title" className="psh__brand">
-              <span className="psh__brand-text">COMPOSITE</span>
-            </h2>
-
-            <p className="psh__role-row">
-              <span className="sr-only">{ROLES.join(", ")}</span>
-              <RoleCycle roles={ROLES} className="psh__role" holdMs={2600} />
-            </p>
-
-            <p className="psh__lead">
-              Interactive layers &amp; tools — explore the composite below.
-            </p>
-
-            <div className="psh__cta">
-              <Link href={ROUTES.work} className="psh__cta-primary">
-                Enter the work
-                <span aria-hidden>→</span>
-              </Link>
-              <Link href={ROUTES.contact} className="psh__cta-secondary">
-                Start a brief
-              </Link>
-            </div>
+          {/* Title lockup — finishes the poster, not a brand billboard */}
+          <div className={cn(layerCls("type"), "psh__lockup")} aria-hidden>
+            <span className="psh__lockup-num">01</span>
+            <span className="psh__lockup-title">Poster</span>
+            <span className="psh__lockup-rule" />
+            <span className="psh__lockup-meta">Artwork · Grade · Type</span>
           </div>
         </div>
       </div>
 
-      {/* Status bar */}
       <div className="psh__status" aria-hidden>
         <span>
-          {done ? `${LAYERS.length} layers` : `Compositing ${shown}/${LAYERS.length}…`}
+          {done
+            ? `${LAYERS.length} layers · composite complete`
+            : armed
+              ? `Placing ${shown}/${LAYERS.length}…`
+              : "Scroll to build"}
         </span>
         {picked ? (
           <span className="psh__picked">

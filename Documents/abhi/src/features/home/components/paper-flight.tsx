@@ -208,9 +208,14 @@ export function PaperFlight() {
     const body = planeRef.current;
     if (!layer || !body) return;
 
+    // Plane can sit as a sibling of <main> (fixed overlay) — don't rely on
+    // closest("main") from the layer, which is null in that layout.
+    const main =
+      layer.closest("main") ??
+      document.querySelector<HTMLElement>("main.home-page") ??
+      document.querySelector("main");
     const sections = Array.from(
-      (layer.closest("main")?.querySelectorAll<HTMLElement>(":scope > section") ??
-        []) as NodeListOf<HTMLElement>,
+      main?.querySelectorAll<HTMLElement>(":scope > section") ?? [],
     );
     if (sections.length === 0) return;
 

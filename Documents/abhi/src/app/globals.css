@@ -214,17 +214,24 @@ body.has-nav-cursor {
 }
 
 /* Per-route palette — top bar ink + compact glass tint follow the page. */
-/* Home: dark ink on light glass so the bar stays readable over empty hero. */
+/* Home cinema: light ink on dark ground; compact glass stays bright. */
 .site-nav--theme-home {
-  --nav-accent: #2563ff;
-  --nav-ink: #0b1f4d;
-  --nav-ink-soft: color-mix(in srgb, #0b1f4d 48%, transparent);
-  --nav-pill-fill: color-mix(in srgb, #2563ff 12%, transparent);
+  --nav-accent: #4f7cff;
+  --nav-ink: #f4f1ea;
+  --nav-ink-soft: rgba(244, 241, 234, 0.55);
+  --nav-pill-fill: rgba(244, 241, 234, 0.12);
   --nav-glass-a: rgba(255, 255, 255, 0.94);
   --nav-glass-b: rgba(255, 255, 255, 0.78);
   --nav-glass-c: rgba(248, 250, 255, 0.9);
-  --nav-glass-edge: rgba(11, 31, 77, 0.12);
-  --nav-glass-shadow: rgba(11, 31, 77, 0.22);
+  --nav-glass-edge: rgba(255, 255, 255, 0.55);
+  --nav-glass-shadow: rgba(11, 31, 77, 0.28);
+}
+
+.site-nav--theme-home.site-nav--compact {
+  --nav-ink: #0b1f4d;
+  --nav-ink-soft: color-mix(in srgb, #0b1f4d 48%, transparent);
+  --nav-pill-fill: color-mix(in srgb, #2563ff 14%, transparent);
+  --nav-accent: #2563ff;
 }
 
 .site-nav--theme-about {
@@ -1361,6 +1368,237 @@ body.has-nav-cursor {
   color: var(--m);
 }
 
+/* --- Sheet layout: type left, the work printing right --- */
+
+.rh__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.9fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+}
+
+.rh__col,
+.rh__stock {
+  min-width: 0;
+}
+
+/* --- Ink plate: the still that prints in four passes --- */
+
+.ip {
+  position: relative;
+  margin: 0 0 0 auto;
+  width: min(100%, 25rem);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 30px 70px rgba(6, 16, 42, 0.2),
+    0 1px 0 rgba(255, 255, 255, 0.6) inset;
+  /* Contain the multiply blends so they never reach the paper behind. */
+  isolation: isolate;
+}
+
+.ip__sheet {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+}
+
+.ip__plate {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+  animation: ip-in 620ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation-delay: var(--d, 0ms);
+  will-change: transform, opacity;
+}
+
+/* Solid ink field with the grayscale photo screened over it: light
+   areas lift to bare paper, dark areas hold ink — how a plate lays. */
+.ip__plate img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.06);
+  mix-blend-mode: screen;
+}
+
+.ip__plate--c { background: var(--c); --fx: -30px; --fy: -16px; --d: 0ms; }
+.ip__plate--m { background: var(--m); --fx: 32px;  --fy: -12px; --d: 110ms; }
+.ip__plate--y { background: var(--y); --fx: -22px; --fy: 20px;  --d: 220ms; }
+.ip__plate--k { background: var(--k); --fx: 26px;  --fy: 18px;  --d: 330ms; }
+
+@keyframes ip-in {
+  0% {
+    transform: translate3d(var(--fx), var(--fy), 0);
+    opacity: 0;
+  }
+  22% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+/* The full-colour resolve sits on top and is opaque, so it simply
+   covers the ink passes once the build finishes. */
+.ip__full {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: ip-resolve 420ms ease 760ms both;
+}
+
+.ip__full.is-instant {
+  opacity: 1;
+  animation: none;
+}
+
+@keyframes ip-resolve {
+  to {
+    opacity: 1;
+  }
+}
+
+.ip__trim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 0 1px rgba(20, 24, 31, 0.1);
+}
+
+.rh__stock-cap {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  width: min(100%, 25rem);
+  margin: 0.85rem 0 0 auto;
+  font-family: var(--font-space-grotesk);
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(20, 24, 31, 0.5);
+}
+
+.rh__stock-cat {
+  font-weight: 600;
+  color: var(--m);
+}
+
+.rh__stock-title {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: rgba(20, 24, 31, 0.78);
+}
+
+.rh__stock-year {
+  margin-left: auto;
+}
+
+/* --- Colour bar: press furniture, wired to the swap --- */
+
+.rh__bar {
+  position: absolute;
+  z-index: 3;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  padding: 0.5rem clamp(1rem, 3vw, 2.25rem);
+  border-top: 1px solid rgba(20, 24, 31, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(6px);
+  font-family: var(--font-space-grotesk);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(20, 24, 31, 0.45);
+  white-space: nowrap;
+}
+
+.rh__bar-strip {
+  display: flex;
+  gap: 2px;
+  margin-inline: auto;
+}
+
+.rh__patch {
+  display: grid;
+  place-items: center;
+  width: clamp(1.5rem, 3.2vw, 2.5rem);
+  height: 1.05rem;
+  transform-origin: 50% 100%;
+  /* Each patch flashes as its plate lands, on the same stagger. */
+  animation: rh-patch 620ms ease both;
+  animation-delay: calc(var(--i) * 45ms);
+}
+
+.rh__patch em {
+  font-style: normal;
+  font-size: 0.44rem;
+  letter-spacing: 0.06em;
+  color: #fff;
+  mix-blend-mode: difference;
+}
+
+.rh__patch--c { background: var(--c); }
+.rh__patch--m { background: var(--m); }
+.rh__patch--y { background: var(--y); }
+.rh__patch--k { background: var(--k); }
+.rh__patch--cm { background: #3b2d8f; }
+.rh__patch--cy { background: #00a651; }
+.rh__patch--my { background: #ed1c24; }
+.rh__patch--reg {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--k) 0 3px,
+    #fff 3px 6px
+  );
+}
+
+@keyframes rh-patch {
+  0% {
+    transform: scaleY(0.55);
+    filter: brightness(1.75);
+  }
+  55% {
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+  100% {
+    transform: scaleY(1);
+    filter: brightness(1);
+  }
+}
+
+@media (max-width: 980px) {
+  /* Stack: the work leads, the type follows. */
+  .rh__inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(1.25rem, 4vw, 2rem);
+  }
+
+  .ip,
+  .rh__stock-cap {
+    margin-inline: 0;
+    width: min(100%, 20rem);
+  }
+
+  .rh__bar-slug {
+    display: none;
+  }
+}
+
 @media (max-width: 720px) {
   /* Shorter throws so the plates stay on the sheet on a phone. */
   .rh__plate--c { --fx: -74px; --fy: -34px; }
@@ -1378,19 +1616,36 @@ body.has-nav-cursor {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* No fly-in, no shudder, no press breathe — the line still changes,
-     it just cuts. The plates land registered, so the word reads as the
-     single solid mark it resolves to anyway. */
+  /* No fly-in, no shudder, no press breathe — the line just cuts.
+     The CMYK separation still SHOWS though: the plates hold a small
+     static misregistration so the ink identity survives. Hiding them
+     (an earlier version did) left one plain black word and read as
+     "nothing is happening" to anyone with the OS setting on. Static
+     offset is colour, not motion, so it stays honest to the pref. */
   .rh__brand,
   .rh__live,
   .rh__plate {
     animation: none;
   }
 
-  .rh__plate--c,
-  .rh__plate--m,
-  .rh__plate--y {
-    opacity: 0;
+  .rh__brand {
+    text-shadow:
+      0.7px 0 0 rgba(0, 174, 239, 0.3),
+      -0.7px 0 0 rgba(236, 0, 140, 0.26);
+  }
+
+  .rh__plate--c { transform: translate3d(-2.5px, -1.5px, 0); }
+  .rh__plate--m { transform: translate3d(2.5px, -1px, 0); }
+  .rh__plate--y { transform: translate3d(-1.5px, 2px, 0); }
+  .rh__plate--k { transform: none; }
+
+  /* The colour bar keeps its inks, loses the flash. The ink passes on
+     the still are skipped in the component, so only the resolved
+     photo renders. */
+  .rh__patch,
+  .ip__plate,
+  .ip__full {
+    animation: none;
   }
 }
 
@@ -8727,10 +8982,208 @@ a.creators__card:hover .creators__avatar {
 }
 
 /* ==================================================================
-   Home hero — a live Photoshop document
-   Act A: the composite builds itself layer by layer.
-   Act B: the toolbar is real — the active tool changes what the
-   pointer does on the artboard.
+   Letter craft — bridge after cinema, before the PSD composite.
+   Optical spacing settles; then the Photoshop poster builds.
+   ================================================================== */
+
+.craft {
+  --craft-ink: #0c1220;
+  --craft-mute: rgba(12, 18, 32, 0.55);
+  --craft-line: rgba(12, 18, 32, 0.12);
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: min(92svh, 52rem);
+  padding: clamp(4.5rem, 10vw, 7rem) clamp(1.25rem, 4vw, 3rem);
+  overflow: hidden;
+  color: var(--craft-ink);
+  background:
+    radial-gradient(70% 55% at 80% 10%, rgba(40, 90, 160, 0.08), transparent 55%),
+    radial-gradient(50% 40% at 12% 88%, rgba(20, 40, 70, 0.06), transparent 50%),
+    linear-gradient(165deg, #eef2f7 0%, #e4eaf2 48%, #dce4ef 100%);
+  isolation: isolate;
+}
+
+.craft__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--craft-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--craft-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 45%, #000 20%, transparent 75%);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.craft__inner {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 56rem);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(1.25rem, 3vw, 2rem);
+}
+
+.craft__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 0;
+  font-family: var(--font-sf-pro);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--craft-mute);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 700ms var(--ease-editorial),
+    transform 700ms var(--ease-editorial);
+}
+
+.craft.is-in .craft__eyebrow,
+.craft.is-flat .craft__eyebrow {
+  opacity: 1;
+  transform: none;
+}
+
+.craft__tick {
+  width: 1.75rem;
+  height: 1px;
+  background: currentColor;
+}
+
+.craft__title {
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.05em;
+}
+
+.craft__line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.02em;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(3.4rem, 14vw, 8.5rem);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.craft.is-in .craft__line,
+.craft.is-flat .craft__line {
+  letter-spacing: -0.04em;
+  transition: letter-spacing 1.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.craft__line--sub {
+  font-weight: 300;
+  letter-spacing: 0.28em;
+  color: rgba(12, 18, 32, 0.72);
+}
+
+.craft.is-in .craft__line--sub,
+.craft.is-flat .craft__line--sub {
+  letter-spacing: 0.08em;
+}
+
+.craft__char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(0.35em);
+  transition:
+    opacity 520ms var(--ease-editorial),
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: calc(var(--i) * 45ms + 80ms);
+}
+
+.craft.is-in .craft__char,
+.craft.is-flat .craft__char {
+  opacity: 1;
+  transform: none;
+}
+
+.craft__lede {
+  margin: 0;
+  max-width: 38ch;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  line-height: 1.55;
+  color: var(--craft-mute);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 800ms var(--ease-editorial) 420ms,
+    transform 800ms var(--ease-editorial) 420ms;
+}
+
+.craft.is-in .craft__lede,
+.craft.is-flat .craft__lede {
+  opacity: 1;
+  transform: none;
+}
+
+.craft__metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(1.25rem, 4vw, 2.75rem);
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+  opacity: 0;
+  transition: opacity 700ms var(--ease-editorial) 640ms;
+}
+
+.craft.is-in .craft__metrics,
+.craft.is-flat .craft__metrics {
+  opacity: 1;
+}
+
+.craft__metrics li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 7rem;
+}
+
+.craft__metrics em {
+  font-family: var(--font-sf-pro);
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(12, 18, 32, 0.45);
+}
+
+.craft__metrics span {
+  font-family: var(--font-sf-pro);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--craft-ink);
+}
+
+@media (max-width: 640px) {
+  .craft {
+    min-height: min(78svh, 40rem);
+    place-items: end stretch;
+  }
+
+  .craft__line {
+    font-size: clamp(2.8rem, 18vw, 4.5rem);
+  }
+}
+
+/* ==================================================================
+   Photoshop document — poster builds layer by layer.
+   Act A: scroll-armed composite lands bottom-up.
+   Act B: toolbar is real once the stack is complete.
    ================================================================== */
 
 .psh {
@@ -9202,121 +9655,66 @@ a.creators__card:hover .creators__avatar {
   }
 }
 
-/* --- Type layer --- */
+/* --- Title lockup (finishes the poster — not a billboard) --- */
 
-.psh__type {
+.psh__lockup {
   z-index: 4;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 0.75rem;
-  padding: clamp(1.25rem, 4vw, 3.25rem);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto auto;
+  align-content: end;
+  gap: 0.35rem 0.85rem;
+  padding: clamp(1rem, 3vw, 2rem);
   pointer-events: none;
   color: #fff;
+  background: linear-gradient(
+    180deg,
+    transparent 35%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
 }
 
-.psh__type > * {
-  pointer-events: auto;
-}
-
-.psh__eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin: 0;
+.psh__lockup-num {
+  grid-row: 1 / 3;
+  align-self: end;
   font-family: var(--font-sf-pro);
-  font-size: clamp(0.6rem, 1.1vw, 0.72rem);
-  font-weight: 500;
-  letter-spacing: 0.28em;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  opacity: 0.85;
+}
+
+.psh__lockup-title {
+  grid-column: 2;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(1.35rem, 3.2vw, 2.1rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.76);
 }
 
-.psh__pulse {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.55);
-  animation: psh-pulse 2.4s ease-out infinite;
+.psh__lockup-rule {
+  grid-column: 2;
+  width: 2.5rem;
+  height: 2px;
+  background: var(--ps-accent, #7dd3fc);
 }
 
-@keyframes psh-pulse {
-  70% {
-    box-shadow: 0 0 0 9px rgba(34, 197, 94, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-  }
-}
-
-.psh__brand {
-  margin: 0;
+.psh__lockup-meta {
+  grid-column: 2;
   font-family: var(--font-sf-pro);
-  font-size: clamp(2.4rem, 8.5vw, 6.6rem);
-  font-weight: 800;
-  line-height: 0.88;
-  letter-spacing: -0.05em;
-  text-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
-}
-
-.psh__role-row {
-  margin: 0;
-  font-family: var(--font-sf-pro);
-  font-size: clamp(0.95rem, 2.2vw, 1.5rem);
+  font-size: 0.62rem;
   font-weight: 500;
-  color: var(--ps-accent);
-  filter: brightness(1.5);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
 }
 
-.psh__lead {
-  margin: 0;
-  max-width: 34ch;
-  font-family: var(--font-sf-pro);
-  font-size: clamp(0.85rem, 1.5vw, 1.05rem);
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.78);
-}
-
-.psh__cta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-  margin-top: 0.6rem;
-}
-
-.psh__cta-primary,
-.psh__cta-secondary {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.7rem 1.25rem;
-  border-radius: 999px;
-  font-family: var(--font-sf-pro);
-  font-size: 0.72rem;
+.psh__building {
+  color: #0ea5e9;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  text-decoration: none;
-  transition:
-    transform 340ms var(--ease-spring),
-    background-color 260ms ease;
-}
-
-.psh__cta-primary {
-  background: #fff;
-  color: var(--primary);
-}
-
-.psh__cta-secondary {
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  color: #fff;
-}
-
-.psh__cta-primary:hover,
-.psh__cta-secondary:hover {
-  transform: translateY(-2px);
 }
 
 /* --- Status bar --- */
@@ -9468,6 +9866,583 @@ a.creators__card:hover .creators__avatar {
 }
 
 /* ==================================================================
+   Home hero — cinema wall
+   A tilted wall of work runs behind the name forever. Dark ground,
+   bright type, large-scale motion that reads from across the room.
+   ================================================================== */
+
+.ch {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding: calc(var(--nav-h) + clamp(2rem, 6vh, 4rem)) 0 clamp(3rem, 8vh, 5rem);
+  background: #05070f;
+  color: #fff;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* --- The wall --- */
+
+.ch__wall {
+  position: absolute;
+  inset: -20%;
+  z-index: 0;
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.75rem, 1.6vw, 1.5rem);
+  /* The tilt is what turns a grid of thumbnails into momentum. */
+  transform: rotate(-9deg) scale(1.16)
+    translate3d(var(--px, 0px), var(--py, 0px), 0);
+  transform-origin: center center;
+  opacity: 0.72;
+  will-change: transform;
+}
+
+.ch__col {
+  --gap: clamp(0.75rem, 1.6vw, 1.5rem);
+  flex: 0 0 clamp(12rem, 21vw, 21rem);
+  overflow: hidden;
+}
+
+.ch__track {
+  display: block;
+  animation: ch-up 46s linear infinite;
+  will-change: transform;
+}
+
+.ch__col--1 .ch__track {
+  animation-name: ch-down;
+  animation-duration: 58s;
+}
+
+.ch__col--2 .ch__track {
+  animation-duration: 38s;
+}
+
+/* Spacing lives on the frame, not as track `gap` — a gap makes the
+   -50% loop land half a gap out and the wall visibly hitches. */
+.ch__frame {
+  display: block;
+  margin-bottom: var(--gap);
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #0d1424;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+}
+
+.ch__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: saturate(0.9) contrast(1.06) brightness(0.82);
+}
+
+@keyframes ch-up {
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes ch-down {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* --- Light --- */
+
+.ch__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      125% 105% at 18% 52%,
+      rgba(5, 7, 15, 0.97) 0%,
+      rgba(5, 7, 15, 0.78) 36%,
+      transparent 74%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(5, 7, 15, 0.88) 0%,
+      transparent 26%,
+      transparent 58%,
+      rgba(5, 7, 15, 0.94) 100%
+    );
+}
+
+.ch__bloom {
+  position: absolute;
+  z-index: 1;
+  left: -12%;
+  top: 14%;
+  width: min(62vw, 900px);
+  height: min(62vw, 900px);
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ps-accent, #2563ff) 44%, transparent) 0%,
+    transparent 62%
+  );
+  filter: blur(50px);
+  animation: ch-bloom 16s ease-in-out infinite alternate;
+}
+
+@keyframes ch-bloom {
+  to {
+    transform: translate3d(8%, 6%, 0) scale(1.16);
+    opacity: 0.72;
+  }
+}
+
+.ch__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(255, 255, 255, 0.55) 1px,
+    transparent 0
+  );
+  background-size: 3px 3px;
+}
+
+/* --- Type --- */
+
+/* ID card + plane hitch stage — right side over the cinema wall */
+.ch__cargo {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ch__cargo .lanyard {
+  z-index: 5;
+}
+
+.ch__cargo .lanyard__flip {
+  pointer-events: auto;
+}
+
+.ch__inner {
+  position: relative;
+  z-index: 3;
+  width: min(100% - 3rem, 1240px);
+  margin-inline: auto;
+  /* Keep copy clear of the hanging credential on desktop. */
+  padding-right: min(34vw, 17rem);
+}
+
+@media (max-width: 899px) {
+  .ch__inner {
+    padding-right: 0;
+  }
+
+  .ch__cargo {
+    /* Compact hang slot — same phone behaviour as the original hero cargo. */
+    inset: auto;
+    top: calc(var(--nav-h) + 0.5rem);
+    right: 0.75rem;
+    width: min(46vw, 11.5rem);
+    height: 13.5rem;
+  }
+}
+
+.ch__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 clamp(1rem, 2.5vw, 1.6rem);
+  font-family: var(--font-sf-pro);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 800ms var(--ease-editorial) 100ms,
+    transform 800ms var(--ease-editorial) 100ms;
+}
+
+.ch.is-lit .ch__eyebrow {
+  opacity: 1;
+  transform: none;
+}
+
+.ch__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 12px #22c55e;
+  animation: ch-pulse 2.4s ease-out infinite;
+}
+
+@keyframes ch-pulse {
+  70% {
+    box-shadow: 0 0 0 9px rgba(34, 197, 94, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
+
+.ch__rule {
+  flex: 1;
+  max-width: 7rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), transparent);
+}
+
+.ch__name {
+  display: block;
+  margin: 0;
+  max-width: min(100%, 52rem);
+}
+
+/* Hero magnetic spotlight — letters move with the cursor. */
+.ch__magnet {
+  --spot-x: 50%;
+  --spot-y: 50%;
+  --spot-a: 0;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.04em;
+  margin: 0;
+  width: fit-content;
+  max-width: 100%;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(2.85rem, 11vw, 8.25rem);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: default;
+  isolation: isolate;
+}
+
+@media (min-width: 1100px) {
+  .ch__magnet {
+    font-size: clamp(4.5rem, 8.5vw, 7.75rem);
+    gap: 0.055em;
+    letter-spacing: 0.035em;
+  }
+}
+
+.ch__magnet-spot {
+  position: absolute;
+  left: var(--spot-x);
+  top: var(--spot-y);
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: calc(var(--spot-a) * 0.55);
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ps-accent, #4f7cff) 55%, #fff) 0%,
+    color-mix(in srgb, var(--ps-accent, #4f7cff) 18%, transparent) 42%,
+    transparent 70%
+  );
+  filter: blur(8px);
+  transition: opacity 200ms ease;
+  mix-blend-mode: screen;
+}
+
+.ch__magnet-cell {
+  display: block;
+  overflow: hidden;
+  opacity: 0;
+  transform: translateY(110%);
+}
+
+.ch__magnet.is-ready .ch__magnet-cell {
+  animation: ch-magnet-in 1000ms var(--ease-editorial) both;
+  animation-delay: calc(var(--i) * 55ms + 140ms);
+}
+
+@keyframes ch-magnet-in {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ch__magnet-letter {
+  --glow: 0;
+  --fringe: 0px;
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  transform-origin: 50% 80%;
+  will-change: transform;
+  background: linear-gradient(
+    180deg,
+    #fff 28%,
+    color-mix(in srgb, #fff 70%, var(--ps-accent, #4f7cff)) 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(
+    0 0 calc(var(--glow) * 18px)
+      color-mix(in srgb, var(--ps-accent, #4f7cff) calc(var(--glow) * 70%), transparent)
+  );
+  text-shadow:
+    calc(var(--fringe) * -1) 0 0
+      color-mix(in srgb, #22d3ee calc(var(--glow) * 80%), transparent),
+    var(--fringe) 0 0
+      color-mix(in srgb, #f472b6 calc(var(--glow) * 70%), transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch__magnet-cell {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+
+  .ch__magnet-letter {
+    text-shadow: none;
+    filter: none;
+  }
+
+  .ch__magnet-spot {
+    display: none;
+  }
+}
+
+.ch__role {
+  position: relative;
+  display: inline-grid;
+  margin: clamp(0.9rem, 2.2vw, 1.5rem) 0 0;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(1.1rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: color-mix(in srgb, var(--ps-accent, #2563ff) 45%, #ffffff);
+}
+
+.ch__role-sizer {
+  display: grid;
+  visibility: hidden;
+}
+
+.ch__role-sizer > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.ch__role-live {
+  position: absolute;
+  inset: 0;
+  display: block;
+  white-space: nowrap;
+  animation: ch-role 640ms var(--ease-editorial) both;
+}
+
+@keyframes ch-role {
+  0% {
+    opacity: 0;
+    transform: translateY(64%);
+    filter: blur(7px);
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.ch__lead {
+  margin: clamp(0.9rem, 2.2vw, 1.4rem) 0 0;
+  max-width: 38ch;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.66);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 900ms var(--ease-editorial) 560ms,
+    transform 900ms var(--ease-editorial) 560ms;
+}
+
+.ch.is-lit .ch__lead {
+  opacity: 1;
+  transform: none;
+}
+
+.ch__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(1.4rem, 3vw, 2.25rem);
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 900ms var(--ease-editorial) 700ms,
+    transform 900ms var(--ease-editorial) 700ms;
+}
+
+.ch.is-lit .ch__cta {
+  opacity: 1;
+  transform: none;
+}
+
+.ch__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 48px;
+  padding: 0.85rem 1.6rem;
+  border-radius: 999px;
+  font-family: var(--font-sf-pro);
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    transform 400ms var(--ease-spring),
+    box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.ch__btn--solid {
+  background: #fff;
+  color: #05070f;
+  box-shadow: 0 12px 32px rgba(255, 255, 255, 0.18);
+}
+
+.ch__btn--ghost {
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  color: #fff;
+}
+
+.ch__btn:hover {
+  transform: translateY(-3px);
+}
+
+.ch__btn--solid:hover {
+  box-shadow: 0 18px 44px rgba(255, 255, 255, 0.3);
+}
+
+.ch__btn--ghost:hover {
+  border-color: #fff;
+}
+
+.ch__btn em {
+  font-style: normal;
+  transition: transform 400ms var(--ease-spring);
+}
+
+.ch__btn--solid:hover em {
+  transform: translateX(4px);
+}
+
+.ch__cue {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 1.5rem;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-sf-pro);
+  font-size: 0.6rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+  pointer-events: none;
+}
+
+.ch__cue em {
+  display: block;
+  width: 1px;
+  height: 2.4rem;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.65));
+  animation: ch-cue 2.2s ease-in-out infinite;
+}
+
+@keyframes ch-cue {
+  50% {
+    transform: scaleY(0.45);
+    transform-origin: 50% 100%;
+  }
+}
+
+@media (max-width: 900px) {
+  /* Two columns is plenty of wall behind type this size. */
+  .ch__col--2 {
+    display: none;
+  }
+
+  .ch__wall {
+    transform: rotate(-7deg) scale(1.3)
+      translate3d(var(--px, 0px), var(--py, 0px), 0);
+    opacity: 0.6;
+  }
+
+  .ch__cue {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The wall holds still and the type is simply there — no crawl,
+     no unmask, no bloom drift. It still reads as a composed poster. */
+  /* The per-column rules outrank a bare `.ch__track`, so name them
+     here too rather than leaning on the browser to zero the duration. */
+  .ch__track,
+  .ch__col--1 .ch__track,
+  .ch__col--2 .ch__track,
+  .ch__bloom,
+  .ch__dot,
+  .ch__cue em {
+    animation: none;
+  }
+
+  .ch__letter i,
+  .ch__eyebrow,
+  .ch__lead,
+  .ch__cta {
+    transition: none;
+    transform: none;
+    opacity: 1;
+  }
+
+  .ch__role-live {
+    animation: none;
+  }
+}
+
+/* ==================================================================
    /work hero — interactive exhibition index
    Oversized editorial type; hovering a line summons a cursor-trailing
    stack of that discipline's stills.
@@ -9482,8 +10457,9 @@ a.creators__card:hover .creators__avatar {
   /* Tuned so the whole index — including the last row — clears the fold
      on a ~820px viewport; the hero is the promise, scrolling is the
      reward, so nothing here should be hidden below it. */
+  /* Bottom padding clears the colour bar pinned to the trim edge. */
   padding: calc(var(--nav-h) + clamp(1.25rem, 3.5vh, 2.75rem)) 0
-    clamp(1.75rem, 4vh, 3rem);
+    clamp(4.25rem, 9vh, 6rem);
   background:
     radial-gradient(80% 60% at 78% 12%, rgba(11, 31, 77, 0.07) 0%, transparent 58%),
     linear-gradient(168deg, #f6f8fc 0%, #ffffff 46%, #eef2f9 100%);
@@ -11232,12 +12208,17 @@ a.creators__card:hover .creators__avatar {
   --pp-edge: rgba(11, 31, 77, 0.14);
 }
 
+/* Read clearly over the dark cinema hero */
+.home-page .paper-flight__body {
+  filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.45));
+}
+
 /* --- The one plane that flies the whole page ---------------------- */
 
 .paper-flight {
   position: fixed;
   inset: 0;
-  z-index: 4;
+  z-index: 6;
   pointer-events: none;
   overflow: hidden;
 }
@@ -11293,4 +12274,6 @@ a.creators__card:hover .creators__avatar {
     display: none;
   }
 }
+
+
 

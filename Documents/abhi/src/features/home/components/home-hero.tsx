@@ -1,13 +1,12 @@
 "use client";
 
+import { HeroCinema } from "@/features/home/components/hero-cinema";
+
 /**
- * Empty interactive hero — placeholder for the next motion phase.
- * Navbar is the primary UI on first paint; studio content lives below.
+ * Home hero. The implementation lives in <HeroCinema /> — a tilted
+ * wall of work crawling behind the name on a dark ground, with the
+ * wordmark unmasking letter by letter and the discipline line cycling.
  */
 export function HomeHero() {
-  return (
-    <section className="hero hero--empty" aria-label="Home">
-      <div className="hero__void" aria-hidden />
-    </section>
-  );
+  return <HeroCinema />;
 }

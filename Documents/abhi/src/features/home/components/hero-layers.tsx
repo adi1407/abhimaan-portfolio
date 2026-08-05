@@ -9,11 +9,11 @@ import { cn } from "@/lib/cn";
  */
 export const LAYERS = [
   { id: "wash", label: "Background", blend: "Normal", opacity: 100 },
-  { id: "plate", label: "Plate 01", blend: "Normal", opacity: 100 },
+  { id: "plate", label: "Artwork", blend: "Normal", opacity: 100 },
   { id: "grain", label: "Grain", blend: "Multiply", opacity: 38 },
-  { id: "duotone", label: "Duotone", blend: "Overlay", opacity: 72 },
+  { id: "duotone", label: "Color Grade", blend: "Overlay", opacity: 72 },
   { id: "curves", label: "Curves", blend: "Soft Light", opacity: 90 },
-  { id: "type", label: "Type — COMPOSITE", blend: "Normal", opacity: 100 },
+  { id: "type", label: "Title Lockup", blend: "Normal", opacity: 100 },
 ] as const;
 
 export type LayerId = (typeof LAYERS)[number]["id"];

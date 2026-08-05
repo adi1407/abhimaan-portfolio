@@ -202,7 +202,7 @@ body.has-nav-cursor {
   position: fixed;
   inset-inline: 0;
   top: 0;
-  z-index: 50;
+  z-index: 80;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -214,16 +214,17 @@ body.has-nav-cursor {
 }
 
 /* Per-route palette — top bar ink + compact glass tint follow the page. */
+/* Home: dark ink on light glass so the bar stays readable over empty hero. */
 .site-nav--theme-home {
-  --nav-accent: #2f6bff;
-  --nav-ink: #f4f1ea;
-  --nav-ink-soft: rgba(244, 241, 234, 0.55);
-  --nav-pill-fill: rgba(244, 241, 234, 0.12);
-  --nav-glass-a: rgba(22, 28, 40, 0.82);
-  --nav-glass-b: rgba(18, 22, 32, 0.72);
-  --nav-glass-c: rgba(28, 36, 52, 0.78);
-  --nav-glass-edge: rgba(255, 255, 255, 0.14);
-  --nav-glass-shadow: rgba(0, 0, 0, 0.45);
+  --nav-accent: #2563ff;
+  --nav-ink: #0b1f4d;
+  --nav-ink-soft: color-mix(in srgb, #0b1f4d 48%, transparent);
+  --nav-pill-fill: color-mix(in srgb, #2563ff 12%, transparent);
+  --nav-glass-a: rgba(255, 255, 255, 0.94);
+  --nav-glass-b: rgba(255, 255, 255, 0.78);
+  --nav-glass-c: rgba(248, 250, 255, 0.9);
+  --nav-glass-edge: rgba(11, 31, 77, 0.12);
+  --nav-glass-shadow: rgba(11, 31, 77, 0.22);
 }
 
 .site-nav--theme-about {
@@ -1022,6 +1023,375 @@ body.has-nav-cursor {
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(8, 10, 14, 0.45) 0%, transparent 26%, transparent 74%, rgba(8, 10, 14, 0.58) 100%);
+}
+
+/* Empty interactive phase — calm stage; navbar is the focus. */
+.hero--empty {
+  padding: 0;
+  background:
+    radial-gradient(55% 48% at 50% 42%, rgba(37, 99, 255, 0.07) 0%, transparent 58%),
+    linear-gradient(180deg, #f7f8fc 0%, #eef1f8 48%, #e8ecf5 100%);
+  color: var(--hero-ink);
+}
+
+.hero--empty::before {
+  display: none;
+}
+
+.hero__void {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(11, 31, 77, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 31, 77, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(60% 50% at 50% 48%, #000 10%, transparent 78%);
+}
+
+/* ==================================================================
+   Home hero — CMYK registration
+   The name is the registered mark; the discipline line beneath it
+   separates into process plates and re-registers on every swap.
+   ================================================================== */
+
+.rh {
+  --c: #00aeef;
+  --m: #ec008c;
+  --y: #ffd400;
+  --k: #14181f;
+  --paper: #f7f6f2;
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 100svh;
+  padding: calc(var(--nav-h) + clamp(2rem, 6vh, 4rem)) 0 clamp(2.5rem, 7vh, 5rem);
+  background:
+    radial-gradient(70% 55% at 50% 38%, rgba(255, 255, 255, 0.9) 0%, transparent 62%),
+    linear-gradient(178deg, var(--paper) 0%, #f1efe9 100%);
+  color: var(--k);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Uncoated-stock tooth */
+.rh__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    rgba(20, 24, 31, 0.13) 1px,
+    transparent 0
+  );
+  background-size: 3px 3px;
+  mix-blend-mode: multiply;
+}
+
+/* Corner registration targets */
+.rh__mark {
+  position: absolute;
+  z-index: 1;
+  width: clamp(1.4rem, 2.4vw, 2rem);
+  height: clamp(1.4rem, 2.4vw, 2rem);
+  color: rgba(20, 24, 31, 0.28);
+  pointer-events: none;
+}
+
+.rh__mark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.rh__mark--tl { top: clamp(1rem, 3vw, 2.25rem); left: clamp(1rem, 3vw, 2.25rem); }
+.rh__mark--tr { top: clamp(1rem, 3vw, 2.25rem); right: clamp(1rem, 3vw, 2.25rem); }
+.rh__mark--bl { bottom: clamp(1rem, 3vw, 2.25rem); left: clamp(1rem, 3vw, 2.25rem); }
+.rh__mark--br { bottom: clamp(1rem, 3vw, 2.25rem); right: clamp(1rem, 3vw, 2.25rem); }
+
+.rh__slug {
+  position: absolute;
+  z-index: 1;
+  left: 50%;
+  bottom: clamp(1.05rem, 3vw, 2.35rem);
+  transform: translateX(-50%);
+  font-family: var(--font-space-grotesk);
+  font-size: 0.6rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(20, 24, 31, 0.34);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.rh__inner {
+  position: relative;
+  z-index: 2;
+  width: min(100% - 3rem, 1240px);
+  margin-inline: auto;
+}
+
+.rh__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 clamp(1rem, 2.5vw, 1.75rem);
+  font-family: var(--font-sf-pro);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: rgba(20, 24, 31, 0.5);
+}
+
+.rh__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--m);
+}
+
+/* --- The registered name --- */
+
+.rh__brand {
+  margin: 0;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(3rem, 13vw, 10rem);
+  font-weight: 800;
+  line-height: 0.86;
+  letter-spacing: -0.055em;
+  color: var(--k);
+  /* A hair of ink fringe, breathing — the press is never perfect. */
+  animation: rh-press 9s ease-in-out infinite;
+}
+
+@keyframes rh-press {
+  0%,
+  100% {
+    text-shadow:
+      0.7px 0 0 rgba(0, 174, 239, 0.3),
+      -0.7px 0 0 rgba(236, 0, 140, 0.26);
+  }
+  50% {
+    text-shadow:
+      -0.5px 0.4px 0 rgba(0, 174, 239, 0.22),
+      0.6px -0.3px 0 rgba(236, 0, 140, 0.32);
+  }
+}
+
+/* --- The registering line --- */
+
+.rh__reg {
+  position: relative;
+  display: inline-block;
+  margin: clamp(0.9rem, 2.2vw, 1.5rem) 0 0;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(1.05rem, 3.4vw, 2.6rem);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* Holds the widest term so the line never reflows mid-swap. */
+.rh__sizer {
+  display: grid;
+  visibility: hidden;
+}
+
+.rh__sizer > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+.rh__live {
+  position: absolute;
+  inset: 0;
+  animation: rh-shudder 640ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+}
+
+.rh__plate {
+  position: absolute;
+  inset: 0;
+  display: block;
+  white-space: nowrap;
+  /* Multiply is what makes overlapping plates behave like real ink. */
+  mix-blend-mode: multiply;
+  will-change: transform, opacity;
+  animation: rh-in 640ms cubic-bezier(0.2, 0.9, 0.25, 1) both;
+  animation-delay: var(--d, 0ms);
+}
+
+.rh__plate > i {
+  display: inline-block;
+  font-style: normal;
+  will-change: transform;
+}
+
+/* Every stage is an explicit length. Multiplying a var inside the
+   keyframe (calc(var(--fx) * .16)) is not reliably interpolatable —
+   the plates snap to register instead of travelling there. */
+.rh__plate--c {
+  color: var(--c);
+  --fx: -150px; --fy: -62px; --fr: -6deg;
+  --mx: -24px;  --my: -10px; --mr: -1.1deg;
+  --ox: 5px;    --oy: 2px;
+  --d: 0ms;
+}
+.rh__plate--m {
+  color: var(--m);
+  --fx: 158px;  --fy: -74px; --fr: 5deg;
+  --mx: 25px;   --my: -12px; --mr: 0.9deg;
+  --ox: -6px;   --oy: 3px;
+  --d: 45ms;
+}
+.rh__plate--y {
+  color: var(--y);
+  --fx: -128px; --fy: 84px;  --fr: 4deg;
+  --mx: -20px;  --my: 13px;  --mr: 0.7deg;
+  --ox: 4px;    --oy: -3px;
+  --d: 90ms;
+}
+.rh__plate--k {
+  color: var(--k);
+  --fx: 136px;  --fy: 96px;  --fr: -5deg;
+  --mx: 22px;   --my: 15px;  --mr: -0.9deg;
+  --ox: -5px;   --oy: -3px;
+  --d: 135ms;
+}
+
+/* The last term in the cycle hangs loose a beat longer before locking. */
+.rh__live.is-loose,
+.rh__live.is-loose .rh__plate {
+  animation-duration: 1020ms;
+}
+
+@keyframes rh-in {
+  0% {
+    transform: translate3d(var(--fx), var(--fy), 0) rotate(var(--fr));
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  62% {
+    transform: translate3d(var(--mx), var(--my), 0) rotate(var(--mr));
+    opacity: 1;
+  }
+  /* Overshoot through register, then settle — the press "bite". */
+  82% {
+    transform: translate3d(var(--ox), var(--oy), 0) rotate(0deg);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes rh-shudder {
+  0%,
+  70% {
+    transform: none;
+  }
+  79% {
+    transform: translate3d(0, 1.6px, 0) scaleY(0.984);
+  }
+  88% {
+    transform: translate3d(0, -0.6px, 0) scaleY(1.005);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.rh__lead {
+  margin: clamp(1.25rem, 3vw, 2rem) 0 0;
+  max-width: 34ch;
+  font-family: var(--font-sf-pro);
+  font-size: clamp(0.95rem, 1.7vw, 1.15rem);
+  line-height: 1.5;
+  color: rgba(20, 24, 31, 0.62);
+}
+
+.rh__cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: clamp(1.5rem, 3.5vw, 2.25rem);
+}
+
+.rh__cta-primary,
+.rh__cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  padding: 0.75rem 1.4rem;
+  border-radius: 999px;
+  font-family: var(--font-sf-pro);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    transform 340ms var(--ease-spring),
+    background-color 260ms ease,
+    color 260ms ease;
+}
+
+.rh__cta-primary {
+  background: var(--k);
+  color: var(--paper);
+}
+
+.rh__cta-secondary {
+  border: 1px solid rgba(20, 24, 31, 0.3);
+  color: var(--k);
+}
+
+.rh__cta-primary:hover,
+.rh__cta-secondary:hover {
+  transform: translateY(-2px);
+}
+
+.rh__cta-secondary:hover {
+  border-color: var(--m);
+  color: var(--m);
+}
+
+@media (max-width: 720px) {
+  /* Shorter throws so the plates stay on the sheet on a phone. */
+  .rh__plate--c { --fx: -74px; --fy: -34px; }
+  .rh__plate--m { --fx: 78px;  --fy: -40px; }
+  .rh__plate--y { --fx: -64px; --fy: 44px; }
+  .rh__plate--k { --fx: 70px;  --fy: 50px; }
+
+  .rh__slug {
+    display: none;
+  }
+
+  .rh__mark {
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No fly-in, no shudder, no press breathe — the line still changes,
+     it just cuts. The plates land registered, so the word reads as the
+     single solid mark it resolves to anyway. */
+  .rh__brand,
+  .rh__live,
+  .rh__plate {
+    animation: none;
+  }
+
+  .rh__plate--c,
+  .rh__plate--m,
+  .rh__plate--y {
+    opacity: 0;
+  }
 }
 
 /* --- Artboard field --- */
@@ -10923,3 +11293,4 @@ a.creators__card:hover .creators__avatar {
     display: none;
   }
 }
+

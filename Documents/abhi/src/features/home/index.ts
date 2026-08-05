@@ -1,4 +1,5 @@
 export { HomeHero } from "./components/home-hero";
+export { StudioDocument } from "./components/studio-document";
 export { HeroPosterField } from "./components/hero-poster-field";
 export { ProcessPoster } from "./components/process-poster";
 export { CreatorsStrip } from "./components/creators-strip";

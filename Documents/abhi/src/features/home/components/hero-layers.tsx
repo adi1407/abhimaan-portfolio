@@ -13,7 +13,7 @@ export const LAYERS = [
   { id: "grain", label: "Grain", blend: "Multiply", opacity: 38 },
   { id: "duotone", label: "Duotone", blend: "Overlay", opacity: 72 },
   { id: "curves", label: "Curves", blend: "Soft Light", opacity: 90 },
-  { id: "type", label: "Type — ABHIMAAN", blend: "Normal", opacity: 100 },
+  { id: "type", label: "Type — COMPOSITE", blend: "Normal", opacity: 100 },
 ] as const;
 
 export type LayerId = (typeof LAYERS)[number]["id"];

@@ -1,4 +1,4 @@
-import { Inter } from "next/font/google";
+import { Inter, Unbounded } from "next/font/google";
 
 /**
  * The site runs on one typeface: SF Pro.
@@ -14,6 +14,9 @@ import { Inter } from "next/font/google";
  * through black display) come out of a single file, and `opsz` lets the
  * drawing tighten itself as type gets larger, which is what SF does natively.
  *
+ * Unbounded is reserved for the cinema hero wordmark only — a black display
+ * cut that gives ABHIMAAN more presence than body SF/Inter.
+ *
  * The full stack lives in globals.css as `--font-sf-pro`; every other
  * `--font-*` token is an alias of it, so roles are separated by weight,
  * size and tracking rather than by family.
@@ -26,5 +29,12 @@ export const inter = Inter({
   display: "swap",
 });
 
-/** Spread onto <html> to register the family. */
-export const fontVariables = inter.variable;
+export const unbounded = Unbounded({
+  variable: "--ff-unbounded",
+  subsets: ["latin"],
+  weight: ["700", "800", "900"],
+  display: "swap",
+});
+
+/** Spread onto <html> to register the families. */
+export const fontVariables = `${inter.variable} ${unbounded.variable}`;

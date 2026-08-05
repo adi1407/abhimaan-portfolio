@@ -27,6 +27,9 @@ const TERMS = [
 
 const TERM_MS = 2600;
 
+const clamp = (v: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, v));
+
 /**
  * Every column carries the whole set, each starting at a different
  * point in it. That way no column repeats a still within itself, and
@@ -48,6 +51,7 @@ export function HeroCinema() {
   const reduced = useReducedMotion();
   const [term, setTerm] = useState(0);
   const [lit, setLit] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
   const wallRef = useRef<HTMLDivElement>(null);
   const columns = useMemo(() => buildColumns(), []);
 
@@ -64,6 +68,40 @@ export function HeroCinema() {
       TERM_MS,
     );
     return () => window.clearInterval(id);
+  }, []);
+
+  /* Exit glow — intensifies as the hero scrolls out toward letter craft. */
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const rect = section.getBoundingClientRect();
+      const h = Math.max(rect.height, 1);
+      /* 0 while hero fills the view; rises as the bottom leaves the fold. */
+      const raw = clamp((-rect.top) / (h * 0.72), 0, 1);
+      const eased = raw * raw * (3 - 2 * raw);
+      section.style.setProperty("--exit", eased.toFixed(4));
+      section.style.setProperty(
+        "--exit-glow",
+        (0.35 + eased * 0.95).toFixed(3),
+      );
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
   /* Slow parallax lean — ambient, so reduced motion opts out. */
@@ -102,7 +140,12 @@ export function HeroCinema() {
   }, [reduced]);
 
   return (
-    <section className={cn("ch", lit && "is-lit")} aria-labelledby="ch-name">
+    <section
+      ref={sectionRef}
+      className={cn("ch", lit && "is-lit")}
+      aria-labelledby="ch-name"
+      style={{ ["--exit" as string]: 0 }}
+    >
       {/* Tilted wall of work */}
       <div ref={wallRef} className="ch__wall" aria-hidden>
         {columns.map((col, ci) => (
@@ -127,6 +170,8 @@ export function HeroCinema() {
 
       <span className="ch__scrim" aria-hidden />
       <span className="ch__bloom" aria-hidden />
+      <span className="ch__exit-glow" aria-hidden />
+      <span className="ch__exit-beam" aria-hidden />
       <span className="ch__grain" aria-hidden />
 
       {/* Plane-hitched ID card — hangs in the right gutter */}

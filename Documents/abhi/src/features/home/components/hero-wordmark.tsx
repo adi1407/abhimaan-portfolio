@@ -6,24 +6,22 @@ import { SITE } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
- * Hero wordmark — magnetic spotlight
+ * Hero wordmark — magnetic spotlight + dissolve
  *
- * Related to the footer mark (cursor lights the name), but different:
- * letters spring toward the pointer, swell and lift when near, and a
- * soft accent spotlight trails the cursor with a light chromatic fringe.
- * No video, no ink beam.
+ * Cursor springs letters toward the pointer, swells them, and dissolves
+ * the nearest glyphs with chromatic fringe + soft particle haze.
  * ================================================================== */
 
 const WORD = SITE.name.toUpperCase();
 
-const REACH = 160;
-const LIFT = 14;
-const PUSH = 0.12;
-const SCALE = 0.18;
-const TILT = 8;
-const SPRING = 0.18;
-const DAMP = 0.78;
-const POS_LERP = 0.14;
+const REACH = 190;
+const LIFT = 18;
+const PUSH = 0.16;
+const SCALE = 0.22;
+const TILT = 10;
+const SPRING = 0.2;
+const DAMP = 0.76;
+const POS_LERP = 0.16;
 
 const clamp = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, v));
@@ -52,6 +50,7 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
     const cy = new Float64Array(n);
     const f = new Float64Array(n);
     const v = new Float64Array(n);
+    const dissolve = new Float64Array(n);
 
     let raf = 0;
     let active = false;
@@ -60,6 +59,7 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
     let tx = 0;
     let ty = 0;
     let heat = 0;
+    let t0 = performance.now();
 
     const measure = () => {
       for (const el of letters) el.style.transform = "";
@@ -75,18 +75,22 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
       el.style.transform = "";
       el.style.setProperty("--glow", "0");
       el.style.setProperty("--fringe", "0px");
+      el.style.setProperty("--dissolve", "0");
+      el.style.setProperty("--jitter", "0px");
     };
 
-    const tick = () => {
+    const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
 
+      const time = (now - t0) / 1000;
       px += (tx - px) * POS_LERP;
       py += (ty - py) * POS_LERP;
-      heat += ((active ? 1 : 0) - heat) * 0.1;
+      heat += ((active ? 1 : 0) - heat) * 0.12;
 
       root.style.setProperty("--spot-x", `${px.toFixed(1)}px`);
       root.style.setProperty("--spot-y", `${py.toFixed(1)}px`);
       root.style.setProperty("--spot-a", heat.toFixed(3));
+      root.style.setProperty("--spot-pulse", (0.85 + Math.sin(time * 3.2) * 0.15).toFixed(3));
 
       let quiet = true;
 
@@ -101,13 +105,23 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
         v[i] = (v[i] + (target - f[i]) * SPRING) * DAMP;
         f[i] += v[i];
 
+        const wantDissolve = active ? target : 0;
+        dissolve[i] += (wantDissolve - dissolve[i]) * 0.14;
+
         const el = letters[i];
         const a = f[i];
+        const dsv = dissolve[i];
 
-        if (!active && Math.abs(a) < 0.002 && Math.abs(v[i]) < 0.002) {
-          if (f[i] !== 0) {
+        if (
+          !active &&
+          Math.abs(a) < 0.002 &&
+          Math.abs(v[i]) < 0.002 &&
+          dsv < 0.01
+        ) {
+          if (f[i] !== 0 || dissolve[i] !== 0) {
             f[i] = 0;
             v[i] = 0;
+            dissolve[i] = 0;
             clear(el);
           }
           continue;
@@ -121,12 +135,17 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
         const oy = -LIFT * a + (dy / dist) * -PUSH * a * 8;
         const sc = 1 + SCALE * a;
         const rot = clamp(dx / REACH, -1, 1) * -TILT * a;
+        /* Soft dissolve jitter — letters shimmer apart near the cursor. */
+        const jx = Math.sin(time * 14 + i * 1.7) * dsv * 2.4;
+        const jy = Math.cos(time * 11 + i * 2.1) * dsv * 3.2;
 
         el.style.transform =
-          `translate3d(${ox.toFixed(2)}px, ${oy.toFixed(2)}px, 0) ` +
+          `translate3d(${(ox + jx).toFixed(2)}px, ${(oy + jy).toFixed(2)}px, 0) ` +
           `scale(${sc.toFixed(3)}) rotate(${rot.toFixed(2)}deg)`;
         el.style.setProperty("--glow", a.toFixed(3));
-        el.style.setProperty("--fringe", `${(a * 2.4).toFixed(2)}px`);
+        el.style.setProperty("--fringe", `${(a * 3.6 + dsv * 2).toFixed(2)}px`);
+        el.style.setProperty("--dissolve", dsv.toFixed(3));
+        el.style.setProperty("--jitter", `${(dsv * 1.8).toFixed(2)}px`);
       }
 
       if (!active && quiet && heat < 0.02) {
@@ -137,7 +156,10 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
     };
 
     const start = () => {
-      if (!raf) raf = requestAnimationFrame(tick);
+      if (!raf) {
+        t0 = performance.now();
+        raf = requestAnimationFrame(tick);
+      }
     };
 
     const point = (e: PointerEvent) => {
@@ -213,6 +235,7 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
       aria-hidden
     >
       <span className="ch__magnet-spot" />
+      <span className="ch__magnet-haze" />
       {WORD.split("").map((char, i) => (
         <span
           key={`${char}-${i}`}
@@ -224,8 +247,12 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
             ref={(el) => {
               lettersRef.current[i] = el;
             }}
+            data-char={char}
           >
-            {char}
+            <span className="ch__magnet-fill">{char}</span>
+            <span className="ch__magnet-ghost" aria-hidden>
+              {char}
+            </span>
           </span>
         </span>
       ))}

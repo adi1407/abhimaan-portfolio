@@ -4890,7 +4890,7 @@ a.creators__card:hover .creators__avatar {
   padding: clamp(5rem, 12vw, 9rem) 0 clamp(3rem, 6vw, 5rem);
   background: #fff;
   color: var(--primary);
-  overflow: visible;
+  overflow: clip;
   isolation: isolate;
 }
 
@@ -9835,10 +9835,14 @@ a.creators__card:hover .creators__avatar {
 
 .psh-layers {
   grid-area: layers;
+  display: flex;
+  flex-direction: column;
   width: 15rem;
+  min-height: 0;
   border-left: 1px solid var(--chrome-line);
   background: var(--chrome);
   font-family: var(--font-sf-pro);
+  overflow: hidden;
 }
 
 .psh-layers__head {
@@ -9869,6 +9873,10 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .psh-layers__row {
@@ -9934,34 +9942,16 @@ a.creators__card:hover .creators__avatar {
   background-position: center;
 }
 
-.psh-layers__thumb--wash {
-  background: linear-gradient(160deg, #0b1f4d, #35508f);
-}
-.psh-layers__thumb--plate {
-  background-image: url("/work/p-01.jpg");
-}
-.psh-layers__thumb--grain {
-  background:
-    repeating-linear-gradient(0deg, #999 0 1px, #fff 1px 2px);
-}
-.psh-layers__thumb--duotone {
-  background: linear-gradient(120deg, var(--ps-accent), #ff5c8a);
-}
-.psh-layers__thumb--curves {
-  background:
-    linear-gradient(45deg, #111 0%, #888 50%, #fff 100%);
-}
-.psh-layers__thumb--type {
-  display: grid;
-  place-items: center;
-  background: #fff;
-  font-family: var(--font-sf-pro);
-  font-size: 0.55rem;
-  font-weight: 800;
-  color: var(--primary);
-}
-.psh-layers__thumb--type::after {
-  content: "T";
+.psh-layers__thumb--l1,
+.psh-layers__thumb--l2,
+.psh-layers__thumb--l3,
+.psh-layers__thumb--l4,
+.psh-layers__thumb--l5,
+.psh-layers__thumb--l6,
+.psh-layers__thumb--l7,
+.psh-layers__thumb--l8,
+.psh-layers__thumb--l9 {
+  background-color: #0a0e18;
 }
 
 .psh-layers__meta {
@@ -10687,260 +10677,163 @@ a.creators__card:hover .creators__avatar {
   container-name: ch-name;
 }
 
-/* Hero magnetic spotlight — letters move, dissolve, and fringe. */
-.ch__magnet {
-  --spot-x: 50%;
-  --spot-y: 50%;
-  --spot-a: 0;
-  --spot-pulse: 1;
+
+/* ------------------------------------------------------------------
+   Wordmark — the name is a window onto the work.
+
+   Two identical stacks of letters sit on top of each other: the base
+   is plain white type, the layer above is the same type filled with a
+   portfolio still. A soft circular mask follows the cursor, so moving
+   across the name wipes the picture through the letterforms.
+   ------------------------------------------------------------------ */
+
+.ch__wm {
+  --x: 50%;
+  --y: 50%;
   position: relative;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 0.015em;
+  display: block;
   margin: 0;
   width: max-content;
   max-width: 100%;
   font-family: var(--font-hero-display);
-  /* Sized to the name column so ABHIMAAN never wraps. */
   font-size: clamp(1.55rem, 12.2cqi, 8.5rem);
   font-weight: 900;
   line-height: 0.84;
   letter-spacing: -0.02em;
   text-transform: uppercase;
   white-space: nowrap;
-  color: #fff;
   cursor: default;
   isolation: isolate;
-  filter: drop-shadow(0 0 calc(var(--exit) * 28px) rgba(255, 255, 255, 0.35));
 }
 
 @supports not (font-size: 1cqi) {
-  .ch__magnet {
+  .ch__wm {
     font-size: clamp(1.55rem, 9.5vw, 8.5rem);
   }
 }
 
+.ch__wm-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.015em;
+}
+
 @media (min-width: 1100px) {
-  .ch__magnet {
+  .ch__wm-row {
     gap: 0.02em;
-    letter-spacing: -0.01em;
   }
 }
 
-.ch__magnet-spot {
+/* The picture layer is pinned exactly over the base copy. */
+.ch__wm-row--art {
+  --r: clamp(90px, 13vw, 190px);
   position: absolute;
-  left: var(--spot-x);
-  top: var(--spot-y);
-  width: 280px;
-  height: 280px;
-  margin: -140px 0 0 -140px;
-  border-radius: 50%;
+  inset: 0;
   pointer-events: none;
-  z-index: 0;
-  opacity: calc(var(--spot-a) * 0.72 * var(--spot-pulse));
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, #fff 70%, var(--ps-accent, #4f7cff)) 0%,
-    color-mix(in srgb, var(--ps-accent, #4f7cff) 42%, transparent) 38%,
-    rgba(34, 211, 238, 0.18) 55%,
-    transparent 72%
+  background-image: var(--wm-art);
+  background-size: cover;
+  background-position: center 38%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  opacity: 0;
+  transition: opacity 420ms var(--ease-editorial);
+  /* The window. Radius grows once the pointer is over the name. */
+  -webkit-mask-image: radial-gradient(
+    circle var(--r, 0px) at var(--x) var(--y),
+    #000 0%,
+    #000 55%,
+    transparent 100%
   );
-  filter: blur(10px);
-  transition: opacity 200ms ease;
-  mix-blend-mode: screen;
-  transform: scale(calc(0.85 + var(--spot-a) * 0.35));
+  mask-image: radial-gradient(
+    circle var(--r, 0px) at var(--x) var(--y),
+    #000 0%,
+    #000 55%,
+    transparent 100%
+  );
 }
 
-.ch__magnet-haze {
-  position: absolute;
-  left: var(--spot-x);
-  top: var(--spot-y);
-  width: 160px;
-  height: 160px;
-  margin: -80px 0 0 -80px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 2;
-  opacity: calc(var(--spot-a) * 0.55);
-  background-image: radial-gradient(
-      circle at 30% 40%,
-      rgba(255, 255, 255, 0.9) 0 1px,
-      transparent 1.5px
-    ),
-    radial-gradient(
-      circle at 70% 60%,
-      rgba(255, 255, 255, 0.7) 0 1px,
-      transparent 1.5px
-    ),
-    radial-gradient(
-      circle,
-      color-mix(in srgb, #fff 30%, transparent) 0%,
-      transparent 70%
-    );
-  background-size:
-    18px 18px,
-    22px 22px,
-    100% 100%;
-  filter: blur(0.4px);
-  mix-blend-mode: screen;
-  mask-image: radial-gradient(circle, #000 0%, transparent 70%);
-  animation: ch-haze 1.1s steps(3) infinite;
+.ch__wm.is-hot .ch__wm-row--art {
+  opacity: 1;
 }
 
-@keyframes ch-haze {
-  0% {
-    background-position:
-      0 0,
-      4px 2px,
-      0 0;
-  }
-  100% {
-    background-position:
-      6px -4px,
-      -3px 5px,
-      0 0;
-  }
-}
-
-.ch__magnet.is-hot .ch__magnet-haze {
-  opacity: calc(var(--spot-a) * 0.85);
-}
-
-.ch__magnet-cell {
+.ch__wm-cell {
   display: block;
   flex: 0 0 auto;
   overflow: hidden;
+}
+
+.ch__wm-cell > span {
+  display: block;
+}
+
+/* Base copy keeps the original rise-out-of-the-mask entrance. */
+.ch__wm-row--base .ch__wm-cell > span {
   opacity: 0;
   transform: translateY(110%);
 }
 
-.ch__magnet.is-ready .ch__magnet-cell {
-  animation: ch-magnet-in 1000ms var(--ease-editorial) both;
+.ch__wm.is-ready .ch__wm-row--base .ch__wm-cell > span {
+  animation: ch-wm-in 1000ms var(--ease-editorial) both;
   animation-delay: calc(var(--i) * 55ms + 140ms);
 }
 
-.ch__magnet.is-hot .ch__magnet-cell {
-  overflow: visible;
-}
-
-@keyframes ch-magnet-in {
+@keyframes ch-wm-in {
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.ch__magnet-letter {
-  --glow: 0;
-  --fringe: 0px;
-  --dissolve: 0;
-  --jitter: 0px;
-  position: relative;
-  z-index: 1;
-  display: inline-block;
-  transform-origin: 50% 80%;
-  will-change: transform, filter, opacity;
-}
-
-.ch__magnet-fill {
-  position: relative;
-  z-index: 1;
-  display: inline-block;
-  background: linear-gradient(
-    180deg,
-    #fff 22%,
-    color-mix(in srgb, #fff 62%, var(--ps-accent, #4f7cff)) 100%
-  );
+.ch__wm-row--base .ch__wm-cell > span {
+  background: linear-gradient(180deg, #fff 32%, rgba(255, 255, 255, 0.62) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  -webkit-text-fill-color: transparent;
-  opacity: calc(1 - var(--dissolve) * 0.55);
-  filter:
-    drop-shadow(
-      0 0 calc(var(--glow) * 22px)
-        color-mix(
-          in srgb,
-          var(--ps-accent, #4f7cff) calc(var(--glow) * 75%),
-          transparent
-        )
-    )
-    blur(calc(var(--dissolve) * 1.6px));
-  text-shadow:
-    calc(var(--fringe) * -1) 0 0
-      color-mix(in srgb, #22d3ee calc(var(--glow) * 85%), transparent),
-    var(--fringe) 0 0
-      color-mix(in srgb, #f472b6 calc(var(--glow) * 75%), transparent),
-    0 calc(var(--fringe) * 0.6) 0
-      color-mix(in srgb, #a78bfa calc(var(--glow) * 45%), transparent);
 }
 
-/* Dissolving ghost — chromatic twin that peels away on hover. */
-.ch__magnet-ghost {
+/* A whisper of light trailing the cursor, under the type. */
+.ch__wm-glow {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  display: inline-block;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  background: linear-gradient(
-    120deg,
-    #22d3ee 0%,
-    #fff 45%,
-    #f472b6 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  opacity: calc(var(--dissolve) * 0.7);
-  transform: translate3d(
-      calc(var(--fringe) * 1.4),
-      calc(var(--jitter) * -1),
-      0
-    )
-    scale(calc(1 + var(--dissolve) * 0.08));
-  filter: blur(calc(var(--dissolve) * 2.4px));
-  mix-blend-mode: screen;
+  left: var(--x);
+  top: var(--y);
+  z-index: -1;
+  width: 22rem;
+  height: 22rem;
+  margin: -11rem 0 0 -11rem;
+  border-radius: 50%;
   pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ps-accent, #4f7cff) 40%, transparent) 0%,
+    transparent 68%
+  );
+  filter: blur(28px);
+  transition: opacity 420ms var(--ease-editorial);
 }
 
-.ch__magnet.is-hot .ch__magnet-letter {
-  animation: ch-dissolve-flicker 420ms steps(2) infinite;
-  animation-play-state: running;
-}
-
-@keyframes ch-dissolve-flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: calc(1 - var(--dissolve) * 0.12);
-  }
+.ch__wm.is-hot .ch__wm-glow {
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ch__magnet-cell {
+  .ch__wm-row--base .ch__wm-cell > span {
     opacity: 1;
     transform: none;
     animation: none !important;
   }
 
-  .ch__magnet-fill {
-    text-shadow: none;
-    filter: none;
-    opacity: 1;
+  /* Hover reveal stays — it is pointer-driven, not autonomous — but
+     it snaps to the cursor instead of easing behind it. */
+  .ch__wm-row--art,
+  .ch__wm-glow {
+    transition: none;
   }
 
-  .ch__magnet-ghost,
-  .ch__magnet-spot,
-  .ch__magnet-haze,
   .ch__exit-glow,
   .ch__exit-beam {
     display: none;
-  }
-
-  .ch__magnet.is-hot .ch__magnet-letter {
-    animation: none;
   }
 
   .ch__inner {
@@ -11141,7 +11034,6 @@ a.creators__card:hover .creators__avatar {
   .ch__col--1 .ch__track,
   .ch__col--2 .ch__track,
   .ch__bloom,
-  .ch__magnet-haze,
   .ch__dot,
   .ch__cue em {
     animation: none;
@@ -13049,6 +12941,8 @@ a.creators__card:hover .creators__avatar {
 
 .sdoc {
   position: relative;
+  /* Above .fun (2) and .poster (1) so sticky pin never paints under Desk Scraps. */
+  z-index: 3;
   /* One viewport to pin against, plus a slice of travel per layer. */
   height: calc(100svh + var(--slices, 6) * var(--slice, 46svh));
   background: linear-gradient(180deg, #070a11 0%, #0a0e18 50%, #070a11 100%);
@@ -13075,9 +12969,17 @@ a.creators__card:hover .creators__avatar {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55);
+  /* No toolbar in the scroll composite — stage + layers only. */
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "title  title"
+    "stage  layers"
+    "status status";
 }
 
 .sdoc__stage {
+  /* Match the 1270×720 plate stack. */
+  aspect-ratio: 1270 / 720;
   /* Scroll owns the transform here, so drop the hero's easing. */
   transition: none;
 }
@@ -13088,40 +12990,35 @@ a.creators__card:hover .creators__avatar {
 
 .sdoc__layer {
   --peak: 1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   opacity: calc(var(--t, 0) * var(--peak));
-  transform: translateY(calc((1 - var(--t, 0)) * -24px))
-    scale(calc(1 + (1 - var(--t, 0)) * 0.035));
-  filter: blur(calc((1 - var(--t, 0)) * 7px));
+  transform: translateY(calc((1 - var(--t, 0)) * -22px))
+    scale(calc(1 + (1 - var(--t, 0)) * 0.04));
+  filter: blur(calc((1 - var(--t, 0)) * 8px));
   /* Scrubbed, not animated — a transition would lag the scrollbar. */
   transition: none;
+  will-change: opacity, transform, filter;
 }
 
-/* Blend layers keep their intended ceilings rather than going opaque. */
-.sdoc__layer.psh__layer--grain {
-  --peak: 0.38;
+/* Light / FX plates — black drops out so the stack reads as additive. */
+.sdoc__layer--screen {
+  mix-blend-mode: screen;
 }
 
-.sdoc__layer.psh__layer--duotone {
-  --peak: 0.72;
+.sdoc__layer--normal {
+  mix-blend-mode: normal;
 }
 
-.sdoc__layer.psh__layer--curves {
-  --peak: 0.9;
+/* First plate is the foundation — no soft landing fade. */
+.sdoc__layer--l1 {
+  --peak: 1;
 }
 
-.sdoc__lockup {
-  position: absolute;
-  z-index: 5;
-  left: clamp(1rem, 4%, 2.5rem);
-  bottom: clamp(1rem, 7%, 3rem);
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.4rem;
-  color: #fff;
-  text-shadow: 0 6px 26px rgba(0, 0, 0, 0.6);
-  opacity: var(--t, 0);
-  transform: translateY(calc((1 - var(--t, 0)) * 20px));
+/* Dense hero detail plate lands a touch softer so it doesn't slam. */
+.sdoc__layer--l5 {
+  --peak: 1;
 }
 
 /* --- Status strip --- */
@@ -13157,20 +13054,31 @@ a.creators__card:hover .creators__avatar {
 
 @media (max-width: 720px) {
   .sdoc {
-    /* Shorter travel so the build doesn't outstay its welcome. */
-    height: calc(100svh + var(--slices, 6) * 32svh);
+    /* Shorter travel so nine layers don't outstay the welcome. */
+    height: calc(100svh + var(--slices, 9) * 28svh);
   }
 
   .sdoc__doc {
-    height: min(100%, 34rem);
+    height: min(100%, 36rem);
+  }
+
+  .psh-layers {
+    width: 11.5rem;
+  }
+
+  .psh-layers__name {
+    font-size: 0.68rem;
+  }
+
+  .psh-layers__mode {
+    font-size: 0.55rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   /* The component resolves every layer to t=1, so the composite is
      simply present. Nothing to animate away. */
-  .sdoc__layer,
-  .sdoc__lockup {
+  .sdoc__layer {
     filter: none;
     transform: none;
   }

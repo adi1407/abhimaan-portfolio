@@ -6,18 +6,15 @@ import {
   LAYERS,
   type LayerId,
 } from "@/features/home/components/hero-layers";
-import { WORK_ITEMS } from "@/lib/work";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
- * Studio document — the poster composites itself as you scroll.
+ * Studio document — nine uploaded plates composite on scroll.
  *
  * The section is taller than the viewport and pins its artboard. The
  * scroll distance through that pin IS the build: every layer gets its
  * own slice of the travel and fills across it, so the composite
  * assembles one layer at a time and un-assembles on the way back up.
- * Nothing here is clickable — the only control is the scrollbar the
- * visitor is already using.
  * ================================================================== */
 
 const EMPTY_HIDDEN = new Set<LayerId>();
@@ -27,25 +24,15 @@ const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /** Scroll room per layer, on top of one viewport for the pin itself. */
-const SLICE_SVH = 46;
-
-function topPlate() {
-  for (const item of WORK_ITEMS) if (item.src) return item.src;
-  return "/work/p-01.jpg";
-}
+const SLICE_SVH = 38;
 
 export function StudioDocument() {
-  // Reduced motion is handled entirely in CSS for this section.
-  const PLATE = topPlate();
-
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLElement | null)[]>([]);
-  const lockupRef = useRef<HTMLDivElement>(null);
   const railRef = useRef<HTMLSpanElement>(null);
 
-  /* Integer count, for the panel readout only. Written just when it
-     changes, so an ordinary scroll frame stays pure DOM writes with no
-     React re-render. */
+  /* Integer count for the panel readout only — written when it changes
+     so ordinary scroll frames stay pure DOM writes. */
   const [built, setBuilt] = useState(0);
 
   useEffect(() => {
@@ -66,26 +53,17 @@ export function StudioDocument() {
          i → i+1, which is what lands them in sequence. */
       const stepped = p * LAYERS.length;
 
-      /* Not gated on reduced motion: this is the scrollbar mapped to a
-         build state, not an animation that plays at you. Reduced
-         motion drops the travel and blur in CSS, so layers still
-         arrive in order — they just don't fly in. */
       for (let i = 0; i < LAYERS.length; i += 1) {
         const el = layerRefs.current[i];
         if (!el) continue;
         el.style.setProperty("--t", smooth(clamp(stepped - i, 0, 1)).toFixed(4));
       }
 
-      if (lockupRef.current) {
-        const t = smooth(clamp(stepped - (LAYERS.length - 1), 0, 1));
-        lockupRef.current.style.setProperty("--t", t.toFixed(4));
-      }
-
       if (railRef.current) {
         railRef.current.style.setProperty("--p", p.toFixed(4));
       }
 
-      const count = clamp(Math.floor(stepped + 0.4), 0, LAYERS.length);
+      const count = clamp(Math.floor(stepped + 0.35), 0, LAYERS.length);
       if (count !== lastBuilt) {
         lastBuilt = count;
         setBuilt(count);
@@ -131,10 +109,11 @@ export function StudioDocument() {
               <em>RGB/8</em>
               <em>{LAYERS.length} layers</em>
             </span>
-            <span className="psh__hint">Scroll to composite</span>
+            <span className="psh__hint">
+              {done ? "Composite complete" : "Scroll to composite"}
+            </span>
           </div>
 
-          {/* Read-only readout — scroll is the only control. */}
           <HeroLayersPanel
             built={built}
             hidden={EMPTY_HIDDEN}
@@ -154,25 +133,17 @@ export function StudioDocument() {
                   }}
                   className={cn(
                     "psh__layer",
-                    `psh__layer--${layer.id}`,
                     "sdoc__layer",
+                    `sdoc__layer--${layer.mode}`,
+                    `sdoc__layer--${layer.id}`,
                   )}
-                  style={
-                    layer.id === "plate"
-                      ? { backgroundImage: `url("${PLATE}")` }
-                      : undefined
-                  }
+                  style={{
+                    backgroundImage: `url("${layer.src}")`,
+                    zIndex: i + 1,
+                  }}
                   aria-hidden
                 />
               ))}
-
-              {/* Title lockup rides in with the last layer. */}
-              <div ref={lockupRef} className="sdoc__lockup" aria-hidden>
-                <span className="psh__lockup-num">01</span>
-                <span className="psh__lockup-title">Composite</span>
-                <span className="psh__lockup-rule" />
-                <span className="psh__lockup-meta">Poster · 2026</span>
-              </div>
             </div>
           </div>
 

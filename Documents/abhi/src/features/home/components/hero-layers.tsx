@@ -3,17 +3,83 @@
 import { cn } from "@/lib/cn";
 
 /**
- * Layer stack for the hero document. Order is bottom-up — the same order
- * they land in during the build, and the reverse of how a Layers panel
- * lists them.
+ * Layer stack for the studio document. Order is bottom-up — the same
+ * order they land in during the scroll build, and the reverse of how a
+ * Layers panel lists them. Assets live in /public/photoshop.
  */
 export const LAYERS = [
-  { id: "wash", label: "Background", blend: "Normal", opacity: 100 },
-  { id: "plate", label: "Artwork", blend: "Normal", opacity: 100 },
-  { id: "grain", label: "Grain", blend: "Multiply", opacity: 38 },
-  { id: "duotone", label: "Color Grade", blend: "Overlay", opacity: 72 },
-  { id: "curves", label: "Curves", blend: "Soft Light", opacity: 90 },
-  { id: "type", label: "Title Lockup", blend: "Normal", opacity: 100 },
+  {
+    id: "l1",
+    label: "Base Plate",
+    blend: "Normal",
+    opacity: 100,
+    src: "/photoshop/1.jpg.jpeg",
+    mode: "normal",
+  },
+  {
+    id: "l2",
+    label: "Light Streaks",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/2.png",
+    mode: "screen",
+  },
+  {
+    id: "l3",
+    label: "Atmosphere",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/3.png",
+    mode: "screen",
+  },
+  {
+    id: "l4",
+    label: "Glow Pass",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/4.png",
+    mode: "screen",
+  },
+  {
+    id: "l5",
+    label: "Hero Detail",
+    blend: "Normal",
+    opacity: 100,
+    src: "/photoshop/5.png",
+    mode: "normal",
+  },
+  {
+    id: "l6",
+    label: "Highlights",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/6.png",
+    mode: "screen",
+  },
+  {
+    id: "l7",
+    label: "FX Pass",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/7.png",
+    mode: "screen",
+  },
+  {
+    id: "l8",
+    label: "Depth",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/8.png",
+    mode: "screen",
+  },
+  {
+    id: "l9",
+    label: "Type & UI",
+    blend: "Screen",
+    opacity: 100,
+    src: "/photoshop/9.png",
+    mode: "screen",
+  },
 ] as const;
 
 export type LayerId = (typeof LAYERS)[number]["id"];
@@ -57,7 +123,7 @@ export function HeroLayersPanel({
     <aside className="psh-layers" aria-label="Layers">
       <div className="psh-layers__head">
         <span>Layers</span>
-        <em>Normal · 100%</em>
+        <em>{LAYERS.length} · RGB/8</em>
       </div>
 
       <ul className="psh-layers__list">
@@ -86,7 +152,11 @@ export function HeroLayersPanel({
                 <Eye on={on} />
               </button>
 
-              <span className={cn("psh-layers__thumb", `psh-layers__thumb--${layer.id}`)} aria-hidden />
+              <span
+                className={cn("psh-layers__thumb", `psh-layers__thumb--${layer.id}`)}
+                style={{ backgroundImage: `url("${layer.src}")` }}
+                aria-hidden
+              />
 
               <span className="psh-layers__meta">
                 <span className="psh-layers__name">{layer.label}</span>

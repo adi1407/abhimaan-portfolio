@@ -1,9 +1,9 @@
 import { Suspense } from "react";
+import { CrtLogo } from "@/components/brand/crt-logo";
 import { SiteNav } from "@/components/layout/site-nav";
 import { NavMenu } from "@/components/layout/nav-menu";
 import { NavCursor } from "@/components/layout/nav-cursor";
 import { PageTransition } from "@/components/layout/page-transition";
-import { SITE } from "@/lib/constants";
 
 /** Stable chrome while `useSearchParams` suspends — never blank the bar. */
 function NavShellFallback() {
@@ -11,8 +11,7 @@ function NavShellFallback() {
     <header className="site-nav site-nav--top" aria-hidden>
       <div className="site-nav__shell">
         <span className="nav-logo">
-          <span className="nav-logo__dot" />
-          <span className="nav-logo__text">{SITE.name}</span>
+          <CrtLogo decorative />
         </span>
         <span className="site-nav__center" />
         <span className="site-nav__end">

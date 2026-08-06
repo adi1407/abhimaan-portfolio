@@ -35,27 +35,36 @@ export function LetterCraft() {
     return () => io.disconnect();
   }, []);
 
-  /* Continuous arrival light — peaks as the section centres the fold. */
+  /* Continuous arrival light — peaks as the section centres the fold.
+     Deliberately NOT gated on reduced motion: this is a light level
+     following scroll position, not an animation, and gating it left
+     the lamp frozen at a fixed brightness for those users. */
   useEffect(() => {
     const el = rootRef.current;
-    if (!el || reduced) return;
+    if (!el) return;
 
     let raf = 0;
     const update = () => {
       raf = 0;
       const rect = el.getBoundingClientRect();
       const vh = window.innerHeight || 1;
-      /* 0 above fold → 1 when section top crosses ~35% of viewport. */
-      const enter = clamp(1 - rect.top / (vh * 0.85), 0, 1);
-      const mid = clamp(
-        1 - Math.abs(rect.top + rect.height * 0.35 - vh * 0.45) / (vh * 0.7),
-        0,
-        1,
-      );
-      const arrive = clamp(enter * 0.55 + mid * 0.45, 0, 1);
-      const eased = arrive * arrive * (3 - 2 * arrive);
+
+      /* Proximity of the section's centre to the viewport's centre:
+         0 while it is off-screen either way, 1 as it passes through
+         the middle. Scrolling the page literally turns the lamp up
+         and back down again. */
+      const centre = rect.top + rect.height / 2;
+      const reach = vh / 2 + rect.height / 2;
+      const prox = clamp(1 - Math.abs(centre - vh / 2) / (reach || 1), 0, 1);
+
+      /* Sharpened so the bright band sits around the middle of the
+         pass rather than smearing across the whole scroll. */
+      const lit = clamp((prox - 0.18) / 0.62, 0, 1);
+      const eased = lit * lit * (3 - 2 * lit);
+
       el.style.setProperty("--arrive", eased.toFixed(4));
-      el.style.setProperty("--flare", (0.25 + eased * 0.9).toFixed(3));
+      /* Filament runs hotter and whiter than the spill it throws. */
+      el.style.setProperty("--burn", (eased * eased).toFixed(4));
     };
 
     const onScroll = () => {
@@ -70,24 +79,29 @@ export function LetterCraft() {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [reduced]);
+  }, []);
 
   return (
     <section
       ref={rootRef}
       className={cn("craft", inView && "is-in", reduced && "is-flat")}
       aria-labelledby="craft-title"
-      style={{ ["--arrive" as string]: 0 }}
+      style={{ ["--arrive" as string]: 0, ["--burn" as string]: 0 }}
     >
-      {/* Light stack — inherits the hero’s exit glow */}
+      {/* A hanging lamp is the only light in the room. Cord, shade,
+          bulb, beam and dust all sway as one fixture; the pool it
+          throws slides in sympathy underneath. */}
       <div className="craft__light" aria-hidden>
-        <span className="craft__flare" />
-        <span className="craft__aurora" />
-        <span className="craft__beam" />
-        <span className="craft__orb craft__orb--a" />
-        <span className="craft__orb craft__orb--b" />
-        <span className="craft__sweep" />
-        <span className="craft__floor" />
+        <div className="craft__lamp">
+          <span className="craft__cord" />
+          <span className="craft__shade" />
+          <span className="craft__halo" />
+          <span className="craft__bulb" />
+          <span className="craft__cone" />
+          <span className="craft__dust" />
+        </div>
+        <span className="craft__pool" />
+        <span className="craft__vignette" />
       </div>
 
       <div className="craft__grid" aria-hidden />

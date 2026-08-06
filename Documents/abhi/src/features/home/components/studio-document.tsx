@@ -1,416 +1,193 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { HeroToolbar, type ToolId } from "@/features/home/components/hero-toolbar";
-import { HeroLayersPanel, LAYERS, type LayerId } from "@/features/home/components/hero-layers";
-import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { useEffect, useRef, useState } from "react";
+import {
+  HeroLayersPanel,
+  LAYERS,
+  type LayerId,
+} from "@/features/home/components/hero-layers";
 import { WORK_ITEMS } from "@/lib/work";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
- * Studio document — Photoshop-themed poster composite.
+ * Studio document — the poster composites itself as you scroll.
  *
- * Sits after Letter Craft. Layers land one-by-one on the artboard
- * (scroll-armed), then the real tools stay live for exploration.
+ * The section is taller than the viewport and pins its artboard. The
+ * scroll distance through that pin IS the build: every layer gets its
+ * own slice of the travel and fills across it, so the composite
+ * assembles one layer at a time and un-assembles on the way back up.
+ * Nothing here is clickable — the only control is the scrollbar the
+ * visitor is already using.
  * ================================================================== */
 
-/** Two plates: the composite you land on, and what's hiding under it. */
-function plates() {
-  const unique: string[] = [];
-  for (const item of WORK_ITEMS) {
-    if (!unique.includes(item.src)) unique.push(item.src);
-    if (unique.length >= 2) break;
-  }
-  return { top: unique[0], under: unique[1] ?? unique[0] };
-}
+const EMPTY_HIDDEN = new Set<LayerId>();
+const noop = () => {};
 
-/** Layer land cadence — slow enough to read each step. */
-const BUILD_STEP_MS = 340;
-const BRUSH_RADIUS = 46;
-const ZOOM_STEPS = [60, 80, 100, 130, 170, 220];
+const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const smooth = (t: number) => t * t * (3 - 2 * t);
 
-type Rect = { x: number; y: number; w: number; h: number };
+/** Scroll room per layer, on top of one viewport for the pin itself. */
+const SLICE_SVH = 46;
 
-function toHex(r: number, g: number, b: number) {
-  return `#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`;
+function topPlate() {
+  for (const item of WORK_ITEMS) if (item.src) return item.src;
+  return "/work/p-01.jpg";
 }
 
 export function StudioDocument() {
-  const reduced = useReducedMotion();
-  const { top: TOP_PLATE, under: UNDER_PLATE } = plates();
+  // Reduced motion is handled entirely in CSS for this section.
+  const PLATE = topPlate();
 
   const sectionRef = useRef<HTMLElement>(null);
-  const stageRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const underImgRef = useRef<HTMLImageElement | null>(null);
-  const sampleRef = useRef<HTMLCanvasElement | null>(null);
+  const layerRefs = useRef<(HTMLElement | null)[]>([]);
+  const lockupRef = useRef<HTMLDivElement>(null);
+  const railRef = useRef<HTMLSpanElement>(null);
 
-  const [armed, setArmed] = useState(false);
-  const [tool, setTool] = useState<ToolId>("move");
+  /* Integer count, for the panel readout only. Written just when it
+     changes, so an ordinary scroll frame stays pure DOM writes with no
+     React re-render. */
   const [built, setBuilt] = useState(0);
-  const [hidden, setHidden] = useState<Set<LayerId>>(new Set());
-  const [selection, setSelection] = useState<Rect | null>(null);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [zoomIdx, setZoomIdx] = useState(2);
-  const [picked, setPicked] = useState<string | null>(null);
-  const [painting, setPainting] = useState(false);
-
-  const zoom = ZOOM_STEPS[zoomIdx];
-
-  /* Arm the build when the document enters view (not on page load). */
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) setArmed(true);
-      },
-      { threshold: 0.22 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-
-  /* Act A: land layers bottom-up once armed. */
-  useEffect(() => {
-    if (reduced || !armed) return;
-    if (built >= LAYERS.length) return;
-    const id = window.setTimeout(
-      () => setBuilt((n) => n + 1),
-      built === 0 ? 280 : BUILD_STEP_MS,
-    );
-    return () => window.clearTimeout(id);
-  }, [armed, built, reduced]);
-
-  const shown = reduced ? LAYERS.length : built;
-  const done = shown >= LAYERS.length;
 
   useEffect(() => {
-    const img = new window.Image();
-    img.crossOrigin = "anonymous";
-    img.src = TOP_PLATE;
-    img.onload = () => {
-      const c = document.createElement("canvas");
-      c.width = img.naturalWidth;
-      c.height = img.naturalHeight;
-      c.getContext("2d")?.drawImage(img, 0, 0);
-      sampleRef.current = c;
-    };
-    const under = new window.Image();
-    under.src = UNDER_PLATE;
-    under.onload = () => {
-      underImgRef.current = under;
-    };
-  }, [TOP_PLATE, UNDER_PLATE]);
+    const section = sectionRef.current;
+    if (!section) return;
 
-  const clearBrush = useCallback(() => {
-    const c = canvasRef.current;
-    const ctx = c?.getContext("2d");
-    if (c && ctx) ctx.clearRect(0, 0, c.width, c.height);
-  }, []);
+    let raf = 0;
+    let lastBuilt = -1;
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement | null;
-      if (t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
-      if (e.metaKey || e.ctrlKey || e.altKey) return;
-      const map: Record<string, ToolId> = {
-        v: "move",
-        m: "marquee",
-        i: "dropper",
-        b: "brush",
-        h: "hand",
-        z: "zoom",
-      };
-      const next = map[e.key.toLowerCase()];
-      if (next) {
-        setTool(next);
-        return;
+    const update = () => {
+      raf = 0;
+      const rect = section.getBoundingClientRect();
+      const vh = window.innerHeight || 1;
+      const travel = rect.height - vh;
+      const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
+
+      /* Spread p across the stack: layer i fills as `stepped` crosses
+         i → i+1, which is what lands them in sequence. */
+      const stepped = p * LAYERS.length;
+
+      /* Not gated on reduced motion: this is the scrollbar mapped to a
+         build state, not an animation that plays at you. Reduced
+         motion drops the travel and blur in CSS, so layers still
+         arrive in order — they just don't fly in. */
+      for (let i = 0; i < LAYERS.length; i += 1) {
+        const el = layerRefs.current[i];
+        if (!el) continue;
+        el.style.setProperty("--t", smooth(clamp(stepped - i, 0, 1)).toFixed(4));
       }
-      if (e.key === "Escape") {
-        setSelection(null);
-        clearBrush();
+
+      if (lockupRef.current) {
+        const t = smooth(clamp(stepped - (LAYERS.length - 1), 0, 1));
+        lockupRef.current.style.setProperty("--t", t.toFixed(4));
+      }
+
+      if (railRef.current) {
+        railRef.current.style.setProperty("--p", p.toFixed(4));
+      }
+
+      const count = clamp(Math.floor(stepped + 0.4), 0, LAYERS.length);
+      if (count !== lastBuilt) {
+        lastBuilt = count;
+        setBuilt(count);
       }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [clearBrush]);
 
-  useEffect(() => {
-    const stage = stageRef.current;
-    const c = canvasRef.current;
-    if (!stage || !c) return;
-    const fit = () => {
-      const r = stage.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      c.width = Math.max(1, Math.round(r.width * dpr));
-      c.height = Math.max(1, Math.round(r.height * dpr));
-      c.style.width = `${r.width}px`;
-      c.style.height = `${r.height}px`;
-      const ctx = c.getContext("2d");
-      ctx?.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
     };
-    fit();
-    const ro = new ResizeObserver(fit);
-    ro.observe(stage);
-    return () => ro.disconnect();
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
   }, []);
 
-  const local = (e: React.PointerEvent) => {
-    const r = stageRef.current!.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top, w: r.width, h: r.height };
-  };
-
-  const dab = useCallback((x: number, y: number, w: number, h: number) => {
-    const ctx = canvasRef.current?.getContext("2d");
-    const img = underImgRef.current;
-    if (!ctx || !img) return;
-    const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight);
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(x, y, BRUSH_RADIUS, 0, Math.PI * 2);
-    ctx.clip();
-    ctx.drawImage(img, (w - dw) / 2, (h - dh) / 2, dw, dh);
-    ctx.restore();
-  }, []);
-
-  const drag = useRef<{ x: number; y: number; pan: { x: number; y: number } } | null>(
-    null,
-  );
-
-  const onDown = (e: React.PointerEvent) => {
-    if (!done) return;
-    const p = local(e);
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch {
-      /* no capture */
-    }
-
-    if (tool === "marquee") {
-      drag.current = { x: p.x, y: p.y, pan };
-      setSelection({ x: p.x, y: p.y, w: 0, h: 0 });
-    } else if (tool === "hand") {
-      drag.current = { x: e.clientX, y: e.clientY, pan };
-    } else if (tool === "brush") {
-      setPainting(true);
-      dab(p.x, p.y, p.w, p.h);
-    } else if (tool === "dropper") {
-      pick(p);
-    } else if (tool === "zoom") {
-      setZoomIdx((i) =>
-        e.shiftKey || e.altKey
-          ? Math.max(0, i - 1)
-          : Math.min(ZOOM_STEPS.length - 1, i + 1),
-      );
-    }
-  };
-
-  const onMove = (e: React.PointerEvent) => {
-    if (!done) return;
-    const p = local(e);
-
-    if (tool === "marquee" && drag.current) {
-      const d = drag.current;
-      setSelection({
-        x: Math.min(d.x, p.x),
-        y: Math.min(d.y, p.y),
-        w: Math.abs(p.x - d.x),
-        h: Math.abs(p.y - d.y),
-      });
-    } else if (tool === "hand" && drag.current) {
-      const d = drag.current;
-      setPan({
-        x: d.pan.x + (e.clientX - d.x),
-        y: d.pan.y + (e.clientY - d.y),
-      });
-    } else if (tool === "brush" && painting) {
-      dab(p.x, p.y, p.w, p.h);
-    }
-  };
-
-  const onUp = (e: React.PointerEvent) => {
-    try {
-      if (e.currentTarget.hasPointerCapture(e.pointerId))
-        e.currentTarget.releasePointerCapture(e.pointerId);
-    } catch {
-      /* already released */
-    }
-    drag.current = null;
-    setPainting(false);
-    setSelection((s) => (s && (s.w < 4 || s.h < 4) ? null : s));
-  };
-
-  const pick = (p: { x: number; y: number; w: number; h: number }) => {
-    const c = sampleRef.current;
-    if (!c) return;
-    const scale = Math.max(p.w / c.width, p.h / c.height);
-    const dw = c.width * scale;
-    const dh = c.height * scale;
-    const sx = Math.round((p.x - (p.w - dw) / 2) / scale);
-    const sy = Math.round((p.y - (p.h - dh) / 2) / scale);
-    const ctx = c.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return;
-    const px = ctx.getImageData(
-      Math.max(0, Math.min(c.width - 1, sx)),
-      Math.max(0, Math.min(c.height - 1, sy)),
-      1,
-      1,
-    ).data;
-    const hex = toHex(px[0], px[1], px[2]);
-    setPicked(hex);
-    document.documentElement.style.setProperty("--ps-accent", hex);
-  };
-
-  const toggleLayer = (id: LayerId) =>
-    setHidden((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-  const visible = (id: LayerId) => !hidden.has(id);
-  const landed = (id: LayerId) => LAYERS.findIndex((l) => l.id === id) < shown;
-  const layerCls = (id: LayerId) =>
-    cn("psh__layer", `psh__layer--${id}`, landed(id) && "is-in", !visible(id) && "is-off");
+  const done = built >= LAYERS.length;
+  const landing = LAYERS[clamp(built, 0, LAYERS.length - 1)];
 
   return (
     <section
       ref={sectionRef}
-      className={cn("psh", done && "is-done", `psh--${tool}`)}
-      aria-labelledby="studio-doc-title"
-      id="studio-document"
+      className="sdoc"
+      aria-labelledby="sdoc-title"
+      style={{
+        ["--slice" as string]: `${SLICE_SVH}svh`,
+        ["--slices" as string]: LAYERS.length,
+      }}
     >
-      <h2 id="studio-doc-title" className="sr-only">
-        Poster composite — layers build one by one
+      <h2 id="sdoc-title" className="sr-only">
+        The poster, composited layer by layer
       </h2>
 
-      <div className="psh__titlebar" aria-hidden>
-        <span className="psh__doc">
-          poster-composite.psd
-          <em>@ {zoom}%</em>
-          <em>RGB/8</em>
-          {!done ? <em className="psh__building">Building…</em> : null}
-        </span>
-        <span className="psh__hint">
-          {done ? (
-            <>
-              Pick a tool — <kbd>V</kbd> <kbd>M</kbd> <kbd>I</kbd> <kbd>B</kbd>{" "}
-              <kbd>H</kbd> <kbd>Z</kbd>
-            </>
-          ) : (
-            <>Layers placing — watch the stack</>
-          )}
-        </span>
-      </div>
-
-      <HeroToolbar tool={tool} onPick={setTool} disabled={!done} />
-
-      <HeroLayersPanel
-        built={shown}
-        hidden={hidden}
-        onToggle={toggleLayer}
-        disabled={!done}
-      />
-
-      <div className="psh__viewport">
-        <div
-          ref={stageRef}
-          className="psh__stage"
-          style={{
-            transform: `translate3d(${pan.x}px, ${pan.y}px, 0) scale(${zoom / 100})`,
-          }}
-          onPointerDown={onDown}
-          onPointerMove={onMove}
-          onPointerUp={onUp}
-          onPointerCancel={onUp}
-        >
-          <span className="psh__checker" aria-hidden />
-
-          <span className={layerCls("wash")} aria-hidden />
-          <span
-            className={layerCls("plate")}
-            aria-hidden
-            style={{ backgroundImage: `url("${TOP_PLATE}")` }}
-          />
-          <span className={layerCls("grain")} aria-hidden />
-          <span className={layerCls("duotone")} aria-hidden />
-
-          <canvas
-            ref={canvasRef}
-            className={cn("psh__paint", visible("plate") && "is-live")}
-            aria-hidden
-          />
-
-          {selection && selection.w > 4 && selection.h > 4 ? (
-            <span
-              className="psh__marquee"
-              aria-hidden
-              style={{
-                left: selection.x,
-                top: selection.y,
-                width: selection.w,
-                height: selection.h,
-              }}
-            >
-              <span
-                className="psh__marquee-art"
-                style={{
-                  backgroundImage: `url("${UNDER_PLATE}")`,
-                  backgroundPosition: `${-selection.x}px ${-selection.y}px`,
-                }}
-              />
+      <div className="sdoc__pin">
+        <div className={cn("psh", "sdoc__doc", done && "is-done")}>
+          <div className="psh__titlebar" aria-hidden>
+            <span className="psh__doc">
+              abhimaan-2026.psd
+              <em>RGB/8</em>
+              <em>{LAYERS.length} layers</em>
             </span>
-          ) : null}
+            <span className="psh__hint">Scroll to composite</span>
+          </div>
 
-          <span className={layerCls("curves")} aria-hidden />
+          {/* Read-only readout — scroll is the only control. */}
+          <HeroLayersPanel
+            built={built}
+            hidden={EMPTY_HIDDEN}
+            onToggle={noop}
+            disabled
+          />
 
-          {/* Title lockup — finishes the poster, not a brand billboard */}
-          <div className={cn(layerCls("type"), "psh__lockup")} aria-hidden>
-            <span className="psh__lockup-num">01</span>
-            <span className="psh__lockup-title">Poster</span>
-            <span className="psh__lockup-rule" />
-            <span className="psh__lockup-meta">Artwork · Grade · Type</span>
+          <div className="psh__viewport">
+            <div className="psh__stage sdoc__stage">
+              <span className="psh__checker" aria-hidden />
+
+              {LAYERS.map((layer, i) => (
+                <span
+                  key={layer.id}
+                  ref={(el) => {
+                    layerRefs.current[i] = el;
+                  }}
+                  className={cn(
+                    "psh__layer",
+                    `psh__layer--${layer.id}`,
+                    "sdoc__layer",
+                  )}
+                  style={
+                    layer.id === "plate"
+                      ? { backgroundImage: `url("${PLATE}")` }
+                      : undefined
+                  }
+                  aria-hidden
+                />
+              ))}
+
+              {/* Title lockup rides in with the last layer. */}
+              <div ref={lockupRef} className="sdoc__lockup" aria-hidden>
+                <span className="psh__lockup-num">01</span>
+                <span className="psh__lockup-title">Composite</span>
+                <span className="psh__lockup-rule" />
+                <span className="psh__lockup-meta">Poster · 2026</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="psh__status" aria-hidden>
+            <span className="sdoc__now">
+              {done ? "Composite complete" : `Placing — ${landing.label}`}
+            </span>
+            <span ref={railRef} className="sdoc__rail">
+              <i />
+            </span>
+            <span className="sdoc__count">
+              {built} / {LAYERS.length}
+            </span>
           </div>
         </div>
-      </div>
-
-      <div className="psh__status" aria-hidden>
-        <span>
-          {done
-            ? `${LAYERS.length} layers · composite complete`
-            : armed
-              ? `Placing ${shown}/${LAYERS.length}…`
-              : "Scroll to build"}
-        </span>
-        {picked ? (
-          <span className="psh__picked">
-            <i style={{ background: picked }} />
-            {picked.toUpperCase()} — site retinted
-          </span>
-        ) : (
-          <span className="psh__picked psh__picked--idle">
-            Eyedropper <kbd>I</kbd> retints the whole site
-          </span>
-        )}
-        <button
-          type="button"
-          className="psh__reset"
-          onClick={() => {
-            setSelection(null);
-            clearBrush();
-            setPan({ x: 0, y: 0 });
-            setZoomIdx(2);
-            setHidden(new Set());
-            setPicked(null);
-            document.documentElement.style.removeProperty("--ps-accent");
-          }}
-        >
-          Revert
-        </button>
       </div>
     </section>
   );

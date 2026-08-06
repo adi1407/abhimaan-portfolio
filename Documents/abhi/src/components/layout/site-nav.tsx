@@ -9,6 +9,7 @@ import {
   useState,
   type CSSProperties,
 } from "react";
+import { CrtLogo } from "@/components/brand/crt-logo";
 import { cn } from "@/lib/cn";
 import { SITE } from "@/lib/constants";
 import { NAV_ITEMS, getNavItemByHref } from "@/lib/nav";
@@ -316,21 +317,7 @@ export function SiteNav() {
           onMouseLeave={() => setCursorExpanded(false)}
           onClick={onLogoClick}
         >
-          <span className="nav-logo__dot" aria-hidden />
-          <span className="nav-logo__text">
-            {SITE.name.split("").map((letter, i) => (
-              <span
-                key={`${letter}-${i}`}
-                className="nav-logo-letter"
-                style={{ ["--i" as string]: i }}
-              >
-                {letter}
-              </span>
-            ))}
-          </span>
-          <span className="nav-logo__index" aria-hidden>
-            {active.index}
-          </span>
+          <CrtLogo priority decorative />
         </button>
 
         <nav

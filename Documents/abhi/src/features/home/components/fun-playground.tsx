@@ -438,7 +438,7 @@ export function FunPlayground() {
           </h2>
           <p className="fun__lede">
             {mobileDesk
-              ? "Five Behance creatives from the desk. Tap one to open the project in a new tab."
+              ? "Five Behance creatives from the desk. Tap a scrap to open the project."
               : "Five Behance creatives circling the desk. Click one to open the project in a new tab, or drag it anywhere on the desk — where you drop it is where it stays."}
           </p>
           {!mobileDesk ? (

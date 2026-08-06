@@ -118,8 +118,18 @@ function cardWidth(vw: number) {
   return clamp(vw * (narrow ? 0.5 : 0.32), narrow ? 176 : 214, 268);
 }
 
-/** Where the plane hangs in the hero: right gutter, card clear of the edge. */
+/** Where the plane hangs in the hero: right gutter (card clearance on desktop). */
 function heroSlot(vw: number, vh: number, pw: number): Pose {
+  /* Mobile has no ID card — park the plane cleanly in the upper-right. */
+  if (vw < 900) {
+    return {
+      cx: vw * 0.78,
+      cy: Math.max(vh * 0.18, 96),
+      roll: -10,
+      scale: 0.9,
+      facing: 1,
+    };
+  }
   const clearance = vw - cardWidth(vw) / 2 - 12 + (0.5 - PLANE_HITCH.x) * pw;
   return {
     cx: Math.min(vw * 0.82, clearance),
@@ -451,7 +461,8 @@ export function PaperFlight() {
           scale: lerp(held.scale, handoff.scale, k),
           facing: 1,
         };
-        carrying = t < RELEASE_AT;
+        /* No ID card on phones — never claim a hitch. */
+        carrying = vw >= 900 && t < RELEASE_AT;
 
         // The exact frame the card lets go — fire the origin-shard once.
         // Guarded by !reduced: it's a one-shot narrative flourish, not part

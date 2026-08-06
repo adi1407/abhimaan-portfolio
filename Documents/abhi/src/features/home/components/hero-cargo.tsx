@@ -7,11 +7,8 @@ import { IdCard } from "@/features/home/components/id-card";
 /* ================================================================== *
  * Hero cargo
  *
- * The ID card, hitched to the plane that flies the page. The plane is
- * fixed to the viewport and lives outside the hero; the card's rope is
- * solved in its own stage box, so this converts between the two and
- * freezes the anchor the moment the plane lets go — the card then just
- * hangs where it was dropped and slides out of frame with the hero.
+ * Desktop: ID card hitched to the plane. Mobile: no card — the plane
+ * flies alone so the hero stays clear.
  * ================================================================== */
 
 type Size = { w: number; h: number };
@@ -60,7 +57,6 @@ export function HeroCargo() {
       if (!hitch?.ready) return { x: stage.w * 0.8, y: stage.h * 0.3 };
 
       if (hitch.carrying) {
-        // Scrolling back up hands the card to the plane again.
         released.current = null;
         return {
           x: hitch.x - origin.current.x,
@@ -83,16 +79,10 @@ export function HeroCargo() {
     [],
   );
 
-  // Phone: hang inside the in-flow badge slot — the plane is hidden there.
-  // No flight context: same ceiling hang as the pre-carrier card.
-  //
-  // The card's floor size (176x246, from IdCard's narrow-mode clamp) is
-  // taller than the reserved slot itself, so anchor + rope are tuned
-  // together to rest the card as high as the swing allows — short of
-  // that it bleeds under the next section's opaque background, since
-  // that section is a later DOM sibling of the hero, not a descendant
-  // overflow-y can hold back.
-  if (!flight || mobileHang) {
+  /* Phone: keep the plane, drop the credential. */
+  if (mobileHang) return null;
+
+  if (!flight) {
     return (
       <IdCard
         anchor={(stage, card) => ({ x: stage.w * 0.5, y: -(card.h * 0.3) })}

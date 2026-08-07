@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useState } from "react";
 import {
   CREATORS,
@@ -7,7 +8,15 @@ import {
   creatorPhotoCandidates,
   type Creator,
 } from "@/lib/creators";
-import { CreatorsParticles } from "@/features/home/components/creators-particles";
+/* three.js is ~600KB and this canvas is purely decorative, so it is
+   split out of the initial bundle and loaded once the strip mounts. */
+const CreatorsParticles = dynamic(
+  () =>
+    import("@/features/home/components/creators-particles").then(
+      (m) => m.CreatorsParticles,
+    ),
+  { ssr: false },
+);
 
 /** Repeat the set so each track half is always wider than the viewport. */
 const LOOP_SET = [...CREATORS, ...CREATORS, ...CREATORS];

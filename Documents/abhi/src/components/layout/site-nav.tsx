@@ -10,6 +10,7 @@ import {
   type CSSProperties,
 } from "react";
 import { CrtLogo } from "@/components/brand/crt-logo";
+import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
 import { SITE } from "@/lib/constants";
 import { NAV_ITEMS, getNavItemByHref } from "@/lib/nav";
@@ -109,41 +110,31 @@ export function SiteNav() {
 
   useEffect(() => {
     lastY.current = window.scrollY;
-    let ticking = false;
 
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
+    /* Shared frame loop — the nav no longer keeps its own scroll
+       listener + rAF; scroll position is measured once per frame for
+       the whole page and handed to every subscriber. */
+    return onViewport(({ scrollY: y, vh }) => {
+      const delta = y - lastY.current;
+      const max = document.documentElement.scrollHeight - vh;
 
-      requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const delta = y - lastY.current;
-        const max =
-          document.documentElement.scrollHeight - window.innerHeight;
+      if (y > 48) setCompact(true);
+      else if (y < 24) {
+        setCompact(false);
+        setExpanded(false);
+        setPinned(false);
+      }
 
-        if (y > 48) setCompact(true);
-        else if (y < 24) {
-          setCompact(false);
-          setExpanded(false);
-          setPinned(false);
-        }
+      setProgress(max > 0 ? Math.min(1, Math.max(0, y / max)) : 0);
 
-        setProgress(max > 0 ? Math.min(1, Math.max(0, y / max)) : 0);
+      // Scroll-down while pinned → unpin and collapse.
+      if (pinnedRef.current && delta > 8 && y > 64) {
+        setPinned(false);
+        setExpanded(false);
+      }
 
-        // Scroll-down while pinned → unpin and collapse.
-        if (pinnedRef.current && delta > 8 && y > 64) {
-          setPinned(false);
-          setExpanded(false);
-        }
-
-        lastY.current = y;
-        ticking = false;
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
+      lastY.current = y;
+    });
   }, []);
 
   // Esc / outside click clears pin (and closes menu via existing handler).

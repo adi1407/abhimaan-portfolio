@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
+import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -43,11 +44,11 @@ export function LetterCraft() {
     const el = rootRef.current;
     if (!el) return;
 
-    let raf = 0;
-    const update = () => {
-      raf = 0;
+    /* Shared frame loop: scroll and viewport size are measured once
+       per frame for the whole page rather than by each listener. */
+    return onViewport(({ vh: viewportH }) => {
       const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || 1;
+      const vh = viewportH || 1;
 
       /* Proximity of the section's centre to the viewport's centre:
          0 while it is off-screen either way, 1 as it passes through
@@ -65,20 +66,7 @@ export function LetterCraft() {
       el.style.setProperty("--arrive", eased.toFixed(4));
       /* Filament runs hotter and whiter than the spill it throws. */
       el.style.setProperty("--burn", (eased * eased).toFixed(4));
-    };
-
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    });
   }, []);
 
   return (

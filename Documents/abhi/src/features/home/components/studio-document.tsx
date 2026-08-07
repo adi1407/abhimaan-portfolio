@@ -6,6 +6,7 @@ import {
   LAYERS,
   type LayerId,
 } from "@/features/home/components/hero-layers";
+import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -39,13 +40,13 @@ export function StudioDocument() {
     const section = sectionRef.current;
     if (!section) return;
 
-    let raf = 0;
     let lastBuilt = -1;
 
-    const update = () => {
-      raf = 0;
+    /* Shared frame loop — one scroll measurement per frame for the
+       whole page instead of a listener per section. */
+    return onViewport(({ vh: viewportH }) => {
       const rect = section.getBoundingClientRect();
-      const vh = window.innerHeight || 1;
+      const vh = viewportH || 1;
       const travel = rect.height - vh;
       const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
 
@@ -68,20 +69,7 @@ export function StudioDocument() {
         lastBuilt = count;
         setBuilt(count);
       }
-    };
-
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(update);
-    };
-
-    update();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
+    });
   }, []);
 
   const done = built >= LAYERS.length;

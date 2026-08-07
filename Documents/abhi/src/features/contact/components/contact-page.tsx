@@ -1,8 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { RoleCycle } from "@/components/motion/role-cycle";
-import { ContactScene } from "@/features/contact/components/contact-scene";
+
+/* Same reason as the creators canvas: three.js stays out of the route's
+   first load and arrives after the form is interactive. */
+const ContactScene = dynamic(
+  () =>
+    import("@/features/contact/components/contact-scene").then(
+      (m) => m.ContactScene,
+    ),
+  { ssr: false },
+);
 import {
   InquiryForm,
   type InquiryStatus,

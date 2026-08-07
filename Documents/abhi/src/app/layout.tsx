@@ -3,6 +3,7 @@ import { fontVariables } from "@/app/fonts";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { NavProvider } from "@/components/layout/nav-provider";
+import { OffscreenPause } from "@/components/perf/offscreen-pause";
 import { SmoothScroll } from "@/components/providers/smooth-scroll";
 import { SITE, SITE_IMAGE } from "@/lib/constants";
 import "./globals.css";
@@ -46,6 +47,7 @@ export default function RootLayout({
             <SiteHeader />
             <div className="flex min-h-full flex-1 flex-col">{children}</div>
             <SiteFooter />
+            <OffscreenPause />
           </NavProvider>
         </SmoothScroll>
       </body>

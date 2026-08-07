@@ -72,7 +72,7 @@ const SOCIALS = ["Instagram", "Behance", "LinkedIn"];
 export function IdCard({
   name = "Abhimaan",
   role = "Art Designer",
-  photoSrc = "/profile.png",
+  photoSrc = "/profile.webp",
   location = "IN",
   email = "hello@abhimaan.studio",
   anchorRatio,

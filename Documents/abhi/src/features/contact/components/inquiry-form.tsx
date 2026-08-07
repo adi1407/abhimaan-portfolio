@@ -245,7 +245,7 @@ export function InquiryForm({
               </div>
             </label>
 
-            <label className="inquiry-form__field inquiry-form__field--full">
+            <label className="inquiry-form__field">
               <span>Budget <em>(optional)</em></span>
               <div className="inquiry-form__control">
                 <input

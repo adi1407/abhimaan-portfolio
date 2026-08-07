@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -13,7 +14,7 @@ export const LAYERS = [
     label: "Base Plate",
     blend: "Normal",
     opacity: 100,
-    src: "/photoshop/1.jpg.jpeg",
+    src: "/photoshop/1.jpg.webp",
     mode: "normal",
   },
   {
@@ -21,7 +22,7 @@ export const LAYERS = [
     label: "Light Streaks",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/2.png",
+    src: "/photoshop/2.webp",
     mode: "screen",
   },
   {
@@ -29,7 +30,7 @@ export const LAYERS = [
     label: "Atmosphere",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/3.png",
+    src: "/photoshop/3.webp",
     mode: "screen",
   },
   {
@@ -37,7 +38,7 @@ export const LAYERS = [
     label: "Glow Pass",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/4.png",
+    src: "/photoshop/4.webp",
     mode: "screen",
   },
   {
@@ -45,7 +46,7 @@ export const LAYERS = [
     label: "Hero Detail",
     blend: "Normal",
     opacity: 100,
-    src: "/photoshop/5.png",
+    src: "/photoshop/5.webp",
     mode: "normal",
   },
   {
@@ -53,7 +54,7 @@ export const LAYERS = [
     label: "Highlights",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/6.png",
+    src: "/photoshop/6.webp",
     mode: "screen",
   },
   {
@@ -61,7 +62,7 @@ export const LAYERS = [
     label: "FX Pass",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/7.png",
+    src: "/photoshop/7.webp",
     mode: "screen",
   },
   {
@@ -69,7 +70,7 @@ export const LAYERS = [
     label: "Depth",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/8.png",
+    src: "/photoshop/8.webp",
     mode: "screen",
   },
   {
@@ -77,7 +78,7 @@ export const LAYERS = [
     label: "Type & UI",
     blend: "Screen",
     opacity: 100,
-    src: "/photoshop/9.png",
+    src: "/photoshop/9.webp",
     mode: "screen",
   },
 ] as const;
@@ -119,27 +120,52 @@ export function HeroLayersPanel({
   onToggle: (id: LayerId) => void;
   disabled: boolean;
 }) {
+  const listRef = useRef<HTMLUListElement>(null);
+  const liveRef = useRef<HTMLLIElement | null>(null);
+  const liveIndex = Math.max(0, built - 1);
+
+  /* Keep the landing layer in view on the mobile filmstrip. */
+  useEffect(() => {
+    const el = liveRef.current;
+    if (!el || built <= 0) return;
+    el.scrollIntoView({
+      behavior: "smooth",
+      inline: "center",
+      block: "nearest",
+    });
+  }, [built]);
+
   return (
     <aside className="psh-layers" aria-label="Layers">
       <div className="psh-layers__head">
-        <span>Layers</span>
-        <em>{LAYERS.length} · RGB/8</em>
+        <span className="psh-layers__head-title">
+          <i className="psh-layers__pulse" aria-hidden />
+          Layers
+        </span>
+        <em>
+          {Math.min(built, LAYERS.length)}/{LAYERS.length}
+        </em>
       </div>
 
-      <ul className="psh-layers__list">
+      <ul ref={listRef} className="psh-layers__list">
         {/* Panels list top layer first. */}
         {[...LAYERS].reverse().map((layer) => {
           const index = LAYERS.findIndex((l) => l.id === layer.id);
           const isIn = index < built;
+          const isLive = isIn && index === liveIndex;
           const on = !hidden.has(layer.id);
+          const n = String(index + 1).padStart(2, "0");
           return (
             <li
               key={layer.id}
+              ref={isLive ? (node) => { liveRef.current = node; } : undefined}
               className={cn(
                 "psh-layers__row",
                 isIn && "is-in",
+                isLive && "is-live",
                 !on && "is-off",
               )}
+              style={{ ["--li" as string]: index }}
             >
               <button
                 type="button"
@@ -153,10 +179,15 @@ export function HeroLayersPanel({
               </button>
 
               <span
-                className={cn("psh-layers__thumb", `psh-layers__thumb--${layer.id}`)}
+                className={cn(
+                  "psh-layers__thumb",
+                  `psh-layers__thumb--${layer.id}`,
+                )}
                 style={{ backgroundImage: `url("${layer.src}")` }}
                 aria-hidden
-              />
+              >
+                <em className="psh-layers__idx">{n}</em>
+              </span>
 
               <span className="psh-layers__meta">
                 <span className="psh-layers__name">{layer.label}</span>
@@ -164,6 +195,12 @@ export function HeroLayersPanel({
                   {layer.blend} · {layer.opacity}%
                 </span>
               </span>
+
+              {isLive ? (
+                <span className="psh-layers__live" aria-hidden>
+                  Live
+                </span>
+              ) : null}
             </li>
           );
         })}

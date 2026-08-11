@@ -8,9 +8,11 @@
     "start": "next start -p 3003",
     "lint": "eslint",
     "film:frames": "node scripts/extract-film-frames.mjs",
-    "thumbs:normalize": "node scripts/normalize-thumbnails.mjs"
+    "thumbs:normalize": "node scripts/normalize-thumbnails.mjs",
+    "campaigns:normalize": "node scripts/normalize-campaigns.mjs"
   },
   "dependencies": {
+    "gsap": "^3.15.0",
     "lenis": "^1.3.25",
     "next": "16.2.12",
     "react": "19.2.4",

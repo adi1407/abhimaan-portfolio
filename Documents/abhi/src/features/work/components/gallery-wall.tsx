@@ -17,6 +17,7 @@ import {
   type WorkCategoryId,
   type WorkItem,
 } from "@/lib/work";
+import { ThumbCinema } from "@/features/work/components/thumb-cinema";
 
 type Filter = "all" | WorkCategoryId;
 
@@ -76,6 +77,7 @@ export function GalleryWall({
 }: GalleryWallProps) {
   const [filter, setFilter] = useState<Filter>(initialCategory ?? "all");
   const [lightbox, setLightbox] = useState<number | null>(null);
+  const [cinemaOrigin, setCinemaOrigin] = useState<HTMLElement | null>(null);
 
   // Follow a deep-link (/work/[category]) even if the route re-renders this
   // component without remounting — adjusted during render, not in an effect.
@@ -84,7 +86,17 @@ export function GalleryWall({
     setPrevInitial(initialCategory);
     setFilter(initialCategory ?? "all");
     setLightbox(null);
+    setCinemaOrigin(null);
   }
+
+  const openAt = useCallback((i: number, el: HTMLElement | null) => {
+    const media =
+      el?.closest("button")?.querySelector<HTMLElement>(
+        ".wall-item__media, .wall-thumbs__featured-media",
+      ) ?? el;
+    setCinemaOrigin(media);
+    setLightbox(i);
+  }, []);
 
   useEffect(() => {
     if (!focus) return;
@@ -219,7 +231,10 @@ export function GalleryWall({
     return () => io.disconnect();
   }, [filter]);
 
-  const close = useCallback(() => setLightbox(null), []);
+  const close = useCallback(() => {
+    setLightbox(null);
+    setCinemaOrigin(null);
+  }, []);
   const step = useCallback(
     (dir: 1 | -1) =>
       setLightbox((cur) =>
@@ -228,9 +243,9 @@ export function GalleryWall({
     [visible.length],
   );
 
-  // Keyboard control while the lightbox is open.
+  // Keyboard control for the generic lightbox only (ThumbCinema owns its keys).
   useEffect(() => {
-    if (lightbox === null) return;
+    if (lightbox === null || isThumbs) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       else if (e.key === "ArrowRight") step(1);
@@ -242,7 +257,67 @@ export function GalleryWall({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [lightbox, close, step]);
+  }, [lightbox, isThumbs, close, step]);
+
+  /* GSAP page polish for thumbnails (desktop) — featured clip-in + grid stagger.
+     CSS cast remains the fallback if GSAP is slow/unavailable. */
+  useEffect(() => {
+    if (!isThumbs || !thumbsLive) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!window.matchMedia("(min-width: 900px)").matches) return;
+
+    let cancelled = false;
+    let ctx: { revert: () => void } | null = null;
+
+    (async () => {
+      const { gsap } = await import("gsap");
+      if (cancelled) return;
+      const root = thumbsRootRef.current;
+      if (!root) return;
+
+      ctx = gsap.context(() => {
+        const feature = root.querySelector(".wall-thumbs__featured-media");
+        const tiles = gsap.utils.toArray<HTMLElement>(
+          root.querySelectorAll(".wall-item--thumb"),
+        );
+
+        if (feature) {
+          gsap.fromTo(
+            feature,
+            { clipPath: "inset(10% 14% 10% 14% round 10px)", scale: 1.05 },
+            {
+              clipPath: "inset(0% 0% 0% 0% round 10px)",
+              scale: 1,
+              duration: 0.95,
+              ease: "expo.out",
+            },
+          );
+        }
+
+        if (tiles.length) {
+          gsap.set(tiles, { animation: "none" });
+          gsap.fromTo(
+            tiles,
+            { y: 36, opacity: 0 },
+            {
+              y: 0,
+              opacity: 1,
+              duration: 0.58,
+              stagger: 0.04,
+              ease: "power3.out",
+              delay: 0.1,
+              clearProps: "transform,animation",
+            },
+          );
+        }
+      }, root);
+    })();
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
+  }, [isThumbs, thumbsLive, filter]);
 
   const profile = getBehanceProfileUrl();
   const current = lightbox === null ? null : visible[lightbox];
@@ -307,6 +382,7 @@ export function GalleryWall({
               onClick={() => {
                 setFilter(f.id);
                 setLightbox(null);
+                setCinemaOrigin(null);
               }}
             >
               {f.label}
@@ -325,7 +401,9 @@ export function GalleryWall({
               <button
                 type="button"
                 className="wall-thumbs__featured"
-                onClick={() => setLightbox(Math.max(0, featuredGlobalIndex))}
+                onClick={(e) =>
+                  openAt(Math.max(0, featuredGlobalIndex), e.currentTarget)
+                }
                 onPointerMove={onFeaturedPointer}
                 onPointerLeave={() => {
                   onFeaturedLeave();
@@ -419,7 +497,7 @@ export function GalleryWall({
                       <button
                         type="button"
                         className="wall-item__btn"
-                        onClick={() => setLightbox(idx)}
+                        onClick={(e) => openAt(idx, e.currentTarget)}
                         aria-label={`${item.title}, ${item.year} — open`}
                       >
                         <span className="wall-item__media">
@@ -503,7 +581,18 @@ export function GalleryWall({
         </div>
       </Container>
 
-      {current ? (
+      {current && isThumbs && lightbox !== null ? (
+        <ThumbCinema
+          key={`tcinema-${filter}`}
+          items={visible}
+          index={lightbox}
+          onIndexChange={setLightbox}
+          onClose={close}
+          originEl={cinemaOrigin}
+        />
+      ) : null}
+
+      {current && !isThumbs ? (
         <div
           className="wall-lb"
           role="dialog"

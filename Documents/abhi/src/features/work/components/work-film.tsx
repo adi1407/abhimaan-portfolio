@@ -566,7 +566,7 @@ export function WorkFilm({
     const timers: number[] = [];
     for (const cat of WORK_CATEGORIES) {
       if (cat.id !== "thumbnails") continue;
-      const items = getItemsByCategory(cat.id).slice(0, 3);
+      const items = getItemsByCategory(cat.id).slice(0, 4);
       if (items.length < 2) continue;
       let i = 0;
       const id = window.setInterval(() => {

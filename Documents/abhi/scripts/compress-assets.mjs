@@ -28,6 +28,8 @@ const JOBS = [
   { dir: "photoshop", to: "webp", maxEdge: 1600, quality: 82 },
   { dir: "creators", to: "jpeg", maxEdge: 800, quality: 78 },
   { dir: "work", to: "jpeg", maxEdge: 1600, quality: 80 },
+  /* Prefer scripts/normalize-thumbnails.mjs for first-pass rename+convert. */
+  { dir: "thumbnails", to: "webp", maxEdge: 1920, quality: 90 },
   { dir: ".", to: "webp", maxEdge: 1200, quality: 82, only: ["profile.png"] },
 ];
 

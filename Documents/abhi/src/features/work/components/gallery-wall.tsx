@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 import { Container } from "@/components/layout/container";
 import { cn } from "@/lib/cn";
 import {
@@ -24,6 +31,10 @@ const FILTERS: readonly { id: Filter; label: string }[] = [
   { id: "all", label: "All" },
   ...WORK_CATEGORIES.map((c) => ({ id: c.id, label: c.short })),
 ];
+
+/** How many lead cuts rotate in the featured reel. */
+const REEL_LEN = 5;
+const REEL_MS = 3400;
 
 /**
  * Deterministic per-index pseudo-random (never Math.random) so the server and
@@ -105,6 +116,63 @@ export function GalleryWall({
 
   // Longer sets need a tighter wave or the tail drags.
   const stagger = visible.length > 8 ? 34 : 56;
+  const isThumbs = filter === "thumbnails";
+  const reel = useMemo(
+    () => (isThumbs ? visible.slice(0, Math.min(REEL_LEN, visible.length)) : []),
+    [isThumbs, visible],
+  );
+  const rest = useMemo(
+    () => (isThumbs ? visible.slice(1) : visible),
+    [isThumbs, visible],
+  );
+
+  const [reelIndex, setReelIndex] = useState(0);
+  const [reelPaused, setReelPaused] = useState(false);
+  const [thumbsLive, setThumbsLive] = useState(false);
+  const featuredMediaRef = useRef<HTMLSpanElement>(null);
+  const thumbsRootRef = useRef<HTMLDivElement>(null);
+
+  // Reset reel when entering the thumbnails filter.
+  useEffect(() => {
+    setReelIndex(0);
+    setReelPaused(false);
+    setThumbsLive(false);
+  }, [filter]);
+
+  // Featured reel auto-advance (paused on hover / reduced motion / lightbox).
+  useEffect(() => {
+    if (!isThumbs || reel.length < 2 || reelPaused || lightbox !== null) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const id = window.setInterval(() => {
+      setReelIndex((i) => (i + 1) % reel.length);
+    }, REEL_MS);
+    return () => window.clearInterval(id);
+  }, [isThumbs, reel.length, reelPaused, lightbox]);
+
+  const onFeaturedPointer = useCallback(
+    (e: ReactPointerEvent<HTMLButtonElement>) => {
+      const media = featuredMediaRef.current;
+      if (!media) return;
+      if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+        return;
+      }
+      const r = media.getBoundingClientRect();
+      const px = (e.clientX - r.left) / r.width - 0.5;
+      const py = (e.clientY - r.top) / r.height - 0.5;
+      media.style.setProperty("--tilt-x", `${(-py * 5).toFixed(2)}deg`);
+      media.style.setProperty("--tilt-y", `${(px * 6).toFixed(2)}deg`);
+      media.style.setProperty("--shine-x", `${((px + 0.5) * 100).toFixed(1)}%`);
+      media.style.setProperty("--shine-y", `${((py + 0.5) * 100).toFixed(1)}%`);
+    },
+    [],
+  );
+
+  const onFeaturedLeave = useCallback(() => {
+    const media = featuredMediaRef.current;
+    if (!media) return;
+    media.style.setProperty("--tilt-x", "0deg");
+    media.style.setProperty("--tilt-y", "0deg");
+  }, []);
 
   /**
    * Play the scatter-into-register entrance when the wall first comes into
@@ -114,16 +182,21 @@ export function GalleryWall({
   const gridRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
     const grid = gridRef.current;
-    if (!grid) return;
+    const thumbsRoot = thumbsRootRef.current;
+    const target = thumbsRoot ?? grid;
+    if (!target) return;
 
     // The end state is the default; `is-cast` is what runs the animation. So a
     // missing observer or a dropped frame can never strand a tile off-stage.
-    const cast = () => grid.classList.add("is-cast");
+    const cast = () => {
+      grid?.classList.add("is-cast");
+      setThumbsLive(true);
+    };
 
     // Already on screen (landing straight on /work, or filtering in place)?
     // Cast synchronously — a CSS animation still plays from its 0% keyframe,
     // and this can't be stranded by a throttled frame callback.
-    const rect = grid.getBoundingClientRect();
+    const rect = target.getBoundingClientRect();
     if (rect.top < window.innerHeight && rect.bottom > 0) {
       cast();
       return;
@@ -142,7 +215,7 @@ export function GalleryWall({
       },
       { threshold: 0.08, rootMargin: "0px 0px -6% 0px" },
     );
-    io.observe(grid);
+    io.observe(target);
     return () => io.disconnect();
   }, [filter]);
 
@@ -176,16 +249,39 @@ export function GalleryWall({
   const currentCat = current
     ? WORK_CATEGORIES.find((c) => c.id === current.category)
     : null;
+  const featured = reel[reelIndex] ?? reel[0] ?? null;
+  const featuredGlobalIndex = featured
+    ? visible.findIndex((i) => i.id === featured.id)
+    : 0;
 
   return (
-    <section id="work" className="wall" aria-label="Selected work">
+    <section
+      id="work"
+      className={cn(
+        "wall",
+        isThumbs && "wall--thumbs",
+        isThumbs && thumbsLive && "is-thumbs-live",
+      )}
+      aria-label="Selected work"
+    >
       <Container>
         <header className="wall__head" data-work-gallery-head>
           <div className="wall__head-lead">
-            <p className="wall__eyebrow">Selected work</p>
+            <p className="wall__eyebrow">
+              {isThumbs ? "Thumbnails · scroll-stoppers" : "Selected work"}
+            </p>
             <h2 className="wall__title">
-              The work,
-              <span className="wall__title-serif"> hung on one wall</span>
+              {isThumbs ? (
+                <>
+                  Built to stop
+                  <span className="wall__title-serif"> a scroll</span>
+                </>
+              ) : (
+                <>
+                  The work,
+                  <span className="wall__title-serif"> hung on one wall</span>
+                </>
+              )}
             </h2>
           </div>
           {profile ? (
@@ -221,50 +317,186 @@ export function GalleryWall({
 
         {/* Clip the fly-in so off-stage tiles can never widen the page. */}
         <div className="wall__canvas">
-          {/* key=filter → the grid remounts and replays the entrance */}
-          <ul key={filter} ref={gridRef} className="wall__grid">
-            {visible.map((item, i) => {
-              const e = entrance(i);
-              return (
-            <li
-              key={item.id}
-              className={cn("wall-item", `wall-item--${item.aspect}`)}
-              style={
-                {
-                  "--i": i,
-                  "--d": `${(i * stagger).toFixed(0)}ms`,
-                  "--fx": `${e.x}px`,
-                  "--fy": `${e.y}px`,
-                  "--fr": `${e.r}deg`,
-                } as React.CSSProperties
-              }
+          {isThumbs && featured ? (
+            <div
+              ref={thumbsRootRef}
+              className={cn("wall-thumbs", thumbsLive && "is-live")}
             >
               <button
                 type="button"
-                className="wall-item__btn"
-                onClick={() => setLightbox(i)}
-                aria-label={`${item.title}, ${item.year} — open`}
+                className="wall-thumbs__featured"
+                onClick={() => setLightbox(Math.max(0, featuredGlobalIndex))}
+                onPointerMove={onFeaturedPointer}
+                onPointerLeave={() => {
+                  onFeaturedLeave();
+                  setReelPaused(false);
+                }}
+                onPointerEnter={() => setReelPaused(true)}
+                aria-label={`${featured.title}, ${featured.year} — open`}
               >
-                <span className="wall-item__media">
-                  {item.src ? (
+                <span
+                  ref={featuredMediaRef}
+                  className="wall-thumbs__featured-media"
+                >
+                  {reel.map((item, i) => (
                     /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={item.src} alt="" className="wall-item__img" />
-                  ) : (
-                    <Placeholder item={item} />
-                  )}
-                  <span className="wall-item__cat" aria-hidden>
-                    {item.category}
+                    <img
+                      key={item.id}
+                      src={item.src}
+                      alt=""
+                      className={cn(
+                        "wall-thumbs__img",
+                        i === reelIndex && "is-active",
+                      )}
+                      decoding="async"
+                    />
+                  ))}
+                  <span className="wall-thumbs__shine" aria-hidden />
+                  <span className="wall-thumbs__scan" aria-hidden />
+                  <span className="wall-thumbs__play" aria-hidden>
+                    ▶
+                  </span>
+                  <span
+                    key={featured.id}
+                    className="wall-thumbs__progress"
+                    style={{ ["--reel-ms" as string]: `${REEL_MS}ms` }}
+                    data-paused={
+                      reelPaused || lightbox !== null ? "" : undefined
+                    }
+                    aria-hidden
+                  />
+                </span>
+                <span className="wall-thumbs__featured-meta">
+                  <span className="wall-thumbs__kicker">
+                    Live reel · {String(reelIndex + 1).padStart(2, "0")} /{" "}
+                    {String(reel.length).padStart(2, "0")}
+                  </span>
+                  <span
+                    key={featured.id}
+                    className="wall-thumbs__featured-title"
+                  >
+                    {featured.title}
+                  </span>
+                  <span className="wall-thumbs__featured-year">
+                    {featured.year} · click to open
+                  </span>
+                  <span className="wall-thumbs__dots" aria-hidden>
+                    {reel.map((item, i) => (
+                      <span
+                        key={item.id}
+                        className={cn(
+                          "wall-thumbs__dot",
+                          i === reelIndex && "is-on",
+                        )}
+                      />
+                    ))}
                   </span>
                 </span>
-                <span className="wall-item__cap">
-                  <span className="wall-item__name">{item.title}</span>
-                  <span className="wall-item__year">{item.year}</span>
-                </span>
               </button>
-            </li>
-              );
-            })}
-          </ul>
+
+              <ul
+                key={filter}
+                ref={gridRef}
+                className="wall__grid wall-thumbs__grid"
+              >
+                {rest.map((item, i) => {
+                  const idx = i + 1;
+                  const e = entrance(idx);
+                  return (
+                    <li
+                      key={item.id}
+                      className="wall-item wall-item--thumb"
+                      style={
+                        {
+                          "--i": idx,
+                          "--d": `${(80 + i * 42).toFixed(0)}ms`,
+                          "--fx": `${e.x}px`,
+                          "--fy": `${e.y}px`,
+                          "--fr": `${e.r}deg`,
+                        } as React.CSSProperties
+                      }
+                    >
+                      <button
+                        type="button"
+                        className="wall-item__btn"
+                        onClick={() => setLightbox(idx)}
+                        aria-label={`${item.title}, ${item.year} — open`}
+                      >
+                        <span className="wall-item__media">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={item.src}
+                            alt=""
+                            className="wall-item__img"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                          <span className="wall-item__shine" aria-hidden />
+                          <span className="wall-item__play" aria-hidden>
+                            ▶
+                          </span>
+                        </span>
+                        <span className="wall-item__cap">
+                          <span className="wall-item__name">{item.title}</span>
+                          <span className="wall-item__year">{item.year}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : (
+            <ul key={filter} ref={gridRef} className="wall__grid">
+              {visible.map((item, i) => {
+                const e = entrance(i);
+                return (
+                  <li
+                    key={item.id}
+                    className={cn("wall-item", `wall-item--${item.aspect}`)}
+                    style={
+                      {
+                        "--i": i,
+                        "--d": `${(i * stagger).toFixed(0)}ms`,
+                        "--fx": `${e.x}px`,
+                        "--fy": `${e.y}px`,
+                        "--fr": `${e.r}deg`,
+                      } as React.CSSProperties
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="wall-item__btn"
+                      onClick={() => setLightbox(i)}
+                      aria-label={`${item.title}, ${item.year} — open`}
+                    >
+                      <span className="wall-item__media">
+                        {item.src ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={item.src}
+                            alt=""
+                            className="wall-item__img"
+                            loading="lazy"
+                            decoding="async"
+                          />
+                        ) : (
+                          <Placeholder item={item} />
+                        )}
+                        <span className="wall-item__cat" aria-hidden>
+                          {item.category}
+                        </span>
+                      </span>
+                      <span className="wall-item__cap">
+                        <span className="wall-item__name">{item.title}</span>
+                        <span className="wall-item__year">{item.year}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
 
           {/* Sits after the grid so the sibling selector can reach it. */}
           <span className="wall__register" aria-hidden />

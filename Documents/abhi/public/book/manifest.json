@@ -1,0 +1,218 @@
+{
+  "id": "book",
+  "title": "Quiet Hours — Issue 02",
+  "subtitle": "Editorial spreads",
+  "generatedAt": "2026-08-12T08:40:18.823Z",
+  "items": [
+    {
+      "id": "page-01",
+      "src": "/book/page-01.webp",
+      "label": "Spread 1",
+      "source": "1.jpg"
+    },
+    {
+      "id": "page-02",
+      "src": "/book/page-02.webp",
+      "label": "Spread 2",
+      "source": "2.jpg"
+    },
+    {
+      "id": "page-03",
+      "src": "/book/page-03.webp",
+      "label": "Spread 3",
+      "source": "3.jpg"
+    },
+    {
+      "id": "page-04",
+      "src": "/book/page-04.webp",
+      "label": "Spread 4",
+      "source": "4.jpg"
+    },
+    {
+      "id": "page-05",
+      "src": "/book/page-05.webp",
+      "label": "Spread 5",
+      "source": "6.jpg"
+    },
+    {
+      "id": "page-06",
+      "src": "/book/page-06.webp",
+      "label": "Spread 6",
+      "source": "7.jpg"
+    },
+    {
+      "id": "page-07",
+      "src": "/book/page-07.webp",
+      "label": "Spread 7",
+      "source": "9.jpg"
+    },
+    {
+      "id": "page-08",
+      "src": "/book/page-08.webp",
+      "label": "Spread 8",
+      "source": "11.jpg"
+    },
+    {
+      "id": "page-09",
+      "src": "/book/page-09.webp",
+      "label": "Spread 9",
+      "source": "12.jpg"
+    },
+    {
+      "id": "page-10",
+      "src": "/book/page-10.webp",
+      "label": "Spread 10",
+      "source": "13.jpg"
+    },
+    {
+      "id": "page-11",
+      "src": "/book/page-11.webp",
+      "label": "Spread 11",
+      "source": "14.jpg"
+    },
+    {
+      "id": "page-12",
+      "src": "/book/page-12.webp",
+      "label": "Spread 12",
+      "source": "15.jpg"
+    },
+    {
+      "id": "page-13",
+      "src": "/book/page-13.webp",
+      "label": "Spread 13",
+      "source": "16.jpg"
+    },
+    {
+      "id": "page-14",
+      "src": "/book/page-14.webp",
+      "label": "Spread 14",
+      "source": "17.jpg"
+    },
+    {
+      "id": "page-15",
+      "src": "/book/page-15.webp",
+      "label": "Spread 15",
+      "source": "18.jpg"
+    },
+    {
+      "id": "page-16",
+      "src": "/book/page-16.webp",
+      "label": "Spread 16",
+      "source": "19.jpg"
+    },
+    {
+      "id": "page-17",
+      "src": "/book/page-17.webp",
+      "label": "Spread 17",
+      "source": "20.jpg"
+    },
+    {
+      "id": "page-18",
+      "src": "/book/page-18.webp",
+      "label": "Spread 18",
+      "source": "21.jpg"
+    },
+    {
+      "id": "page-19",
+      "src": "/book/page-19.webp",
+      "label": "Spread 19",
+      "source": "22.jpg"
+    },
+    {
+      "id": "page-20",
+      "src": "/book/page-20.webp",
+      "label": "Spread 20",
+      "source": "23.jpg"
+    },
+    {
+      "id": "page-21",
+      "src": "/book/page-21.webp",
+      "label": "Spread 21",
+      "source": "24.jpg"
+    },
+    {
+      "id": "page-22",
+      "src": "/book/page-22.webp",
+      "label": "Spread 22",
+      "source": "25.jpg"
+    },
+    {
+      "id": "page-23",
+      "src": "/book/page-23.webp",
+      "label": "Spread 23",
+      "source": "26.jpg"
+    },
+    {
+      "id": "page-24",
+      "src": "/book/page-24.webp",
+      "label": "Spread 24",
+      "source": "27.jpg"
+    },
+    {
+      "id": "page-25",
+      "src": "/book/page-25.webp",
+      "label": "Spread 25",
+      "source": "28.jpg"
+    },
+    {
+      "id": "page-26",
+      "src": "/book/page-26.webp",
+      "label": "Spread 26",
+      "source": "29.jpg"
+    },
+    {
+      "id": "page-27",
+      "src": "/book/page-27.webp",
+      "label": "Spread 27",
+      "source": "30.jpg"
+    },
+    {
+      "id": "page-28",
+      "src": "/book/page-28.webp",
+      "label": "Spread 28",
+      "source": "31.jpg"
+    },
+    {
+      "id": "page-29",
+      "src": "/book/page-29.webp",
+      "label": "Spread 29",
+      "source": "32.jpg"
+    },
+    {
+      "id": "page-30",
+      "src": "/book/page-30.webp",
+      "label": "Spread 30",
+      "source": "33.jpg"
+    },
+    {
+      "id": "page-31",
+      "src": "/book/page-31.webp",
+      "label": "Spread 31",
+      "source": "34.jpg"
+    },
+    {
+      "id": "page-32",
+      "src": "/book/page-32.webp",
+      "label": "Spread 32",
+      "source": "35.jpg"
+    },
+    {
+      "id": "page-33",
+      "src": "/book/page-33.webp",
+      "label": "Spread 33",
+      "source": "36.jpg"
+    },
+    {
+      "id": "page-34",
+      "src": "/book/page-34.webp",
+      "label": "Spread 34",
+      "source": "37.jpg"
+    },
+    {
+      "id": "page-35",
+      "src": "/book/page-35.webp",
+      "label": "Spread 35",
+      "source": "39.jpg"
+    }
+  ]
+}

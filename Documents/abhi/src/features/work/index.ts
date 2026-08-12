@@ -4,5 +4,6 @@ export { WorkFilm } from "./components/work-film";
 export { CampaignBoards } from "./components/campaign-boards";
 export { CampaignGrid } from "./components/campaign-grid";
 export { GalleryWall } from "./components/gallery-wall";
+export { BookReader } from "./components/book-reader";
 export { ThumbCinema } from "./components/thumb-cinema";
 export { BehanceBridge } from "./components/behance-bridge";

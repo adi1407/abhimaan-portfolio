@@ -372,38 +372,14 @@ export const WORK_ITEMS: readonly WorkItem[] = [
     src: W.p06,
     aspect: "square",
   },
-  // Books
+  // Books — single cover opens the CSS page-flip reader (see BookReader)
   {
     id: "e01",
     category: "books",
     title: "Quiet Hours — Issue 02",
     year: "2026",
-    src: W.p01,
+    src: "/book/page-01.webp",
     aspect: "wide",
-  },
-  {
-    id: "e02",
-    category: "books",
-    title: "Spread: Margins",
-    year: "2025",
-    src: W.p02,
-    aspect: "wide",
-  },
-  {
-    id: "e03",
-    category: "books",
-    title: "Essay Layout",
-    year: "2025",
-    src: W.p03,
-    aspect: "portrait",
-  },
-  {
-    id: "e04",
-    category: "books",
-    title: "Colophon Study",
-    year: "2024",
-    src: W.p04,
-    aspect: "square",
   },
 ] as const;
 

@@ -1,5 +1,5 @@
 /**
- * Rename + convert public/abhi{1,2,3}/* → kebab-case WebP.
+ * Rename + convert public/abhi{1,2,3,4}/* → kebab-case WebP.
  *
  *   node scripts/normalize-campaigns.mjs --dry
  *   node scripts/normalize-campaigns.mjs
@@ -10,7 +10,7 @@ import sharp from "sharp";
 
 const DRY = process.argv.includes("--dry");
 const ROOT = path.resolve("public");
-const SETS = ["abhi1", "abhi2", "abhi3"];
+const SETS = ["abhi1", "abhi2", "abhi3", "abhi4"];
 const QUALITY = 88;
 const MAX_EDGE = 2000;
 
@@ -29,6 +29,12 @@ const MAP = {
   "true ripper jelly 4th.jpg": "true-ripper-jelly",
   "true ripper kiolamo 5th.jpg": "true-ripper-kiolamo",
   "true ripper reel psd.jpg": "true-ripper-reel",
+  "APEX 0.jpg": "apex-0",
+  "APEX-1.jpg": "apex-1",
+  "APEX-2.jpg": "apex-2",
+  "APEX-3.jpg": "apex-3",
+  "APEX-5.jpg": "apex-5",
+  "OVERALL-STANDING.jpg": "overall-standing",
 };
 
 const titleFromSlug = (slug) =>

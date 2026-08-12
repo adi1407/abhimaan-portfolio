@@ -18,6 +18,8 @@ import {
   type WorkItem,
 } from "@/lib/work";
 import { ThumbCinema } from "@/features/work/components/thumb-cinema";
+import { BookReader } from "@/features/work/components/book-reader";
+import { BOOK } from "@/lib/book";
 
 type Filter = "all" | WorkCategoryId;
 
@@ -78,6 +80,7 @@ export function GalleryWall({
   const [filter, setFilter] = useState<Filter>(initialCategory ?? "all");
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [cinemaOrigin, setCinemaOrigin] = useState<HTMLElement | null>(null);
+  const [bookOpen, setBookOpen] = useState(false);
 
   // Follow a deep-link (/work/[category]) even if the route re-renders this
   // component without remounting — adjusted during render, not in an effect.
@@ -87,6 +90,7 @@ export function GalleryWall({
     setFilter(initialCategory ?? "all");
     setLightbox(null);
     setCinemaOrigin(null);
+    setBookOpen(false);
   }
 
   const openAt = useCallback((i: number, el: HTMLElement | null) => {
@@ -129,6 +133,7 @@ export function GalleryWall({
   // Longer sets need a tighter wave or the tail drags.
   const stagger = visible.length > 8 ? 34 : 56;
   const isThumbs = filter === "thumbnails";
+  const isBooks = filter === "books";
   const reel = useMemo(
     () => (isThumbs ? visible.slice(0, Math.min(REEL_LEN, visible.length)) : []),
     [isThumbs, visible],
@@ -143,12 +148,14 @@ export function GalleryWall({
   const [thumbsLive, setThumbsLive] = useState(false);
   const featuredMediaRef = useRef<HTMLSpanElement>(null);
   const thumbsRootRef = useRef<HTMLDivElement>(null);
+  const booksRootRef = useRef<HTMLDivElement>(null);
 
   // Reset reel when entering the thumbnails filter.
   useEffect(() => {
     setReelIndex(0);
     setReelPaused(false);
     setThumbsLive(false);
+    setBookOpen(false);
   }, [filter]);
 
   // Featured reel auto-advance (paused on hover / reduced motion / lightbox).
@@ -195,7 +202,8 @@ export function GalleryWall({
   useEffect(() => {
     const grid = gridRef.current;
     const thumbsRoot = thumbsRootRef.current;
-    const target = thumbsRoot ?? grid;
+    const booksRoot = booksRootRef.current;
+    const target = thumbsRoot ?? booksRoot ?? grid;
     if (!target) return;
 
     // The end state is the default; `is-cast` is what runs the animation. So a
@@ -234,6 +242,7 @@ export function GalleryWall({
   const close = useCallback(() => {
     setLightbox(null);
     setCinemaOrigin(null);
+    setBookOpen(false);
   }, []);
   const step = useCallback(
     (dir: 1 | -1) =>
@@ -243,9 +252,9 @@ export function GalleryWall({
     [visible.length],
   );
 
-  // Keyboard control for the generic lightbox only (ThumbCinema owns its keys).
+  // Keyboard control for the generic lightbox only (ThumbCinema / BookReader own keys).
   useEffect(() => {
-    if (lightbox === null || isThumbs) return;
+    if (lightbox === null || isThumbs || isBooks) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") close();
       else if (e.key === "ArrowRight") step(1);
@@ -257,7 +266,7 @@ export function GalleryWall({
       document.body.style.overflow = "";
       window.removeEventListener("keydown", onKey);
     };
-  }, [lightbox, isThumbs, close, step]);
+  }, [lightbox, isThumbs, isBooks, close, step]);
 
   /* GSAP page polish for thumbnails (desktop) — featured clip-in + grid stagger.
      CSS cast remains the fallback if GSAP is slow/unavailable. */
@@ -335,6 +344,7 @@ export function GalleryWall({
       className={cn(
         "wall",
         isThumbs && "wall--thumbs",
+        isBooks && "wall--books",
         isThumbs && thumbsLive && "is-thumbs-live",
       )}
       aria-label="Selected work"
@@ -343,13 +353,22 @@ export function GalleryWall({
         <header className="wall__head" data-work-gallery-head>
           <div className="wall__head-lead">
             <p className="wall__eyebrow">
-              {isThumbs ? "Thumbnails · scroll-stoppers" : "Selected work"}
+              {isThumbs
+                ? "Thumbnails · scroll-stoppers"
+                : isBooks
+                  ? "Book design · spreads"
+                  : "Selected work"}
             </p>
             <h2 className="wall__title">
               {isThumbs ? (
                 <>
                   Built to stop
                   <span className="wall__title-serif"> a scroll</span>
+                </>
+              ) : isBooks ? (
+                <>
+                  Open the
+                  <span className="wall__title-serif"> book</span>
                 </>
               ) : (
                 <>
@@ -383,6 +402,7 @@ export function GalleryWall({
                 setFilter(f.id);
                 setLightbox(null);
                 setCinemaOrigin(null);
+                setBookOpen(false);
               }}
             >
               {f.label}
@@ -524,6 +544,34 @@ export function GalleryWall({
                 })}
               </ul>
             </div>
+          ) : isBooks && visible[0] ? (
+            <div ref={booksRootRef} className="wall-books">
+              <button
+                type="button"
+                className="wall-books__cover"
+                onClick={() => setBookOpen(true)}
+                aria-label={`${BOOK.title} — open book reader`}
+              >
+                <span className="wall-books__media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={BOOK.cover}
+                    alt=""
+                    className="wall-books__img"
+                    decoding="async"
+                  />
+                  <span className="wall-books__open">Open book ↗</span>
+                </span>
+                <span className="wall-books__meta">
+                  <span className="wall-books__kicker">{BOOK.subtitle}</span>
+                  <span className="wall-books__title">{BOOK.title}</span>
+                  <span className="wall-books__note">
+                    {visible[0].year} · CSS page-turn reader — tap the cover
+                    to flip through every spread.
+                  </span>
+                </span>
+              </button>
+            </div>
           ) : (
             <ul key={filter} ref={gridRef} className="wall__grid">
               {visible.map((item, i) => {
@@ -581,6 +629,8 @@ export function GalleryWall({
         </div>
       </Container>
 
+      {bookOpen ? <BookReader onClose={() => setBookOpen(false)} /> : null}
+
       {current && isThumbs && lightbox !== null ? (
         <ThumbCinema
           key={`tcinema-${filter}`}
@@ -592,7 +642,7 @@ export function GalleryWall({
         />
       ) : null}
 
-      {current && !isThumbs ? (
+      {current && !isThumbs && !isBooks ? (
         <div
           className="wall-lb"
           role="dialog"

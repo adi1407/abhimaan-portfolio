@@ -1,4 +1,4 @@
-export type CampaignId = "abhi1" | "abhi2" | "abhi3";
+export type CampaignId = "abhi1" | "abhi2" | "abhi3" | "abhi4";
 
 export type CampaignLayout = "mosaic-6a" | "mosaic-6b" | "mosaic-8";
 
@@ -24,7 +24,7 @@ export type Campaign = {
 
 /**
  * Campaign poster sets — outside the four Work category filters.
- * Paths point at public/abhi{1,2,3}/*.webp (see scripts/normalize-campaigns.mjs).
+ * Paths point at public/abhi{1,2,3,4}/*.webp (see scripts/normalize-campaigns.mjs).
  *
  * TODO: replace public/abhi2 assets — currently byte-identical to abhi1.
  * When 7 unique files land, bump layout to "mosaic-7" and re-run normalize.
@@ -162,6 +162,45 @@ export const CAMPAIGNS: readonly Campaign[] = [
         src: "/abhi3/true-ripper-reel.webp",
         label: "True Ripper Reel",
         aspect: "story",
+      },
+    ],
+  },
+  {
+    id: "abhi4",
+    title: "Apex · Standings",
+    subtitle: "Tournament standings posters",
+    cover: "/abhi4/overall-standing.webp",
+    layout: "mosaic-6b",
+    images: [
+      {
+        id: "overall-standing",
+        src: "/abhi4/overall-standing.webp",
+        label: "Overall Standing",
+      },
+      {
+        id: "apex-0",
+        src: "/abhi4/apex-0.webp",
+        label: "Apex 0",
+      },
+      {
+        id: "apex-1",
+        src: "/abhi4/apex-1.webp",
+        label: "Apex 1",
+      },
+      {
+        id: "apex-2",
+        src: "/abhi4/apex-2.webp",
+        label: "Apex 2",
+      },
+      {
+        id: "apex-3",
+        src: "/abhi4/apex-3.webp",
+        label: "Apex 3",
+      },
+      {
+        id: "apex-5",
+        src: "/abhi4/apex-5.webp",
+        label: "Apex 5",
       },
     ],
   },

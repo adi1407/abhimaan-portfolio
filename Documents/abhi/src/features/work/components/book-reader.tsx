@@ -10,9 +10,22 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import { BOOK, BOOK_PAGE_COUNT, type BookPage } from "@/lib/book";
+import {
+  BOOK,
+  BOOK_BACK_COVER,
+  BOOK_LAST_SPREAD,
+  BOOK_SPREAD_COUNT,
+  BOOK_SPREADS,
+  type BookSpread,
+} from "@/lib/book";
 
-type Phase = "closed" | "opening" | "ready";
+type Phase =
+  | "closed"
+  | "opening"
+  | "ready"
+  | "closing-back"
+  | "back"
+  | "opening-back";
 type FlipDir = "next" | "prev" | null;
 
 function prefersReducedMotion() {
@@ -31,16 +44,21 @@ function unlockPageScroll() {
   window.__lenis?.start();
 }
 
-function preloadAround(pages: readonly BookPage[], index: number) {
+function preloadAround(index: number) {
   for (const offset of [-2, -1, 0, 1, 2]) {
     const i = index + offset;
-    if (i < 0 || i >= pages.length) continue;
-    const img = new Image();
-    img.src = pages[i].src;
+    if (i < 0 || i >= BOOK_SPREAD_COUNT) continue;
+    const spread = BOOK_SPREADS[i];
+    const left = new Image();
+    left.src = spread.left.src;
+    const right = new Image();
+    right.src = spread.right.src;
   }
+  const back = new Image();
+  back.src = BOOK_BACK_COVER.src;
 }
 
-function SpreadHalf({
+function PageFace({
   src,
   side,
   className,
@@ -50,23 +68,62 @@ function SpreadHalf({
   className?: string;
 }) {
   return (
-    <div className={cn("book__half", `book__half--${side}`, className)}>
+    <div className={cn("book__page", `book__page--${side}`, className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt=""
-        className={cn("book__spread-img", `book__spread-img--${side}`)}
-        draggable={false}
-      />
+      <img src={src} alt="" className="book__page-img" draggable={false} />
     </div>
   );
 }
 
-function SpreadFull({ src, className }: { src: string; className?: string }) {
+function SpreadPair({
+  spread,
+  className,
+}: {
+  spread: BookSpread;
+  className?: string;
+}) {
   return (
-    <div className={cn("book__spread-full", className)}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="book__spread" draggable={false} />
+    <div className={cn("book__spread-pair", className)}>
+      <PageFace src={spread.left.src} side="left" />
+      <PageFace src={spread.right.src} side="right" />
+    </div>
+  );
+}
+
+function CoverBlock({
+  src,
+  opening,
+  side,
+  onTransitionEnd,
+}: {
+  src: string;
+  opening: boolean;
+  side: "front" | "back";
+  onTransitionEnd?: (e: TransitionEvent<HTMLDivElement>) => void;
+}) {
+  return (
+    <div className={cn("book__cover-block", opening && "is-opening")}>
+      <div
+        className={cn(
+          "book__cover-front",
+          side === "back" && "book__cover-front--back",
+        )}
+        onTransitionEnd={onTransitionEnd}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="book__cover-img" draggable={false} />
+        <span className="book__cover-shine" aria-hidden />
+      </div>
+      <span className="book__cover-spine" aria-hidden />
+      <span className="book__cover-stack" aria-hidden>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <span
+            key={i}
+            className="book__stack-sheet"
+            style={{ ["--i" as string]: i }}
+          />
+        ))}
+      </span>
     </div>
   );
 }
@@ -80,12 +137,21 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   const [flipArmed, setFlipArmed] = useState(false);
   const [portalReady] = useState(() => typeof document !== "undefined");
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+  const flipLock = useRef(false);
 
-  const busy = flip !== null;
+  const busy =
+    flip !== null ||
+    phase === "opening" ||
+    phase === "closing-back" ||
+    phase === "opening-back";
   const ready = phase === "ready";
-  const current = BOOK.pages[index];
-  const nextPage = index < BOOK_PAGE_COUNT - 1 ? BOOK.pages[index + 1] : null;
-  const prevPage = index > 0 ? BOOK.pages[index - 1] : null;
+  const onBack = phase === "back";
+  const current = BOOK_SPREADS[index];
+  const nextSpread =
+    index < BOOK_LAST_SPREAD ? BOOK_SPREADS[index + 1] : null;
+  const prevSpread = index > 0 ? BOOK_SPREADS[index - 1] : null;
+  const canPrev = !busy && (onBack || (ready && index > 0));
+  const canNext = !busy && ready && index <= BOOK_LAST_SPREAD;
 
   useEffect(() => {
     lockPageScroll();
@@ -100,7 +166,13 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   }, [phase]);
 
   useEffect(() => {
-    preloadAround(BOOK.pages, index);
+    if (phase !== "opening" && phase !== "opening-back") return;
+    const t = window.setTimeout(() => setPhase("ready"), 1100);
+    return () => window.clearTimeout(t);
+  }, [phase]);
+
+  useEffect(() => {
+    preloadAround(index);
   }, [index]);
 
   const beginOpening = useCallback(() => {
@@ -110,40 +182,72 @@ export function BookReader({ onClose }: { onClose: () => void }) {
 
   const onCoverTransitionEnd = useCallback(
     (e: TransitionEvent<HTMLDivElement>) => {
-      if (e.propertyName !== "transform" || phase !== "opening") return;
-      setPhase("ready");
+      if (e.propertyName !== "transform") return;
+      if (phase === "opening") setPhase("ready");
+      if (phase === "opening-back") setPhase("ready");
     },
     [phase],
   );
 
-  const finishFlip = useCallback((dir: FlipDir) => {
-    if (dir === "next") setIndex((i) => Math.min(i + 1, BOOK_PAGE_COUNT - 1));
-    else if (dir === "prev") setIndex((i) => Math.max(i - 1, 0));
-    setFlip(null);
-    setFlipArmed(false);
-  }, []);
+  const finishFlip = useCallback(
+    (dir: FlipDir) => {
+      if (flipLock.current) return;
+      flipLock.current = true;
+      if (dir === "next") {
+        if (index >= BOOK_LAST_SPREAD) {
+          setPhase("back");
+        } else {
+          setIndex((i) => Math.min(i + 1, BOOK_LAST_SPREAD));
+        }
+      } else if (dir === "prev") {
+        setIndex((i) => Math.max(i - 1, 0));
+      }
+      setFlip(null);
+      setFlipArmed(false);
+    },
+    [index],
+  );
+
+  useEffect(() => {
+    if (!flipArmed || !flip) return;
+    const t = window.setTimeout(() => finishFlip(flip), 1000);
+    return () => window.clearTimeout(t);
+  }, [flipArmed, flip, finishFlip]);
 
   const goNext = useCallback(() => {
-    if (!ready || busy || index >= BOOK_PAGE_COUNT - 1) return;
+    if (!canNext) return;
     if (prefersReducedMotion()) {
-      setIndex((i) => i + 1);
+      if (index >= BOOK_LAST_SPREAD) setPhase("back");
+      else setIndex((i) => i + 1);
       return;
     }
     setFlipArmed(false);
+    if (index >= BOOK_LAST_SPREAD) setPhase("closing-back");
     setFlip("next");
+    flipLock.current = false;
     requestAnimationFrame(() => setFlipArmed(true));
-  }, [ready, busy, index]);
+  }, [canNext, index]);
 
   const goPrev = useCallback(() => {
-    if (!ready || busy || index <= 0) return;
+    if (!canPrev) return;
+    if (onBack) {
+      setIndex(BOOK_LAST_SPREAD);
+      if (prefersReducedMotion()) {
+        setPhase("ready");
+        return;
+      }
+      setPhase("opening-back");
+      return;
+    }
     if (prefersReducedMotion()) {
       setIndex((i) => i - 1);
       return;
     }
     setFlipArmed(false);
     setFlip("prev");
+    flipLock.current = false;
     requestAnimationFrame(() => setFlipArmed(true));
-  }, [ready, busy, index]);
+  }, [canPrev, onBack]);
 
   const onLeafTransitionEnd = useCallback(
     (e: TransitionEvent<HTMLDivElement>) => {
@@ -186,8 +290,32 @@ export function BookReader({ onClose }: { onClose: () => void }) {
 
   if (!portalReady) return null;
 
-  const showCover = phase !== "ready";
-  const coverSrc = BOOK.cover;
+  const showFrontCover = phase === "closed" || phase === "opening";
+  const showBackCover = phase === "back" || phase === "opening-back";
+  const stageLive = ready || phase === "closing-back" || phase === "opening-back";
+  const chromeLive = ready || onBack;
+  const closingToBack = phase === "closing-back" || (flip === "next" && !nextSpread);
+
+  const countLabel = onBack
+    ? "Back"
+    : showFrontCover
+      ? "Cover"
+      : `${String(index + 1).padStart(2, "0")} / ${String(BOOK_SPREAD_COUNT).padStart(2, "0")}`;
+
+  const hint = onBack
+    ? "Prev to reopen"
+    : ready
+      ? "Tap edges or swipe to turn"
+      : phase === "opening-back"
+        ? "Opening…"
+        : "Opening…";
+
+  const leafBackSrc = closingToBack
+    ? BOOK_BACK_COVER.src
+    : nextSpread
+      ? nextSpread.left.src
+      : null;
+  const prevLeafBackSrc = prevSpread ? prevSpread.right.src : null;
 
   return createPortal(
     <div
@@ -196,6 +324,10 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         "is-open",
         phase === "opening" && "is-opening",
         ready && "is-ready",
+        phase === "closing-back" && "is-closing-back",
+        (onBack || phase === "opening-back") && "is-back",
+        phase === "opening-back" && "is-opening-back",
+        phase === "closed" && "is-closed",
       )}
       role="dialog"
       aria-modal="true"
@@ -212,16 +344,13 @@ export function BookReader({ onClose }: { onClose: () => void }) {
 
       <div className="book__shell">
         <header
-          className={cn("book__chrome", !ready && "book__chrome--locked")}
+          className={cn("book__chrome", !chromeLive && "book__chrome--locked")}
         >
           <div className="book__meta">
             <p className="book__eyebrow">{BOOK.subtitle}</p>
             <h2 className="book__title">{BOOK.title}</h2>
           </div>
-          <p className="book__count">
-            {String(index + 1).padStart(2, "0")} /{" "}
-            {String(BOOK_PAGE_COUNT).padStart(2, "0")}
-          </p>
+          <p className="book__count">{countLabel}</p>
           <button
             type="button"
             className="book__close"
@@ -234,7 +363,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
 
         <div className="book__stage-wrap">
           <div className="book__book-tilt">
-            {showCover ? (
+            {showFrontCover ? (
               <div className="book__cover-closed">
                 <button
                   type="button"
@@ -243,38 +372,36 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   onClick={beginOpening}
                   disabled={phase === "opening"}
                 >
-                  <div
-                    className={cn(
-                      "book__cover-block",
-                      phase === "opening" && "is-opening",
-                    )}
-                  >
-                    <div
-                      className="book__cover-front"
-                      onTransitionEnd={onCoverTransitionEnd}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={coverSrc}
-                        alt=""
-                        className="book__cover-img"
-                        draggable={false}
-                      />
-                      <span className="book__cover-shine" aria-hidden />
-                    </div>
-                    <span className="book__cover-spine" aria-hidden />
-                    <span className="book__cover-stack" aria-hidden>
-                      {Array.from({ length: 6 }).map((_, i) => (
-                        <span
-                          key={i}
-                          className="book__stack-sheet"
-                          style={{ ["--i" as string]: i }}
-                        />
-                      ))}
-                    </span>
-                  </div>
+                  <CoverBlock
+                    src={BOOK.cover}
+                    opening={phase === "opening"}
+                    side="front"
+                    onTransitionEnd={onCoverTransitionEnd}
+                  />
                   {phase === "closed" ? (
                     <span className="book__cover-cta">Open book</span>
+                  ) : null}
+                </button>
+              </div>
+            ) : null}
+
+            {showBackCover ? (
+              <div className="book__cover-closed book__cover-closed--back">
+                <button
+                  type="button"
+                  className="book__cover-hit"
+                  aria-label="Open last spread"
+                  onClick={goPrev}
+                  disabled={phase === "opening-back"}
+                >
+                  <CoverBlock
+                    src={BOOK_BACK_COVER.src}
+                    opening={phase === "opening-back"}
+                    side="back"
+                    onTransitionEnd={onCoverTransitionEnd}
+                  />
+                  {onBack ? (
+                    <span className="book__cover-cta">Open last spread</span>
                   ) : null}
                 </button>
               </div>
@@ -283,8 +410,8 @@ export function BookReader({ onClose }: { onClose: () => void }) {
             <div
               className={cn(
                 "book__stage",
-                showCover && "book__stage--behind",
-                ready && "book__stage--live",
+                showFrontCover && "book__stage--behind",
+                stageLive && "book__stage--live",
               )}
             >
               <span className="book__spine" aria-hidden />
@@ -299,32 +426,43 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                 ))}
               </span>
 
-              {flip === "next" && nextPage ? (
-                <SpreadFull src={nextPage.src} className="book__spread-under" />
-              ) : flip === "prev" && prevPage ? (
-                <SpreadFull src={prevPage.src} className="book__spread-under" />
+              {flip === "next" && nextSpread ? (
+                <SpreadPair
+                  spread={nextSpread}
+                  className="book__spread-under"
+                />
+              ) : flip === "next" && closingToBack ? (
+                <div className="book__spread-under book__spread-under--close">
+                  <PageFace src={current.left.src} side="left" />
+                  <div className="book__page book__page--right book__page--void" />
+                </div>
+              ) : flip === "prev" && prevSpread ? (
+                <SpreadPair
+                  spread={prevSpread}
+                  className="book__spread-under"
+                />
               ) : null}
 
               {flip === "next" ? (
-                <SpreadHalf
-                  src={current.src}
+                <PageFace
+                  src={current.left.src}
                   side="left"
                   className="book__pane book__pane--left"
                 />
               ) : flip === "prev" ? (
-                <SpreadHalf
-                  src={current.src}
+                <PageFace
+                  src={current.right.src}
                   side="right"
                   className="book__pane book__pane--right"
                 />
               ) : (
                 <>
-                  <SpreadHalf src={current.src} side="left" />
-                  <SpreadHalf src={current.src} side="right" />
+                  <PageFace src={current.left.src} side="left" />
+                  <PageFace src={current.right.src} side="right" />
                 </>
               )}
 
-              {flip === "next" ? (
+              {flip === "next" && leafBackSrc ? (
                 <div
                   className={cn(
                     "book__leaf",
@@ -334,16 +472,17 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   onTransitionEnd={onLeafTransitionEnd}
                 >
                   <div className="book__face book__face--front">
-                    <SpreadHalf src={current.src} side="right" />
+                    <PageFace src={current.right.src} side="right" />
                     <span className="book__shade book__shade--next" aria-hidden />
                   </div>
-                  <div className="book__face book__face--back" aria-hidden>
-                    <span className="book__paper" />
+                  <div className="book__face book__face--back">
+                    <PageFace src={leafBackSrc} side="left" />
+                    <span className="book__shade book__shade--back" aria-hidden />
                   </div>
                 </div>
               ) : null}
 
-              {flip === "prev" ? (
+              {flip === "prev" && prevLeafBackSrc ? (
                 <div
                   className={cn(
                     "book__leaf",
@@ -353,31 +492,32 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   onTransitionEnd={onLeafTransitionEnd}
                 >
                   <div className="book__face book__face--front">
-                    <SpreadHalf src={current.src} side="left" />
+                    <PageFace src={current.left.src} side="left" />
                     <span className="book__shade book__shade--prev" aria-hidden />
                   </div>
-                  <div className="book__face book__face--back" aria-hidden>
-                    <span className="book__paper" />
+                  <div className="book__face book__face--back">
+                    <PageFace src={prevLeafBackSrc} side="right" />
+                    <span className="book__shade book__shade--back" aria-hidden />
                   </div>
                 </div>
               ) : null}
             </div>
           </div>
 
-          {ready ? (
+          {chromeLive ? (
             <div className="book__tap-zones" aria-hidden>
               <button
                 type="button"
                 className="book__zone book__zone--prev"
                 tabIndex={-1}
-                disabled={index <= 0 || busy}
+                disabled={!canPrev}
                 onClick={goPrev}
               />
               <button
                 type="button"
                 className="book__zone book__zone--next"
                 tabIndex={-1}
-                disabled={index >= BOOK_PAGE_COUNT - 1 || busy}
+                disabled={!canNext}
                 onClick={goNext}
               />
             </div>
@@ -385,26 +525,24 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         </div>
 
         <footer
-          className={cn("book__foot", !ready && "book__foot--locked")}
+          className={cn("book__foot", !chromeLive && "book__foot--locked")}
         >
           <button
             type="button"
             className="book__nav book__nav--prev"
-            disabled={!ready || index <= 0 || busy}
+            disabled={!canPrev}
             onClick={goPrev}
-            aria-label="Previous spread"
+            aria-label="Previous pages"
           >
             ← Prev
           </button>
-          <p className="book__hint">
-            {ready ? "Tap edges or swipe to turn" : "Opening…"}
-          </p>
+          <p className="book__hint">{hint}</p>
           <button
             type="button"
             className="book__nav book__nav--next"
-            disabled={!ready || index >= BOOK_PAGE_COUNT - 1 || busy}
+            disabled={!canNext}
             onClick={goNext}
-            aria-label="Next spread"
+            aria-label="Next pages"
           >
             Next →
           </button>

@@ -133,10 +133,10 @@ function FunCard({
         <span className="fun__card-open" aria-hidden>
           ↗
         </span>
-        <span className="fun__card-meta">
-          <span className="fun__card-title">{design.title}</span>
-          <span className="fun__card-note">{design.note}</span>
-        </span>
+      </span>
+      <span className="fun__card-meta">
+        <span className="fun__card-title">{design.title}</span>
+        <span className="fun__card-note">{design.note}</span>
       </span>
       <span className="fun__card-pin" aria-hidden />
     </a>
@@ -165,7 +165,7 @@ export function FunPlayground() {
   const [mobileDesk, setMobileDesk] = useState(false);
 
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 700px)");
+    const mq = window.matchMedia("(max-width: 900px)");
     const sync = () => setMobileDesk(mq.matches);
     sync();
     mq.addEventListener("change", sync);
@@ -300,8 +300,8 @@ export function FunPlayground() {
   const onPointerDown = useCallback(
     (id: string) => (e: React.PointerEvent<HTMLAnchorElement>) => {
       if (e.button !== 0) return;
-      // Mobile grid is tap-to-open only — never capture the pointer.
-      if (window.matchMedia("(max-width: 700px)").matches) return;
+      // Mobile gallery is tap-to-open only — never capture the pointer.
+      if (window.matchMedia("(max-width: 900px)").matches) return;
 
       const start = pos.current[id] ?? { x: 0, y: 0 };
       const { limitX, limitY } = limitsFor(id);

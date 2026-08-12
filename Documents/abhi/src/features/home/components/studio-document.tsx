@@ -16,12 +16,17 @@ import { cn } from "@/lib/cn";
  * scroll distance through that pin IS the build: every layer gets its
  * own slice of the travel and fills across it, so the composite
  * assembles one layer at a time and un-assembles on the way back up.
+ *
+ * On ≤900px the pin is disabled (normal flow after Desk Scraps) and
+ * the composite shows fully built — no sticky overlap, no tall scrub.
  * ================================================================== */
 
 const EMPTY_HIDDEN = new Set<LayerId>();
 const noop = () => {};
+const MOBILE_MQ = "(max-width: 900px)";
 
-const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+const clamp = (v: number, lo: number, hi: number) =>
+  Math.max(lo, Math.min(hi, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
 /** Scroll room per layer, on top of one viewport for the pin itself. */
@@ -35,29 +40,47 @@ export function StudioDocument() {
   /* Integer count for the panel readout only — written when it changes
      so ordinary scroll frames stay pure DOM writes. */
   const [built, setBuilt] = useState(0);
+  const [mobileStudio, setMobileStudio] = useState(false);
 
   useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ);
+    const sync = () => setMobileStudio(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    if (mobileStudio) {
+      for (let i = 0; i < LAYERS.length; i += 1) {
+        const el = layerRefs.current[i];
+        if (el) el.style.setProperty("--t", "1");
+      }
+      if (railRef.current) railRef.current.style.setProperty("--p", "1");
+      setBuilt(LAYERS.length);
+      return;
+    }
+
     const section = sectionRef.current;
     if (!section) return;
 
     let lastBuilt = -1;
 
-    /* Shared frame loop — one scroll measurement per frame for the
-       whole page instead of a listener per section. */
     return onViewport(({ vh: viewportH }) => {
       const rect = section.getBoundingClientRect();
       const vh = viewportH || 1;
       const travel = rect.height - vh;
       const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
 
-      /* Spread p across the stack: layer i fills as `stepped` crosses
-         i → i+1, which is what lands them in sequence. */
       const stepped = p * LAYERS.length;
 
       for (let i = 0; i < LAYERS.length; i += 1) {
         const el = layerRefs.current[i];
         if (!el) continue;
-        el.style.setProperty("--t", smooth(clamp(stepped - i, 0, 1)).toFixed(4));
+        el.style.setProperty(
+          "--t",
+          smooth(clamp(stepped - i, 0, 1)).toFixed(4),
+        );
       }
 
       if (railRef.current) {
@@ -70,15 +93,15 @@ export function StudioDocument() {
         setBuilt(count);
       }
     });
-  }, []);
+  }, [mobileStudio]);
 
-  const done = built >= LAYERS.length;
+  const done = mobileStudio || built >= LAYERS.length;
   const landing = LAYERS[clamp(built, 0, LAYERS.length - 1)];
 
   return (
     <section
       ref={sectionRef}
-      className="sdoc"
+      className={cn("sdoc", mobileStudio && "sdoc--mobile")}
       aria-labelledby="sdoc-title"
       style={{
         ["--slice" as string]: `${SLICE_SVH}svh`,
@@ -98,7 +121,11 @@ export function StudioDocument() {
               <em>{LAYERS.length} layers</em>
             </span>
             <span className="psh__hint">
-              {done ? "Composite complete" : "Scroll to composite"}
+              {done
+                ? "Composite complete"
+                : mobileStudio
+                  ? "Layer stack"
+                  : "Scroll to composite"}
             </span>
           </div>
 

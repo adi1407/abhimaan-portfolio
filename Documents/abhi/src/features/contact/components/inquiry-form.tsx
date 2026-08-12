@@ -42,9 +42,11 @@ const FLATTEN_MS = 460;
 export type InquiryStatus = "idle" | "sending" | "ok" | "error";
 
 export function InquiryForm({
+  mobile = false,
   onFieldFocus,
   onStatusChange,
 }: {
+  mobile?: boolean;
   onFieldFocus?: (key: string | null) => void;
   onStatusChange?: (status: InquiryStatus) => void;
 } = {}) {
@@ -89,14 +91,16 @@ export function InquiryForm({
     },
   });
 
-  const layers: LayerItem[] = FIELD_META.map((f) => ({
-    key: f.key,
-    label: f.label,
-    icon: f.icon,
-    value: form[f.key],
-    filled: form[f.key].trim().length > 0,
-    active: focused === f.key,
-  }));
+  const layers: LayerItem[] = mobile
+    ? []
+    : FIELD_META.map((f) => ({
+        key: f.key,
+        label: f.label,
+        icon: f.icon,
+        value: form[f.key],
+        filled: form[f.key].trim().length > 0,
+        active: focused === f.key,
+      }));
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -136,18 +140,37 @@ export function InquiryForm({
   };
 
   return (
-    <form className="inquiry-form" onSubmit={onSubmit} noValidate>
+    <form
+      className={`inquiry-form${mobile ? " inquiry-form--mobile" : ""}`}
+      onSubmit={onSubmit}
+      noValidate
+    >
       <div className="inquiry-form__stage">
-        <LayersPanel layers={layers} flattening={flattening} />
+        {!mobile ? (
+          <LayersPanel layers={layers} flattening={flattening} />
+        ) : null}
 
         <div className="inquiry-form__body">
           <header className="inquiry-form__head">
-            <p className="inquiry-form__eyebrow">New layer · Project brief</p>
-            <h2 className="inquiry-form__title">Export a request</h2>
-            <p className="inquiry-form__lede">
-              Fill the stack — stills, motion, or both. Flatten sends it to the
-              studio inbox.
-            </p>
+            {mobile ? (
+              <>
+                <p className="inquiry-form__eyebrow">Project brief</p>
+                <h2 className="inquiry-form__title">Tell me about the work</h2>
+                <p className="inquiry-form__lede">
+                  Name, service, and a short brief are enough to start. Optional
+                  fields help with timing and scope.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="inquiry-form__eyebrow">New layer · Project brief</p>
+                <h2 className="inquiry-form__title">Export a request</h2>
+                <p className="inquiry-form__lede">
+                  Fill the stack — stills, motion, or both. Flatten sends it to
+                  the studio inbox.
+                </p>
+              </>
+            )}
           </header>
 
           <div className="inquiry-form__sections">
@@ -303,17 +326,27 @@ export function InquiryForm({
               onPointerDown={onSubmitPointerDown}
             >
               <span className="inquiry-form__submit-label">
-                {status === "sending" ? "Flattening…" : "Flatten & send"}
+                {status === "sending"
+                  ? "Sending…"
+                  : mobile
+                    ? "Send brief"
+                    : "Flatten & send"}
               </span>
             </button>
 
             {status === "ok" ? (
-              <p className="inquiry-form__status inquiry-form__status--ok" role="status">
+              <p
+                className="inquiry-form__status inquiry-form__status--ok"
+                role="status"
+              >
                 Sent — I&apos;ll get back within two working days.
               </p>
             ) : null}
             {status === "error" ? (
-              <p className="inquiry-form__status inquiry-form__status--err" role="alert">
+              <p
+                className="inquiry-form__status inquiry-form__status--err"
+                role="alert"
+              >
                 {error}
               </p>
             ) : null}

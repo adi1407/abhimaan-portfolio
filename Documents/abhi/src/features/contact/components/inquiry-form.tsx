@@ -150,128 +150,149 @@ export function InquiryForm({
             </p>
           </header>
 
-          <div className="inquiry-form__grid">
-            <label className="inquiry-form__field">
-              <span>Name</span>
-              <div className="inquiry-form__control">
-                <input
-                  name="name"
-                  autoComplete="name"
-                  required
-                  value={form.name}
-                  onChange={set("name")}
-                  placeholder="Your name"
-                  {...focusHandlers("name")}
-                />
-              </div>
-            </label>
+          <div className="inquiry-form__sections">
+            <fieldset className="inquiry-form__section">
+              <legend className="inquiry-form__section-label">Who</legend>
+              <div className="inquiry-form__grid">
+                <label className="inquiry-form__field">
+                  <span>Name</span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="name"
+                      autoComplete="name"
+                      required
+                      value={form.name}
+                      onChange={set("name")}
+                      placeholder="Your name"
+                      {...focusHandlers("name")}
+                    />
+                  </div>
+                </label>
 
-            <label className="inquiry-form__field">
-              <span>Email</span>
-              <div className="inquiry-form__control">
-                <input
-                  name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
-                  value={form.email}
-                  onChange={set("email")}
-                  placeholder="you@studio.com"
-                  {...focusHandlers("email")}
-                />
-              </div>
-            </label>
+                <label className="inquiry-form__field">
+                  <span>Email</span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="email"
+                      type="email"
+                      autoComplete="email"
+                      required
+                      value={form.email}
+                      onChange={set("email")}
+                      placeholder="you@studio.com"
+                      {...focusHandlers("email")}
+                    />
+                  </div>
+                </label>
 
-            <label className="inquiry-form__field">
-              <span>Phone <em>(optional)</em></span>
-              <div className="inquiry-form__control">
-                <input
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
-                  value={form.phone}
-                  onChange={set("phone")}
-                  placeholder="+91 …"
-                  {...focusHandlers("phone")}
-                />
+                <label className="inquiry-form__field">
+                  <span>
+                    Phone <em>(optional)</em>
+                  </span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={form.phone}
+                      onChange={set("phone")}
+                      placeholder="+91 …"
+                      {...focusHandlers("phone")}
+                    />
+                  </div>
+                </label>
               </div>
-            </label>
+            </fieldset>
 
-            <label className="inquiry-form__field">
-              <span>Service</span>
-              <div className="inquiry-form__control">
-                <select
-                  name="service"
-                  required
-                  value={form.service}
-                  onChange={set("service")}
-                  {...focusHandlers("service")}
-                >
-                  <option value="" disabled>
-                    Select…
-                  </option>
-                  {INQUIRY_SERVICES.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
+            <fieldset className="inquiry-form__section">
+              <legend className="inquiry-form__section-label">Project</legend>
+              <div className="inquiry-form__grid">
+                <label className="inquiry-form__field">
+                  <span>Service</span>
+                  <div className="inquiry-form__control">
+                    <select
+                      name="service"
+                      required
+                      value={form.service}
+                      onChange={set("service")}
+                      {...focusHandlers("service")}
+                    >
+                      <option value="" disabled>
+                        Select…
+                      </option>
+                      {INQUIRY_SERVICES.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </label>
 
-            <label className="inquiry-form__field">
-              <span>Deliverable</span>
-              <div className="inquiry-form__control">
-                <input
-                  name="deliverable"
-                  value={form.deliverable}
-                  onChange={set("deliverable")}
-                  placeholder="Thumbnails, jersey edit, reel cover…"
-                  {...focusHandlers("deliverable")}
-                />
-              </div>
-            </label>
+                <label className="inquiry-form__field">
+                  <span>Deliverable</span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="deliverable"
+                      value={form.deliverable}
+                      onChange={set("deliverable")}
+                      placeholder="Thumbnails, jersey edit, reel cover…"
+                      {...focusHandlers("deliverable")}
+                    />
+                  </div>
+                </label>
 
-            <label className="inquiry-form__field">
-              <span>Deadline <em>(optional)</em></span>
-              <div className="inquiry-form__control">
-                <input
-                  name="deadline"
-                  value={form.deadline}
-                  onChange={set("deadline")}
-                  placeholder="e.g. 12 Aug"
-                  {...focusHandlers("deadline")}
-                />
-              </div>
-            </label>
+                <label className="inquiry-form__field">
+                  <span>
+                    Deadline <em>(optional)</em>
+                  </span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="deadline"
+                      value={form.deadline}
+                      onChange={set("deadline")}
+                      placeholder="e.g. 12 Aug"
+                      {...focusHandlers("deadline")}
+                    />
+                  </div>
+                </label>
 
-            <label className="inquiry-form__field">
-              <span>Budget <em>(optional)</em></span>
-              <div className="inquiry-form__control">
-                <input
-                  name="budget"
-                  value={form.budget}
-                  onChange={set("budget")}
-                  placeholder="Rough range"
-                  {...focusHandlers("budget")}
-                />
+                <label className="inquiry-form__field">
+                  <span>
+                    Budget <em>(optional)</em>
+                  </span>
+                  <div className="inquiry-form__control">
+                    <input
+                      name="budget"
+                      value={form.budget}
+                      onChange={set("budget")}
+                      placeholder="Rough range"
+                      {...focusHandlers("budget")}
+                    />
+                  </div>
+                </label>
               </div>
-            </label>
+            </fieldset>
 
-            <label className="inquiry-form__field inquiry-form__field--full">
-              <span>Brief</span>
-              <div className="inquiry-form__control">
-                <textarea
-                  name="message"
-                  required
-                  rows={5}
-                  value={form.message}
-                  onChange={set("message")}
-                  placeholder="What are we making, and who is it for?"
-                  {...focusHandlers("message")}
-                />
+            <fieldset className="inquiry-form__section">
+              <legend className="inquiry-form__section-label">Details</legend>
+              <div className="inquiry-form__grid">
+                <label className="inquiry-form__field inquiry-form__field--full">
+                  <span>Brief</span>
+                  <div className="inquiry-form__control">
+                    <textarea
+                      name="message"
+                      required
+                      rows={5}
+                      value={form.message}
+                      onChange={set("message")}
+                      placeholder="What are we making, and who is it for?"
+                      {...focusHandlers("message")}
+                    />
+                  </div>
+                </label>
               </div>
-            </label>
+            </fieldset>
           </div>
 
           <div className="inquiry-form__foot">

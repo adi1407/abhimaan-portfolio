@@ -123,6 +123,16 @@ export function WorkFilm({
   const [flipIndex, setFlipIndex] = useState<Record<string, number>>({});
   // Desktop default matches SSR so --film-px never hydrates mismatched.
   const [pxPer, setPxPer] = useState(PX_PER_FRAME);
+  /** Phones: skip frame scrub — panels only. */
+  const [mobilePanels, setMobilePanels] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 900px)");
+    const sync = () => setMobilePanels(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const paintSource = useCallback(
     (source: CanvasImageSource, width: number, height: number) => {
@@ -352,7 +362,7 @@ export function WorkFilm({
 
   // Prefer cached stills when manifest exists.
   useEffect(() => {
-    if (intro === "splash") return;
+    if (intro === "splash" || mobilePanels) return;
     let cancelled = false;
     fetch(FRAME_MANIFEST)
       .then((r) => (r.ok ? r.json() : null))
@@ -378,7 +388,7 @@ export function WorkFilm({
       prefetchQueue.current = [];
       stillCache.current.clear();
     };
-  }, [intro, queuePrefetch]);
+  }, [intro, mobilePanels, queuePrefetch]);
 
   // Canvas mounts with useFrames — paint whatever is ready (frame 0 first).
   useEffect(() => {
@@ -387,7 +397,7 @@ export function WorkFilm({
   }, [useFrames, showFrame]);
 
   useEffect(() => {
-    if (intro === "splash" || useFrames) return;
+    if (intro === "splash" || mobilePanels || useFrames) return;
     const v = videoRef.current;
     if (!v) return;
 
@@ -428,20 +438,21 @@ export function WorkFilm({
       v.removeEventListener("seeked", onSeeked);
       v.removeEventListener("loadedmetadata", arm);
     };
-  }, [intro, useFrames, requestSeek]);
+  }, [intro, mobilePanels, useFrames, requestSeek]);
 
-  // Splash-only intro for deep links.
+  // Splash / mobile: skip scrub — short splash then discipline panels.
   useEffect(() => {
-    if (intro !== "splash") return;
+    if (intro !== "splash" && !mobilePanels) return;
     setSplashKey((k) => k + 1);
     setRevealed(true);
+    setReady(true);
     const id = window.setTimeout(() => setPanelsReady(true), PANEL_HOLD_MS + 80);
     return () => window.clearTimeout(id);
-  }, [intro]);
+  }, [intro, mobilePanels]);
 
   useEffect(() => {
     const track = trackRef.current;
-    if (!track || !ready || intro === "splash") return;
+    if (!track || !ready || intro === "splash" || mobilePanels) return;
 
     let ticking = false;
 
@@ -506,7 +517,7 @@ export function WorkFilm({
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [requestSeek, ready, intro, showFrame, paintBitmap]);
+  }, [requestSeek, ready, intro, mobilePanels, showFrame, paintBitmap]);
 
   // Pause infinite FX when tab hidden.
   useEffect(() => {
@@ -644,14 +655,15 @@ export function WorkFilm({
         "film",
         revealed && "is-revealed",
         panelsReady && "is-panels",
-        intro === "splash" && "film--splash-only",
+        (intro === "splash" || mobilePanels) && "film--splash-only",
+        mobilePanels && "film--mobile-panels",
       )}
       style={
         {
           ["--film-frames" as string]:
-            intro === "splash" ? 1 : frameCount,
+            intro === "splash" || mobilePanels ? 1 : frameCount,
           ["--film-px" as string]:
-            intro === "splash" ? "0px" : `${pxPer}px`,
+            intro === "splash" || mobilePanels ? "0px" : `${pxPer}px`,
         } as CSSProperties
       }
       aria-label="Selected work film"
@@ -663,13 +675,14 @@ export function WorkFilm({
       </p>
 
       <div className="film__stage">
-        {useFrames ? (
+        {!mobilePanels && useFrames ? (
           <canvas
             ref={canvasRef}
             className="film__video film__video--canvas film__video--frames"
             aria-hidden
           />
-        ) : (
+        ) : null}
+        {!mobilePanels && !useFrames ? (
           <>
             <video
               ref={videoRef}
@@ -687,11 +700,15 @@ export function WorkFilm({
               aria-hidden
             />
           </>
-        )}
-        <span className="film__grain" aria-hidden />
-        <span className="film__vignette" aria-hidden />
+        ) : null}
+        {!mobilePanels ? (
+          <>
+            <span className="film__grain" aria-hidden />
+            <span className="film__vignette" aria-hidden />
+          </>
+        ) : null}
 
-        {!revealed && ready && intro === "full" ? (
+        {!revealed && ready && intro === "full" && !mobilePanels ? (
           <button
             type="button"
             className="film__skip"

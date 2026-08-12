@@ -3,10 +3,10 @@
 import {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import type { WorkItem } from "@/lib/work";
 
@@ -20,27 +20,55 @@ type ThumbCinemaProps = {
 
 type GsapBundle = {
   gsap: typeof import("gsap").gsap;
-  Flip: typeof import("gsap/Flip").Flip;
 };
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function isDesktopFlip() {
-  return window.matchMedia("(min-width: 900px)").matches;
+function lockPageScroll() {
+  window.__lenis?.stop();
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.overflow = "hidden";
+}
+
+function unlockPageScroll() {
+  document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
+  window.__lenis?.start();
+}
+
+function waitForImage(img: HTMLImageElement, src: string): Promise<void> {
+  return new Promise((resolve) => {
+    if (!src) {
+      resolve();
+      return;
+    }
+    if (img.getAttribute("src") === src && img.complete && img.naturalWidth > 0) {
+      resolve();
+      return;
+    }
+    const done = () => {
+      img.removeEventListener("load", done);
+      img.removeEventListener("error", done);
+      resolve();
+    };
+    img.addEventListener("load", done);
+    img.addEventListener("error", done);
+    img.src = src;
+    if (img.complete && img.naturalWidth > 0) done();
+  });
 }
 
 /**
- * Cinematic fullscreen viewer for thumbnails — GSAP Flip open/close,
- * crossfade nav, filmstrip scrub. Desktop-first; mobile skips Flip.
+ * Cinematic fullscreen viewer for thumbnails — waits for the frame,
+ * then GSAP open. Lenis locked; portal to body; filmstrip + crossfade nav.
  */
 export function ThumbCinema({
   items,
   index,
   onIndexChange,
   onClose,
-  originEl,
 }: ThumbCinemaProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const scrimRef = useRef<HTMLButtonElement>(null);
@@ -50,6 +78,7 @@ export function ThumbCinema({
   const metaRef = useRef<HTMLDivElement>(null);
   const stripRef = useRef<HTMLDivElement>(null);
   const chromeRef = useRef<HTMLDivElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const gsapRef = useRef<GsapBundle | null>(null);
   const activeLayer = useRef<"a" | "b">("a");
   const navTween = useRef<{ kill: () => void } | null>(null);
@@ -71,115 +100,122 @@ export function ThumbCinema({
     strip.scrollTo({ left, behavior: smooth ? "smooth" : "auto" });
   }, []);
 
-  /* Load GSAP once, then open timeline */
-  useLayoutEffect(() => {
+  /* Load GSAP + first frame, then open timeline — after portal is in the DOM */
+  useEffect(() => {
     let cancelled = false;
     let ctx: ReturnType<typeof import("gsap").gsap.context> | null = null;
 
+    lockPageScroll();
+
     (async () => {
-      const [{ gsap }, { Flip }] = await Promise.all([
-        import("gsap"),
-        import("gsap/Flip"),
-      ]);
+      const { gsap } = await import("gsap");
       if (cancelled) return;
-      gsap.registerPlugin(Flip);
-      gsapRef.current = { gsap, Flip };
+      gsapRef.current = { gsap };
       setReady(true);
 
+      /* Portal commit — wait one frame so refs attach */
+      await new Promise<void>((r) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => r())),
+      );
+      if (cancelled) return;
+
       const root = rootRef.current;
-      if (!root) return;
+      const front = imgARef.current;
+      if (!root || !front || !item?.src) return;
+
+      await waitForImage(front, item.src);
+      if (cancelled) return;
+
+      gsap.set(front, { opacity: 1, xPercent: 0 });
+      if (imgBRef.current) {
+        gsap.set(imgBRef.current, { opacity: 0, xPercent: 0 });
+      }
 
       const runOpen = () => {
         if (cancelled) return;
+        const scrim = scrimRef.current;
+        const meta = metaRef.current;
+        const stage = stageRef.current;
+        const strip = stripRef.current;
+        const navs = gsap.utils.toArray<HTMLElement>(
+          root.querySelectorAll(".tcinema__nav, .tcinema__close"),
+        );
+        const reduce = prefersReducedMotion();
+
+        /* Start state before revealing — no FOUC flash */
+        if (!reduce) {
+          gsap.set(scrim, { opacity: 0 });
+          gsap.set(stage, {
+            opacity: 0,
+            scale: 0.92,
+            y: 28,
+            transformOrigin: "50% 50%",
+          });
+          gsap.set(meta ? Array.from(meta.children) : [], {
+            opacity: 0,
+            y: 14,
+          });
+          gsap.set(strip, { opacity: 0, y: 20 });
+          gsap.set(navs, { opacity: 0 });
+        }
+
+        root.classList.add("is-ready");
+
         ctx = gsap.context(() => {
-          const reduce = prefersReducedMotion();
-          const useFlip = !reduce && isDesktopFlip() && originEl?.isConnected;
-          const front = imgARef.current;
-          const scrim = scrimRef.current;
-          const meta = metaRef.current;
-          const chrome = chromeRef.current;
-          const stage = stageRef.current;
-
-          if (front && item?.src) {
-            front.src = item.src;
-            gsap.set(front, { opacity: 1, xPercent: 0 });
-          }
-          if (imgBRef.current) {
-            gsap.set(imgBRef.current, { opacity: 0, xPercent: 0 });
-          }
-
-          document.body.style.overflow = "hidden";
-
           if (reduce) {
-            gsap.set([scrim, chrome, meta, stage].filter(Boolean), {
+            gsap.set([scrim, stage, strip, ...navs].filter(Boolean), {
               opacity: 1,
               clearProps: "transform",
             });
+            if (meta) {
+              gsap.set(Array.from(meta.children), {
+                opacity: 1,
+                clearProps: "transform",
+              });
+            }
             opened.current = true;
             scrollStripToActive(false);
+            closeBtnRef.current?.focus({ preventScroll: true });
             return;
           }
-
-          gsap.set(scrim, { opacity: 0 });
-          gsap.set(chrome, { opacity: 0 });
-          gsap.set(meta ? Array.from(meta.children) : [], {
-            opacity: 0,
-            y: 18,
-          });
-          gsap.set(stripRef.current, { opacity: 0, y: 28 });
 
           const tl = gsap.timeline({
             defaults: { ease: "power3.out" },
             onComplete: () => {
               opened.current = true;
+              gsap.set([stage, ...navs], { clearProps: "transform" });
               scrollStripToActive(false);
+              closeBtnRef.current?.focus({ preventScroll: true });
             },
           });
 
-          tl.to(scrim, { opacity: 1, duration: 0.45 }, 0);
-
-          if (useFlip && front && originEl) {
-            const state = Flip.getState(originEl);
-            gsap.set(front, { opacity: 1 });
-            Flip.from(state, {
-              targets: front,
-              absolute: true,
-              duration: 0.75,
+          tl.to(scrim, { opacity: 1, duration: 0.42 }, 0);
+          tl.to(
+            stage,
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.7,
               ease: "expo.out",
-              fade: true,
-              scale: true,
-              simple: true,
-            });
-          } else if (stage) {
-            tl.fromTo(
-              stage,
-              { opacity: 0, scale: 0.92, y: 24 },
-              {
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                duration: 0.62,
-                ease: "expo.out",
-              },
-              0.05,
-            );
-          }
-
-          tl.to(chrome, { opacity: 1, duration: 0.35 }, 0.2);
+            },
+            0.05,
+          );
           if (meta) {
             tl.to(
               Array.from(meta.children),
-              { opacity: 1, y: 0, duration: 0.5, stagger: 0.06 },
-              0.32,
+              { opacity: 1, y: 0, duration: 0.5, stagger: 0.05 },
+              0.28,
             );
           }
-          if (stripRef.current) {
+          if (strip) {
             tl.to(
-              stripRef.current,
+              strip,
               { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" },
-              0.38,
+              0.36,
             );
           }
+          tl.to(navs, { opacity: 1, duration: 0.35 }, 0.32);
         }, root);
       };
 
@@ -189,7 +225,7 @@ export function ThumbCinema({
     return () => {
       cancelled = true;
       ctx?.revert();
-      document.body.style.overflow = "";
+      unlockPageScroll();
       navTween.current?.kill();
     };
     // Open once per mount
@@ -212,7 +248,6 @@ export function ThumbCinema({
     const back = backRef.current;
     if (!front || !back) return;
 
-    /* Already showing this src on front */
     if (front.getAttribute("src") === item.src) {
       scrollStripToActive(true);
       return;
@@ -224,38 +259,49 @@ export function ThumbCinema({
     const backward = (from - index + count) % count;
     const dir = forward <= backward ? 1 : -1;
 
-    back.src = item.src;
+    const run = async () => {
+      await waitForImage(back, item.src);
+      if (closing.current) return;
 
-    if (reduce) {
-      gsap.set(front, { opacity: 0 });
-      gsap.set(back, { opacity: 1, xPercent: 0 });
-      activeLayer.current = activeLayer.current === "a" ? "b" : "a";
-      scrollStripToActive(false);
-      return;
-    }
-
-    gsap.set(back, { opacity: 0, xPercent: dir * 14 });
-    const tl = gsap.timeline({
-      onComplete: () => {
+      if (reduce) {
+        gsap.set(front, { opacity: 0, xPercent: 0 });
+        gsap.set(back, { opacity: 1, xPercent: 0 });
         activeLayer.current = activeLayer.current === "a" ? "b" : "a";
-        scrollStripToActive(true);
-      },
-    });
-    tl.to(
-      front,
-      { opacity: 0, xPercent: -dir * 12, duration: 0.45, ease: "power2.inOut" },
-      0,
-    );
-    tl.to(
-      back,
-      { opacity: 1, xPercent: 0, duration: 0.5, ease: "power2.out" },
-      0.05,
-    );
-    navTween.current = tl;
+        scrollStripToActive(false);
+        return;
+      }
+
+      gsap.set(back, { opacity: 0, xPercent: dir * 10 });
+      const tl = gsap.timeline({
+        onComplete: () => {
+          activeLayer.current = activeLayer.current === "a" ? "b" : "a";
+          gsap.set([front, back], { clearProps: "xPercent" });
+          scrollStripToActive(true);
+        },
+      });
+      tl.to(
+        front,
+        {
+          opacity: 0,
+          xPercent: -dir * 8,
+          duration: 0.38,
+          ease: "power2.inOut",
+        },
+        0,
+      );
+      tl.to(
+        back,
+        { opacity: 1, xPercent: 0, duration: 0.42, ease: "power2.out" },
+        0.04,
+      );
+      navTween.current = tl;
+    };
+
+    void run();
   }, [index, item, ready, count, scrollStripToActive]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !opened.current) return;
     scrollStripToActive(true);
   }, [index, ready, scrollStripToActive]);
 
@@ -266,55 +312,43 @@ export function ThumbCinema({
     const root = rootRef.current;
 
     if (!bundle || !root || prefersReducedMotion()) {
-      document.body.style.overflow = "";
+      unlockPageScroll();
       onClose();
       return;
     }
 
-    const { gsap, Flip } = bundle;
-    const front =
-      activeLayer.current === "a" ? imgARef.current : imgBRef.current;
-    const canFlip =
-      isDesktopFlip() && originEl?.isConnected && front;
-
+    const { gsap } = bundle;
     navTween.current?.kill();
+
+    const navs = gsap.utils.toArray<HTMLElement>(
+      root.querySelectorAll(".tcinema__nav, .tcinema__close"),
+    );
 
     const tl = gsap.timeline({
       onComplete: () => {
-        document.body.style.overflow = "";
+        unlockPageScroll();
         onClose();
       },
     });
 
     tl.to(
-      [chromeRef.current, metaRef.current, stripRef.current],
-      { opacity: 0, y: 12, duration: 0.28, ease: "power2.in", stagger: 0.03 },
+      [metaRef.current, stripRef.current, ...navs],
+      { opacity: 0, duration: 0.24, ease: "power2.in", stagger: 0.02 },
       0,
     );
-
-    if (canFlip && front && originEl) {
-      const state = Flip.getState(front);
-      tl.add(() => {
-        Flip.from(state, {
-          targets: originEl,
-          absolute: true,
-          duration: 0.55,
-          ease: "power3.inOut",
-          fade: true,
-          scale: true,
-          simple: true,
-        });
-      }, 0.08);
-      tl.to(scrimRef.current, { opacity: 0, duration: 0.4 }, 0.15);
-    } else {
-      tl.to(
-        stageRef.current,
-        { opacity: 0, scale: 0.94, duration: 0.35, ease: "power2.in" },
-        0.05,
-      );
-      tl.to(scrimRef.current, { opacity: 0, duration: 0.3 }, 0.1);
-    }
-  }, [onClose, originEl]);
+    tl.to(
+      stageRef.current,
+      {
+        opacity: 0,
+        scale: 0.96,
+        y: 14,
+        duration: 0.32,
+        ease: "power2.in",
+      },
+      0.04,
+    );
+    tl.to(scrimRef.current, { opacity: 0, duration: 0.28 }, 0.08);
+  }, [onClose]);
 
   const step = useCallback(
     (dir: 1 | -1) => {
@@ -326,17 +360,19 @@ export function ThumbCinema({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") requestClose();
-      else if (e.key === "ArrowRight") step(1);
+      if (e.key === "Escape") {
+        e.preventDefault();
+        requestClose();
+      } else if (e.key === "ArrowRight") step(1);
       else if (e.key === "ArrowLeft") step(-1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [requestClose, step]);
 
-  if (!item) return null;
+  if (!item || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       ref={rootRef}
       className="tcinema"
@@ -360,7 +396,6 @@ export function ThumbCinema({
               ref={imgARef}
               alt=""
               className="tcinema__img tcinema__img--a"
-              data-index={String(index)}
               decoding="async"
             />
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -418,6 +453,7 @@ export function ThumbCinema({
         →
       </button>
       <button
+        ref={closeBtnRef}
         type="button"
         className="tcinema__close"
         aria-label="Close"
@@ -425,6 +461,7 @@ export function ThumbCinema({
       >
         Close ✕
       </button>
-    </div>
+    </div>,
+    document.body,
   );
 }

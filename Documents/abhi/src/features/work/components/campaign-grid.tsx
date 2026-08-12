@@ -103,6 +103,8 @@ export function CampaignGrid({ campaign, onClose }: CampaignGridProps) {
             defaults: { ease: "power3.out" },
             onComplete: () => {
               opened.current = true;
+              /* Transforms on shell break iOS overflow scroll */
+              gsap.set(shell, { clearProps: "transform" });
               closeBtnRef.current?.focus({ preventScroll: true });
             },
           });

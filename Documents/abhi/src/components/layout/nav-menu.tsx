@@ -38,22 +38,23 @@ export function NavMenu() {
       aria-busy={busy || undefined}
       inert={!menuOpen || busy ? true : undefined}
     >
-      <div className="mb-8 flex items-center justify-between">
-        <p className="font-instrument-serif text-sm italic text-white/55">
-          Navigation
-        </p>
+      <header className="nav-menu__top">
+        <p className="nav-menu__eyebrow">Navigation</p>
         <button
           type="button"
-          className="font-satoshi text-sm uppercase tracking-[0.18em] text-white"
+          className="nav-menu__close"
           aria-label="Close menu"
           disabled={busy}
           onClick={() => setMenuOpen(false)}
         >
-          Close ×
+          Close
+          <span className="nav-menu__close-x" aria-hidden>
+            ×
+          </span>
         </button>
-      </div>
+      </header>
 
-      <nav aria-label="Mobile primary" className="flex flex-1 flex-col">
+      <nav aria-label="Mobile primary" className="nav-menu__list">
         {NAV_ITEMS.map((item, i) => {
           const active = item.href === activeHref;
 
@@ -62,7 +63,7 @@ export function NavMenu() {
               key={item.href}
               type="button"
               className={cn(
-                "nav-menu__row border-0 bg-transparent text-left text-white",
+                "nav-menu__row",
                 active && "is-active",
               )}
               style={{ ["--i" as string]: i }}
@@ -81,13 +82,15 @@ export function NavMenu() {
             >
               <span className="nav-menu__index">{item.index}</span>
               <span className="nav-menu__label">{item.label}</span>
-              <span className="nav-menu__preview flex items-center justify-center font-instrument-serif text-xs italic text-white/70">
-                {PREVIEWS[item.href]}
-              </span>
+              <span className="nav-menu__preview">{PREVIEWS[item.href]}</span>
             </button>
           );
         })}
       </nav>
+
+      <footer className="nav-menu__foot">
+        <p className="nav-menu__foot-note">Selected work · Briefs · Studio</p>
+      </footer>
     </div>
   );
 }

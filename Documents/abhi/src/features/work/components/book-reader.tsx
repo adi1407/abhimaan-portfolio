@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { BOOK, BOOK_PAGE_COUNT, type BookPage } from "@/lib/book";
 
+type Phase = "closed" | "opening" | "ready";
 type FlipDir = "next" | "prev" | null;
 
 function prefersReducedMotion() {
@@ -39,62 +40,110 @@ function preloadAround(pages: readonly BookPage[], index: number) {
   }
 }
 
+function SpreadHalf({
+  src,
+  side,
+  className,
+}: {
+  src: string;
+  side: "left" | "right";
+  className?: string;
+}) {
+  return (
+    <div className={cn("book__half", `book__half--${side}`, className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt=""
+        className={cn("book__spread-img", `book__spread-img--${side}`)}
+        draggable={false}
+      />
+    </div>
+  );
+}
+
+function SpreadFull({ src, className }: { src: string; className?: string }) {
+  return (
+    <div className={cn("book__spread-full", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt="" className="book__spread" draggable={false} />
+    </div>
+  );
+}
+
 export function BookReader({ onClose }: { onClose: () => void }) {
+  const [phase, setPhase] = useState<Phase>(() =>
+    typeof window !== "undefined" && prefersReducedMotion() ? "ready" : "closed",
+  );
   const [index, setIndex] = useState(0);
   const [flip, setFlip] = useState<FlipDir>(null);
-  const [nextArmed, setNextArmed] = useState(false);
-  const [prevArmed, setPrevArmed] = useState(false);
-  const [portalReady, setPortalReady] = useState(false);
+  const [flipArmed, setFlipArmed] = useState(false);
+  const [portalReady] = useState(() => typeof document !== "undefined");
   const touchRef = useRef<{ x: number; y: number } | null>(null);
-  const busy = flip !== null;
 
+  const busy = flip !== null;
+  const ready = phase === "ready";
   const current = BOOK.pages[index];
   const nextPage = index < BOOK_PAGE_COUNT - 1 ? BOOK.pages[index + 1] : null;
   const prevPage = index > 0 ? BOOK.pages[index - 1] : null;
 
   useEffect(() => {
-    setPortalReady(true);
     lockPageScroll();
     return () => unlockPageScroll();
   }, []);
 
   useEffect(() => {
+    if (prefersReducedMotion()) return;
+    if (phase !== "closed") return;
+    const id = window.requestAnimationFrame(() => setPhase("opening"));
+    return () => window.cancelAnimationFrame(id);
+  }, [phase]);
+
+  useEffect(() => {
     preloadAround(BOOK.pages, index);
   }, [index]);
 
-  const finishFlip = useCallback(
-    (dir: FlipDir) => {
-      if (dir === "next") setIndex((i) => Math.min(i + 1, BOOK_PAGE_COUNT - 1));
-      else if (dir === "prev") setIndex((i) => Math.max(i - 1, 0));
-      setFlip(null);
-      setNextArmed(false);
-      setPrevArmed(false);
+  const beginOpening = useCallback(() => {
+    if (phase !== "closed" || prefersReducedMotion()) return;
+    setPhase("opening");
+  }, [phase]);
+
+  const onCoverTransitionEnd = useCallback(
+    (e: TransitionEvent<HTMLDivElement>) => {
+      if (e.propertyName !== "transform" || phase !== "opening") return;
+      setPhase("ready");
     },
-    [],
+    [phase],
   );
 
+  const finishFlip = useCallback((dir: FlipDir) => {
+    if (dir === "next") setIndex((i) => Math.min(i + 1, BOOK_PAGE_COUNT - 1));
+    else if (dir === "prev") setIndex((i) => Math.max(i - 1, 0));
+    setFlip(null);
+    setFlipArmed(false);
+  }, []);
+
   const goNext = useCallback(() => {
-    if (busy || index >= BOOK_PAGE_COUNT - 1) return;
+    if (!ready || busy || index >= BOOK_PAGE_COUNT - 1) return;
     if (prefersReducedMotion()) {
       setIndex((i) => i + 1);
       return;
     }
-    setNextArmed(false);
-    setPrevArmed(false);
+    setFlipArmed(false);
     setFlip("next");
-    requestAnimationFrame(() => setNextArmed(true));
-  }, [busy, index]);
+    requestAnimationFrame(() => setFlipArmed(true));
+  }, [ready, busy, index]);
 
   const goPrev = useCallback(() => {
-    if (busy || index <= 0) return;
+    if (!ready || busy || index <= 0) return;
     if (prefersReducedMotion()) {
       setIndex((i) => i - 1);
       return;
     }
-    setPrevArmed(false);
+    setFlipArmed(false);
     setFlip("prev");
-    requestAnimationFrame(() => setPrevArmed(true));
-  }, [busy, index]);
+    requestAnimationFrame(() => setFlipArmed(true));
+  }, [ready, busy, index]);
 
   const onLeafTransitionEnd = useCallback(
     (e: TransitionEvent<HTMLDivElement>) => {
@@ -109,10 +158,11 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       if (e.key === "Escape") onClose();
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
+      else if (e.key === "Enter" && phase === "closed") beginOpening();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goNext, goPrev]);
+  }, [onClose, goNext, goPrev, phase, beginOpening]);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
     const t = e.changedTouches[0];
@@ -136,19 +186,17 @@ export function BookReader({ onClose }: { onClose: () => void }) {
 
   if (!portalReady) return null;
 
-  const underSrc =
-    flip === "next" && nextPage
-      ? nextPage.src
-      : flip === "prev" && prevPage
-        ? BOOK.pages[index].src
-        : current.src;
-
-  const leafSrc =
-    flip === "next" ? current.src : flip === "prev" && prevPage ? prevPage.src : null;
+  const showCover = phase !== "ready";
+  const coverSrc = BOOK.cover;
 
   return createPortal(
     <div
-      className="book is-open"
+      className={cn(
+        "book",
+        "is-open",
+        phase === "opening" && "is-opening",
+        ready && "is-ready",
+      )}
       role="dialog"
       aria-modal="true"
       aria-label={BOOK.title}
@@ -163,7 +211,9 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       />
 
       <div className="book__shell">
-        <header className="book__chrome">
+        <header
+          className={cn("book__chrome", !ready && "book__chrome--locked")}
+        >
           <div className="book__meta">
             <p className="book__eyebrow">{BOOK.subtitle}</p>
             <h2 className="book__title">{BOOK.title}</h2>
@@ -183,70 +233,176 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         </header>
 
         <div className="book__stage-wrap">
-          <span className="book__edge book__edge--left" aria-hidden />
-          <span className="book__edge book__edge--right" aria-hidden />
-
-          <div className="book__stage">
-            <div className="book__under">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={underSrc} alt="" className="book__spread" draggable={false} />
-            </div>
-
-            {leafSrc ? (
-              <div
-                className={cn(
-                  "book__leaf",
-                  flip === "next" && nextArmed && "is-turning-next",
-                  flip === "prev" && "is-turning-prev",
-                  flip === "prev" && prevArmed && "is-armed",
-                )}
-                onTransitionEnd={onLeafTransitionEnd}
-              >
-                <div className="book__face book__face--front">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={leafSrc} alt="" className="book__spread" draggable={false} />
-                  <span className="book__shade" aria-hidden />
-                </div>
-                <div className="book__face book__face--back" aria-hidden>
-                  <span className="book__paper" />
-                </div>
+          <div className="book__book-tilt">
+            {showCover ? (
+              <div className="book__cover-closed">
+                <button
+                  type="button"
+                  className="book__cover-hit"
+                  aria-label="Open book"
+                  onClick={beginOpening}
+                  disabled={phase === "opening"}
+                >
+                  <div
+                    className={cn(
+                      "book__cover-block",
+                      phase === "opening" && "is-opening",
+                    )}
+                  >
+                    <div
+                      className="book__cover-front"
+                      onTransitionEnd={onCoverTransitionEnd}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverSrc}
+                        alt=""
+                        className="book__cover-img"
+                        draggable={false}
+                      />
+                      <span className="book__cover-shine" aria-hidden />
+                    </div>
+                    <span className="book__cover-spine" aria-hidden />
+                    <span className="book__cover-stack" aria-hidden>
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <span
+                          key={i}
+                          className="book__stack-sheet"
+                          style={{ ["--i" as string]: i }}
+                        />
+                      ))}
+                    </span>
+                  </div>
+                  {phase === "closed" ? (
+                    <span className="book__cover-cta">Open book</span>
+                  ) : null}
+                </button>
               </div>
             ) : null}
+
+            <div
+              className={cn(
+                "book__stage",
+                showCover && "book__stage--behind",
+                ready && "book__stage--live",
+              )}
+            >
+              <span className="book__spine" aria-hidden />
+
+              <span className="book__stack" aria-hidden>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <span
+                    key={i}
+                    className="book__stack-sheet"
+                    style={{ ["--i" as string]: i }}
+                  />
+                ))}
+              </span>
+
+              {flip === "next" && nextPage ? (
+                <SpreadFull src={nextPage.src} className="book__spread-under" />
+              ) : flip === "prev" && prevPage ? (
+                <SpreadFull src={prevPage.src} className="book__spread-under" />
+              ) : null}
+
+              {flip === "next" ? (
+                <SpreadHalf
+                  src={current.src}
+                  side="left"
+                  className="book__pane book__pane--left"
+                />
+              ) : flip === "prev" ? (
+                <SpreadHalf
+                  src={current.src}
+                  side="right"
+                  className="book__pane book__pane--right"
+                />
+              ) : (
+                <>
+                  <SpreadHalf src={current.src} side="left" />
+                  <SpreadHalf src={current.src} side="right" />
+                </>
+              )}
+
+              {flip === "next" ? (
+                <div
+                  className={cn(
+                    "book__leaf",
+                    "book__leaf--right",
+                    flipArmed && "is-turning",
+                  )}
+                  onTransitionEnd={onLeafTransitionEnd}
+                >
+                  <div className="book__face book__face--front">
+                    <SpreadHalf src={current.src} side="right" />
+                    <span className="book__shade book__shade--next" aria-hidden />
+                  </div>
+                  <div className="book__face book__face--back" aria-hidden>
+                    <span className="book__paper" />
+                  </div>
+                </div>
+              ) : null}
+
+              {flip === "prev" ? (
+                <div
+                  className={cn(
+                    "book__leaf",
+                    "book__leaf--left",
+                    flipArmed && "is-turning",
+                  )}
+                  onTransitionEnd={onLeafTransitionEnd}
+                >
+                  <div className="book__face book__face--front">
+                    <SpreadHalf src={current.src} side="left" />
+                    <span className="book__shade book__shade--prev" aria-hidden />
+                  </div>
+                  <div className="book__face book__face--back" aria-hidden>
+                    <span className="book__paper" />
+                  </div>
+                </div>
+              ) : null}
+            </div>
           </div>
 
-          <div className="book__tap-zones" aria-hidden>
-            <button
-              type="button"
-              className="book__zone book__zone--prev"
-              tabIndex={-1}
-              disabled={index <= 0 || busy}
-              onClick={goPrev}
-            />
-            <button
-              type="button"
-              className="book__zone book__zone--next"
-              tabIndex={-1}
-              disabled={index >= BOOK_PAGE_COUNT - 1 || busy}
-              onClick={goNext}
-            />
-          </div>
+          {ready ? (
+            <div className="book__tap-zones" aria-hidden>
+              <button
+                type="button"
+                className="book__zone book__zone--prev"
+                tabIndex={-1}
+                disabled={index <= 0 || busy}
+                onClick={goPrev}
+              />
+              <button
+                type="button"
+                className="book__zone book__zone--next"
+                tabIndex={-1}
+                disabled={index >= BOOK_PAGE_COUNT - 1 || busy}
+                onClick={goNext}
+              />
+            </div>
+          ) : null}
         </div>
 
-        <footer className="book__foot">
+        <footer
+          className={cn("book__foot", !ready && "book__foot--locked")}
+        >
           <button
             type="button"
             className="book__nav book__nav--prev"
-            disabled={index <= 0 || busy}
+            disabled={!ready || index <= 0 || busy}
             onClick={goPrev}
             aria-label="Previous spread"
           >
             ← Prev
           </button>
-          <p className="book__hint">Tap edges or swipe to turn</p>
+          <p className="book__hint">
+            {ready ? "Tap edges or swipe to turn" : "Opening…"}
+          </p>
           <button
             type="button"
             className="book__nav book__nav--next"
-            disabled={index >= BOOK_PAGE_COUNT - 1 || busy}
+            disabled={!ready || index >= BOOK_PAGE_COUNT - 1 || busy}
             onClick={goNext}
             aria-label="Next spread"
           >

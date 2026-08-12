@@ -2,4 +2,11 @@
 .next/
 node_modules/
 .vercel/
-.env*
+.env
+.env.local
+.env.*.local
+!/.env.example
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/**/__pycache__/
+backend/.venv/

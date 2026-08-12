@@ -1,0 +1,53 @@
+import { NextResponse } from "next/server";
+import { requireAdmin, unauthorized } from "@/lib/cms/auth-server";
+import { proxyToFastApi } from "@/lib/cms/proxy";
+import { inquiryOut } from "@/lib/cms/serialize";
+import { supabaseAdmin, supabaseConfigured } from "@/lib/supabase/server";
+
+const SERVICES = new Set(["photoshop", "post", "both"]);
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export async function GET(req: Request) {
+  if (!supabaseConfigured()) return proxyToFastApi(req);
+  if (!(await requireAdmin())) return unauthorized();
+  const { data, error } = await supabaseAdmin()
+    .from("inquiries")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ items: (data ?? []).map((row) => inquiryOut(row)) });
+}
+
+export async function POST(req: Request) {
+  if (!supabaseConfigured()) return proxyToFastApi(req);
+  const body = (await req.json()) as Record<string, string>;
+  const email = (body.email ?? "").trim().toLowerCase();
+  if (!EMAIL_RE.test(email)) {
+    return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
+  }
+  if (!SERVICES.has(body.service)) {
+    return NextResponse.json(
+      { error: "Choose Photoshop, Post, or Both." },
+      { status: 400 },
+    );
+  }
+  const { data, error } = await supabaseAdmin()
+    .from("inquiries")
+    .insert({
+      name: (body.name ?? "").trim().slice(0, 120),
+      email: email.slice(0, 180),
+      phone: (body.phone ?? "").slice(0, 40),
+      service: body.service,
+      deliverable: (body.deliverable ?? "").slice(0, 160),
+      deadline: (body.deadline ?? "").slice(0, 80),
+      budget: (body.budget ?? "").slice(0, 80),
+      message: (body.message ?? "").trim().slice(0, 4000),
+      read: false,
+    })
+    .select("id")
+    .single();
+  if (error || !data) {
+    return NextResponse.json({ error: error?.message || "Save failed" }, { status: 500 });
+  }
+  return NextResponse.json({ ok: true, id: data.id }, { status: 201 });
+}

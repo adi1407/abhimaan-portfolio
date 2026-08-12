@@ -18,31 +18,34 @@ type CampaignGridProps = {
 
 type GsapBundle = {
   gsap: typeof import("gsap").gsap;
-  Flip: typeof import("gsap/Flip").Flip;
 };
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function isDesktopFlip() {
-  return window.matchMedia("(min-width: 900px)").matches;
+function lockPageScroll() {
+  window.__lenis?.stop();
+  document.documentElement.style.overflow = "hidden";
+  document.body.style.overflow = "hidden";
+}
+
+function unlockPageScroll() {
+  document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
+  window.__lenis?.start();
 }
 
 /**
- * Fullscreen campaign mosaic — GSAP Flip from cover, staggered cells,
- * simple lightbox for individual posters.
+ * Fullscreen campaign mosaic — equal-size poster sheet, GSAP open/close,
+ * overlay scrollport (Lenis stopped), cell lightbox.
  */
-export function CampaignGrid({
-  campaign,
-  originEl,
-  onClose,
-}: CampaignGridProps) {
+export function CampaignGrid({ campaign, onClose }: CampaignGridProps) {
   const rootRef = useRef<HTMLDivElement>(null);
-  const scrimRef = useRef<HTMLButtonElement>(null);
+  const scrimRef = useRef<HTMLDivElement>(null);
   const shellRef = useRef<HTMLDivElement>(null);
   const mosaicRef = useRef<HTMLDivElement>(null);
-  const heroRef = useRef<HTMLButtonElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
   const gsapRef = useRef<GsapBundle | null>(null);
   const closing = useRef(false);
   const opened = useRef(false);
@@ -56,14 +59,12 @@ export function CampaignGrid({
     let cancelled = false;
     let ctx: ReturnType<typeof import("gsap").gsap.context> | null = null;
 
+    lockPageScroll();
+
     (async () => {
-      const [{ gsap }, { Flip }] = await Promise.all([
-        import("gsap"),
-        import("gsap/Flip"),
-      ]);
+      const { gsap } = await import("gsap");
       if (cancelled) return;
-      gsap.registerPlugin(Flip);
-      gsapRef.current = { gsap, Flip };
+      gsapRef.current = { gsap };
       setReady(true);
 
       const root = rootRef.current;
@@ -73,86 +74,64 @@ export function CampaignGrid({
         if (cancelled) return;
         ctx = gsap.context(() => {
           const reduce = prefersReducedMotion();
-          const useFlip = !reduce && isDesktopFlip() && originEl?.isConnected;
           const scrim = scrimRef.current;
           const shell = shellRef.current;
           const mosaic = mosaicRef.current;
-          const hero = heroRef.current;
           const cells = mosaic
             ? gsap.utils.toArray<HTMLElement>(
                 mosaic.querySelectorAll(".cgrid__cell"),
               )
             : [];
-          const satellites = cells.filter((el) => el !== hero);
-
-          document.body.style.overflow = "hidden";
 
           if (reduce) {
             gsap.set([scrim, shell].filter(Boolean), { opacity: 1 });
             gsap.set(cells, { opacity: 1, clearProps: "transform" });
             opened.current = true;
+            closeBtnRef.current?.focus({ preventScroll: true });
             return;
           }
 
           gsap.set(scrim, { opacity: 0 });
-          gsap.set(shell, { opacity: 1 });
-          gsap.set(satellites, {
+          gsap.set(shell, { opacity: 0, scale: 0.96, y: 18 });
+          gsap.set(cells, {
             opacity: 0,
-            y: 28,
-            rotate: 1.2,
+            y: 24,
             scale: 0.96,
           });
-          if (hero) gsap.set(hero, { opacity: 1 });
 
           const tl = gsap.timeline({
             defaults: { ease: "power3.out" },
             onComplete: () => {
               opened.current = true;
+              closeBtnRef.current?.focus({ preventScroll: true });
             },
           });
 
           tl.to(scrim, { opacity: 1, duration: 0.4 }, 0);
-
-          if (useFlip && hero && originEl) {
-            const state = Flip.getState(originEl);
-            Flip.from(state, {
-              targets: hero,
-              absolute: true,
-              duration: 0.7,
+          tl.to(
+            shell,
+            {
+              opacity: 1,
+              scale: 1,
+              y: 0,
+              duration: 0.55,
               ease: "expo.out",
-              fade: true,
-              scale: true,
-              simple: true,
-            });
-          } else if (shell) {
-            tl.fromTo(
-              shell,
-              { opacity: 0, scale: 0.94, y: 20 },
-              {
-                opacity: 1,
-                scale: 1,
-                y: 0,
-                duration: 0.55,
-                ease: "expo.out",
-              },
-              0.05,
-            );
-          }
-
-          if (satellites.length) {
+            },
+            0.06,
+          );
+          if (cells.length) {
             tl.to(
-              satellites,
+              cells,
               {
                 opacity: 1,
                 y: 0,
-                rotate: 0,
                 scale: 1,
                 duration: 0.55,
                 stagger: 0.05,
                 ease: "expo.out",
                 clearProps: "transform",
               },
-              useFlip ? 0.35 : 0.2,
+              0.18,
             );
           }
         }, root);
@@ -164,9 +143,8 @@ export function CampaignGrid({
     return () => {
       cancelled = true;
       ctx?.revert();
-      document.body.style.overflow = "";
+      unlockPageScroll();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const requestClose = useCallback(() => {
@@ -180,7 +158,7 @@ export function CampaignGrid({
     const root = rootRef.current;
 
     if (!bundle || !root || prefersReducedMotion()) {
-      document.body.style.overflow = "";
+      unlockPageScroll();
       onClose();
       return;
     }
@@ -194,7 +172,7 @@ export function CampaignGrid({
 
     const tl = gsap.timeline({
       onComplete: () => {
-        document.body.style.overflow = "";
+        unlockPageScroll();
         onClose();
       },
     });
@@ -203,7 +181,7 @@ export function CampaignGrid({
       cells,
       {
         opacity: 0,
-        y: 16,
+        y: 14,
         scale: 0.97,
         duration: 0.28,
         stagger: 0.02,
@@ -213,10 +191,10 @@ export function CampaignGrid({
     );
     tl.to(
       shellRef.current,
-      { opacity: 0, scale: 0.96, duration: 0.32, ease: "power2.in" },
-      0.08,
+      { opacity: 0, scale: 0.97, y: 10, duration: 0.3, ease: "power2.in" },
+      0.06,
     );
-    tl.to(scrimRef.current, { opacity: 0, duration: 0.3 }, 0.1);
+    tl.to(scrimRef.current, { opacity: 0, duration: 0.28 }, 0.08);
   }, [onClose, lbIndex]);
 
   const stepLb = useCallback(
@@ -243,17 +221,24 @@ export function CampaignGrid({
     return () => window.removeEventListener("keydown", onKey);
   }, [ready, requestClose, lbIndex, stepLb]);
 
-  /* Focus trap — keep Tab inside overlay */
+  /* Focus trap — prefer close button as entry focus */
   useEffect(() => {
     if (!ready) return;
     const root = rootRef.current;
     if (!root) return;
-    const focusable = root.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
-    );
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    first?.focus({ preventScroll: true });
+    const focusable = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'button:not(.cgrid-lb__scrim), [href], [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => lbIndex !== null || !el.closest(".cgrid-lb"));
+
+    const first = focusable[0] ?? closeBtnRef.current;
+    const last = focusable[focusable.length - 1] ?? first;
+    if (!opened.current) {
+      /* open timeline will focus close when ready */
+    } else {
+      first?.focus({ preventScroll: true });
+    }
 
     const onTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab" || focusable.length === 0) return;
@@ -271,35 +256,17 @@ export function CampaignGrid({
 
   const lbItem = lbIndex !== null ? images[lbIndex] : null;
 
-  const renderCell = (
-    img: CampaignImage,
-    i: number,
-    opts?: { hero?: boolean; final?: boolean },
-  ) => {
-    const aspect = img.aspect ?? "story";
-    return (
-      <button
-        key={img.id}
-        ref={opts?.hero ? heroRef : undefined}
-        type="button"
-        className={cn(
-          "cgrid__cell",
-          `cgrid__cell--${aspect}`,
-          opts?.hero && "cgrid__cell--hero",
-          opts?.final && "cgrid__cell--final",
-        )}
-        onClick={() => setLbIndex(i)}
-        aria-label={`Open ${img.label}`}
-      >
-        <img
-          src={img.src}
-          alt={img.label}
-          loading="lazy"
-          draggable={false}
-        />
-      </button>
-    );
-  };
+  const renderCell = (img: CampaignImage, i: number) => (
+    <button
+      key={img.id}
+      type="button"
+      className="cgrid__cell"
+      onClick={() => setLbIndex(i)}
+      aria-label={`Open ${img.label}`}
+    >
+      <img src={img.src} alt={img.label} loading="lazy" draggable={false} />
+    </button>
+  );
 
   return (
     <div
@@ -308,16 +275,17 @@ export function CampaignGrid({
       role="dialog"
       aria-modal="true"
       aria-label={`${campaign.title} campaign board`}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) requestClose();
+      }}
     >
-      <button
-        ref={scrimRef}
-        type="button"
-        className="cgrid__scrim"
-        aria-label="Close campaign board"
-        onClick={requestClose}
-      />
+      <div ref={scrimRef} className="cgrid__scrim" aria-hidden />
 
-      <div ref={shellRef} className="cgrid__shell">
+      <div
+        ref={shellRef}
+        className="cgrid__shell"
+        onClick={(e) => e.stopPropagation()}
+      >
         <header className="cgrid__head">
           <div className="cgrid__meta">
             <p className="cgrid__kicker">Campaign board</p>
@@ -328,6 +296,7 @@ export function CampaignGrid({
             {count} piece{count === 1 ? "" : "s"}
           </p>
           <button
+            ref={closeBtnRef}
             type="button"
             className="cgrid__close"
             aria-label="Close"
@@ -341,29 +310,7 @@ export function CampaignGrid({
           ref={mosaicRef}
           className={cn("cgrid__mosaic", `cgrid__mosaic--${campaign.layout}`)}
         >
-          {campaign.layout === "mosaic-6a" ? (
-            <>
-              <div className="cgrid__feature">
-                {renderCell(images[0], 0, { hero: true })}
-              </div>
-              <div className="cgrid__satellites">
-                {images.slice(1).map((img, i) => renderCell(img, i + 1))}
-              </div>
-            </>
-          ) : campaign.layout === "mosaic-8" ? (
-            <>
-              <div className="cgrid__feature">
-                {renderCell(images[0], 0, { hero: true, final: true })}
-              </div>
-              <div className="cgrid__satellites">
-                {images.slice(1).map((img, i) => renderCell(img, i + 1))}
-              </div>
-            </>
-          ) : (
-            images.map((img, i) =>
-              renderCell(img, i, { hero: i === 0 }),
-            )
-          )}
+          {images.map((img, i) => renderCell(img, i))}
         </div>
       </div>
 
@@ -373,6 +320,7 @@ export function CampaignGrid({
             type="button"
             className="cgrid-lb__scrim"
             aria-label="Close image"
+            tabIndex={-1}
             onClick={() => setLbIndex(null)}
           />
           <button

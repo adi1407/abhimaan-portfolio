@@ -5827,17 +5827,19 @@ a.creators__card:hover .creators__avatar {
   position: fixed;
   inset: 0;
   z-index: 10090;
-  display: grid;
-  place-items: stretch;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   color: #e8e4db;
 }
 
 .cgrid__scrim {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  border: 0;
-  padding: 0;
-  cursor: pointer;
+  z-index: 0;
+  pointer-events: none;
   background:
     radial-gradient(80% 60% at 50% 20%, rgba(196, 92, 58, 0.12), transparent 55%),
     rgba(4, 6, 12, 0.94);
@@ -5851,17 +5853,12 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-direction: column;
   gap: clamp(1rem, 2.5vw, 1.5rem);
-  width: min(100%, 1280px);
-  max-height: 100%;
-  margin: auto;
+  width: min(100%, 1100px);
+  max-height: none;
+  margin: 0 auto;
   padding: clamp(1rem, 3vw, 2rem);
-  padding-bottom: calc(clamp(1rem, 3vw, 2rem) + env(safe-area-inset-bottom, 0));
-  overflow: auto;
-  pointer-events: none;
-}
-
-.cgrid__shell * {
-  pointer-events: auto;
+  padding-bottom: calc(clamp(1.5rem, 4vw, 2.5rem) + env(safe-area-inset-bottom, 0));
+  overflow: visible;
 }
 
 .cgrid__head {
@@ -5925,53 +5922,22 @@ a.creators__card:hover .creators__avatar {
   border-color: rgba(232, 228, 219, 0.4);
 }
 
+/* Equal-size poster sheet */
 .cgrid__mosaic {
-  --cgrid-story: 9 / 16;
-  --cgrid-sheet: 4 / 5;
   display: grid;
-  gap: clamp(0.5rem, 1.2vw, 0.85rem);
+  gap: clamp(0.45rem, 1vw, 0.75rem);
   width: 100%;
   min-height: 0;
-  align-items: start;
+  align-items: stretch;
 }
 
-.cgrid__feature {
-  min-width: 0;
-}
-
-.cgrid__satellites {
-  min-width: 0;
-  display: grid;
-  gap: inherit;
-  align-items: start;
-}
-
-/* Editorial: large 9:16 hero + 2-col satellite wall (all native story frames) */
-.cgrid__mosaic--mosaic-6a {
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.15fr);
-}
-
-.cgrid__mosaic--mosaic-6a .cgrid__satellites {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-/* Asymmetric 3×2 — column widths differ, every cell stays 9:16 */
+.cgrid__mosaic--mosaic-6a,
 .cgrid__mosaic--mosaic-6b {
-  grid-template-columns: 1.2fr 1fr 0.88fr;
-  grid-template-rows: auto auto;
-}
-
-.cgrid__mosaic--mosaic-6b .cgrid__cell {
-  width: 100%;
-}
-
-/* FINAL 4:5 featured + story/sheet satellites in native frames */
-.cgrid__mosaic--mosaic-8 {
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.2fr);
-}
-
-.cgrid__mosaic--mosaic-8 .cgrid__satellites {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.cgrid__mosaic--mosaic-8 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .cgrid__cell {
@@ -5985,15 +5951,11 @@ a.creators__card:hover .creators__avatar {
   overflow: hidden;
   background: #0b0d14;
   cursor: zoom-in;
-  aspect-ratio: var(--cgrid-story);
+  aspect-ratio: 9 / 16;
   box-shadow:
     0 0 0 1px rgba(232, 228, 219, 0.1),
     0 18px 40px -28px rgba(0, 0, 0, 0.7);
   transition: box-shadow 0.25s ease;
-}
-
-.cgrid__cell--sheet {
-  aspect-ratio: var(--cgrid-sheet);
 }
 
 .cgrid__cell:hover,
@@ -6005,7 +5967,7 @@ a.creators__card:hover .creators__avatar {
   z-index: 1;
 }
 
-/* contain = full poster, original shape — never crop */
+/* Full poster, uniform tile — sheets letterbox inside 9:16 */
 .cgrid__cell img {
   width: 100%;
   height: 100%;
@@ -6019,11 +5981,11 @@ a.creators__card:hover .creators__avatar {
   transform: scale(1.03);
 }
 
-/* Cell lightbox */
+/* Cell lightbox — fixed so it stays in viewport while board scrolls */
 .cgrid-lb {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 10;
+  z-index: 11;
   display: grid;
   place-items: center;
   padding: 1.5rem;
@@ -6135,23 +6097,9 @@ a.creators__card:hover .creators__avatar {
   }
 
   .cgrid__mosaic--mosaic-6a,
+  .cgrid__mosaic--mosaic-6b,
   .cgrid__mosaic--mosaic-8 {
-    grid-template-columns: 1fr;
-  }
-
-  .cgrid__mosaic--mosaic-6a .cgrid__feature,
-  .cgrid__mosaic--mosaic-8 .cgrid__feature {
-    max-width: 16rem;
-    margin-inline: auto;
-  }
-
-  .cgrid__mosaic--mosaic-6a .cgrid__satellites,
-  .cgrid__mosaic--mosaic-8 .cgrid__satellites {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .cgrid__mosaic--mosaic-6b {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cgrid-lb__nav {

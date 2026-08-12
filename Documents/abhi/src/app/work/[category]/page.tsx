@@ -1,24 +1,25 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { WorkPage } from "@/features/work";
-import {
-  getCategory,
-  isWorkCategoryId,
-  WORK_CATEGORIES,
-} from "@/lib/work";
+import { isWorkCategoryId } from "@/lib/work";
 
 type Props = {
   params: Promise<{ category: string }>;
 };
 
 export function generateStaticParams() {
-  return WORK_CATEGORIES.map((c) => ({ category: c.id }));
+  return [
+    { category: "posters" },
+    { category: "thumbnails" },
+    { category: "logos" },
+    { category: "books" },
+  ];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
   if (!isWorkCategoryId(category)) return { title: "Work" };
-  return { title: `${getCategory(category).short} — Work` };
+  return { title: `${category} — Work` };
 }
 
 export default async function WorkCategoryRoute({ params }: Props) {

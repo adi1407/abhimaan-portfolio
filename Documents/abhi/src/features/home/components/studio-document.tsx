@@ -5,9 +5,11 @@ import {
   HeroLayersPanel,
   LAYERS,
   type LayerId,
+  type StudioLayer,
 } from "@/features/home/components/hero-layers";
 import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
+import { useHome } from "@/lib/cms/hooks";
 
 /* ================================================================== *
  * Studio document — nine uploaded plates composite on scroll.
@@ -33,6 +35,15 @@ const smooth = (t: number) => t * t * (3 - 2 * t);
 const SLICE_SVH = 38;
 
 export function StudioDocument() {
+  const home = useHome<{
+    studio?: { filename?: string; title?: string; layers?: StudioLayer[] };
+  }>();
+  const layers: StudioLayer[] = home.studio?.layers?.length
+    ? home.studio.layers
+    : [...LAYERS];
+  const filename = home.studio?.filename || "abhimaan-2026.psd";
+  const title =
+    home.studio?.title || "The poster, composited layer by layer";
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLElement | null)[]>([]);
   const railRef = useRef<HTMLSpanElement>(null);
@@ -52,12 +63,12 @@ export function StudioDocument() {
 
   useEffect(() => {
     if (mobileStudio) {
-      for (let i = 0; i < LAYERS.length; i += 1) {
+      for (let i = 0; i < layers.length; i += 1) {
         const el = layerRefs.current[i];
         if (el) el.style.setProperty("--t", "1");
       }
       if (railRef.current) railRef.current.style.setProperty("--p", "1");
-      setBuilt(LAYERS.length);
+      setBuilt(layers.length);
       return;
     }
 
@@ -72,9 +83,9 @@ export function StudioDocument() {
       const travel = rect.height - vh;
       const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
 
-      const stepped = p * LAYERS.length;
+      const stepped = p * layers.length;
 
-      for (let i = 0; i < LAYERS.length; i += 1) {
+      for (let i = 0; i < layers.length; i += 1) {
         const el = layerRefs.current[i];
         if (!el) continue;
         el.style.setProperty(
@@ -87,16 +98,16 @@ export function StudioDocument() {
         railRef.current.style.setProperty("--p", p.toFixed(4));
       }
 
-      const count = clamp(Math.floor(stepped + 0.35), 0, LAYERS.length);
+      const count = clamp(Math.floor(stepped + 0.35), 0, layers.length);
       if (count !== lastBuilt) {
         lastBuilt = count;
         setBuilt(count);
       }
     });
-  }, [mobileStudio]);
+  }, [mobileStudio, layers]);
 
-  const done = mobileStudio || built >= LAYERS.length;
-  const landing = LAYERS[clamp(built, 0, LAYERS.length - 1)];
+  const done = mobileStudio || built >= layers.length;
+  const landing = layers[clamp(built, 0, layers.length - 1)];
 
   return (
     <section
@@ -105,20 +116,20 @@ export function StudioDocument() {
       aria-labelledby="sdoc-title"
       style={{
         ["--slice" as string]: `${SLICE_SVH}svh`,
-        ["--slices" as string]: LAYERS.length,
+        ["--slices" as string]: layers.length,
       }}
     >
       <h2 id="sdoc-title" className="sr-only">
-        The poster, composited layer by layer
+        {title}
       </h2>
 
       <div className="sdoc__pin">
         <div className={cn("psh", "sdoc__doc", done && "is-done")}>
           <div className="psh__titlebar" aria-hidden>
             <span className="psh__doc">
-              abhimaan-2026.psd
+              {filename}
               <em>RGB/8</em>
-              <em>{LAYERS.length} layers</em>
+              <em>{layers.length} layers</em>
             </span>
             <span className="psh__hint">
               {done
@@ -134,13 +145,14 @@ export function StudioDocument() {
             hidden={EMPTY_HIDDEN}
             onToggle={noop}
             disabled
+            layers={layers}
           />
 
           <div className="psh__viewport">
             <div className="psh__stage sdoc__stage">
               <span className="psh__checker" aria-hidden />
 
-              {LAYERS.map((layer, i) => (
+              {layers.map((layer, i) => (
                 <span
                   key={layer.id}
                   ref={(el) => {
@@ -164,13 +176,13 @@ export function StudioDocument() {
 
           <div className="psh__status" aria-hidden>
             <span className="sdoc__now">
-              {done ? "Composite complete" : `Placing — ${landing.label}`}
+              {done ? "Composite complete" : `Placing — ${landing?.label ?? ""}`}
             </span>
             <span ref={railRef} className="sdoc__rail">
               <i />
             </span>
             <span className="sdoc__count">
-              {built} / {LAYERS.length}
+              {built} / {layers.length}
             </span>
           </div>
         </div>

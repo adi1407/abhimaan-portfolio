@@ -8337,6 +8337,138 @@ a.creators__card:hover .creators__avatar {
   }
 }
 
+.admin-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1.5rem;
+}
+
+.admin-tabs__btn {
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  background: #fff;
+  color: var(--primary);
+  padding: 0.45rem 0.8rem;
+  font-family: var(--font-sf-pro);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-tabs__btn.is-on {
+  background: var(--primary);
+  color: #fff;
+}
+
+.admin-tabs__count {
+  margin-left: 0.4rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 999px;
+  background: #2563ff;
+  color: #fff;
+  font-size: 0.65rem;
+}
+
+.admin-cms {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-cms__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.admin-cms__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-card,
+.admin-block {
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem;
+  background: #fff;
+  border: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.admin-block__head {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-card__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.admin-card__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.admin-input,
+.admin-textarea,
+.admin-login input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--primary) 16%, transparent);
+  background: #fff;
+  color: var(--primary);
+  padding: 0.5rem 0.65rem;
+  font-family: var(--font-sf-pro);
+  font-size: 0.88rem;
+}
+
+.admin-textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.admin-media {
+  display: grid;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
+.admin-media__img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  background: #0b0d14;
+}
+
+.admin-media__ph {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 4 / 5;
+  background: #e8ecf3;
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.admin-media__btn {
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
 /* ==================================================================
    Footer
    ================================================================== */

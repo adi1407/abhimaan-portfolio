@@ -12,6 +12,7 @@ import {
   funScrapSrc,
   type FunDesign,
 } from "@/lib/fun-designs";
+import { useHome } from "@/lib/cms/hooks";
 
 /* ================================================================== *
  * Desk scraps
@@ -144,6 +145,14 @@ function FunCard({
 }
 
 export function FunPlayground() {
+  const home = useHome<{
+    scraps?: { title?: string; centerLines?: string[]; items?: FunDesign[] };
+  }>();
+  const designs = home.scraps?.items?.length ? home.scraps.items : FUN_DESIGNS;
+  const centerLines = home.scraps?.centerLines?.length
+    ? home.scraps.centerLines
+    : FUN_CENTER_LINES;
+  const title = home.scraps?.title || "Desk scraps";
   const reduced = useReducedMotion();
 
   const stageRef = useRef<HTMLDivElement>(null);
@@ -165,6 +174,13 @@ export function FunPlayground() {
   const [mobileDesk, setMobileDesk] = useState(false);
 
   useEffect(() => {
+    for (const d of designs) {
+      if (!pos.current[d.id]) pos.current[d.id] = orbitAt(d, d.phase);
+    }
+    setOrder(designs.map((d) => d.id));
+  }, [designs]);
+
+  useEffect(() => {
     const mq = window.matchMedia("(max-width: 900px)");
     const sync = () => setMobileDesk(mq.matches);
     sync();
@@ -184,8 +200,8 @@ export function FunPlayground() {
   }, []);
 
   const writeAll = useCallback(() => {
-    for (const d of FUN_DESIGNS) write(d.id);
-  }, [write]);
+    for (const d of designs) write(d.id);
+  }, [write, designs]);
 
   /** Keep a scrap fully inside the desk, whatever its size. */
   const limitsFor = useCallback((id: string) => {
@@ -227,10 +243,10 @@ export function FunPlayground() {
 
   useEffect(() => {
     const t0 = performance.now();
-    for (const d of FUN_DESIGNS) {
+    for (const d of designs) {
       orbitOrigin.current[d.id] = t0 - d.phase * (ORBIT_MS / d.speed);
     }
-  }, []);
+  }, [designs]);
 
   useEffect(() => {
     const stage = stageRef.current;
@@ -251,7 +267,7 @@ export function FunPlayground() {
       raf = requestAnimationFrame(tick);
       if (!visible || document.hidden) return;
 
-      for (const d of FUN_DESIGNS) {
+      for (const d of designs) {
         if (pinnedRef.current.has(d.id)) continue;
         if (dragRef.current?.id === d.id) continue;
         const period = ORBIT_MS / d.speed;
@@ -266,18 +282,18 @@ export function FunPlayground() {
       cancelAnimationFrame(raf);
       observer.disconnect();
     };
-  }, [reduced, mobileDesk, write]);
+  }, [reduced, mobileDesk, write, designs]);
 
   /** Re-enter the orbit at the angle the scrap currently sits at. */
   const reseedOrbit = useCallback((id: string) => {
-    const design = FUN_DESIGNS.find((d) => d.id === id);
+    const design = designs.find((d) => d.id === id);
     if (!design) return;
     const p = pos.current[id] ?? { x: 0, y: 0 };
     const angle = Math.atan2(p.y / 0.72, p.x);
     const turn = (angle / (Math.PI * 2) + 1) % 1;
     orbitOrigin.current[id] =
       performance.now() - turn * (ORBIT_MS / design.speed);
-  }, []);
+  }, [designs]);
 
   const pin = useCallback((id: string) => {
     if (pinnedRef.current.has(id)) return;
@@ -415,12 +431,12 @@ export function FunPlayground() {
     for (const id of pinnedRef.current) reseedOrbit(id);
     pinnedRef.current.clear();
     setPinned([]);
-    setOrder(FUN_DESIGNS.map((d) => d.id));
+    setOrder(designs.map((d) => d.id));
     // Glide back instead of snapping: the loop keeps writing, the
     // transition catches up over one beat.
     setEasing(true);
     window.setTimeout(() => setEasing(false), RETURN_MS);
-  }, [reseedOrbit]);
+  }, [reseedOrbit, designs]);
 
   useEffect(() => {
     if (!reduced) return;
@@ -434,7 +450,7 @@ export function FunPlayground() {
         <header className="fun__head">
           <p className="fun__eyebrow">04 — For fun</p>
           <h2 id="fun-heading" className="fun__title">
-            Desk scraps
+            {title}
           </h2>
           <p className="fun__lede">
             {mobileDesk
@@ -463,9 +479,9 @@ export function FunPlayground() {
         {!mobileDesk ? (
           <div className="fun__center" style={{ zIndex: CENTER_Z }}>
             <p className="fun__center-eyebrow">On the desk</p>
-            <span className="sr-only">{FUN_CENTER_LINES.join(", ")}</span>
+            <span className="sr-only">{centerLines.join(", ")}</span>
             <RoleCycle
-              roles={FUN_CENTER_LINES}
+              roles={centerLines}
               className="fun__center-cycle"
               holdMs={2400}
             />
@@ -474,11 +490,11 @@ export function FunPlayground() {
           <p className="fun__grid-label">On the desk</p>
         )}
 
-        {FUN_DESIGNS.map((design) => (
+        {designs.map((design) => (
           <FunCard
             key={design.id}
             design={design}
-            base={BASE_POSITIONS[design.id]}
+            base={BASE_POSITIONS[design.id] ?? orbitAt(design, design.phase)}
             z={zFor(design.id, dragId === design.id)}
             dragging={dragId === design.id}
             pinned={pinned.includes(design.id)}

@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import { CAMPAIGNS, type Campaign } from "@/lib/campaigns";
+import type { Campaign } from "@/lib/campaigns";
+import { useCampaigns } from "@/lib/cms/hooks";
 import { CampaignGrid } from "@/features/work/components/campaign-grid";
 
 /**
@@ -11,6 +12,7 @@ import { CampaignGrid } from "@/features/work/components/campaign-grid";
  * Click a cover → fullscreen CampaignGrid.
  */
 export function CampaignBoards() {
+  const campaigns = useCampaigns() as unknown as Campaign[];
   const sectionRef = useRef<HTMLElement>(null);
   const cardRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const entered = useRef(false);
@@ -123,7 +125,7 @@ export function CampaignBoards() {
         </h2>
 
         <ul className="cboards__strip">
-          {CAMPAIGNS.map((campaign, i) => (
+          {campaigns.map((campaign, i) => (
             <li key={campaign.id}>
               <button
                 ref={(el) => {

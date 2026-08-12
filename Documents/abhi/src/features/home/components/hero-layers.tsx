@@ -83,7 +83,16 @@ export const LAYERS = [
   },
 ] as const;
 
-export type LayerId = (typeof LAYERS)[number]["id"];
+export type StudioLayer = {
+  id: string;
+  label: string;
+  blend: string;
+  opacity: number;
+  src: string;
+  mode: string;
+};
+
+export type LayerId = string;
 
 function Eye({ on }: { on: boolean }) {
   return (
@@ -114,11 +123,13 @@ export function HeroLayersPanel({
   hidden,
   onToggle,
   disabled,
+  layers = LAYERS as unknown as StudioLayer[],
 }: {
   built: number;
   hidden: Set<LayerId>;
   onToggle: (id: LayerId) => void;
   disabled: boolean;
+  layers?: StudioLayer[];
 }) {
   const listRef = useRef<HTMLUListElement>(null);
   const liveRef = useRef<HTMLLIElement | null>(null);
@@ -143,14 +154,14 @@ export function HeroLayersPanel({
           Layers
         </span>
         <em>
-          {Math.min(built, LAYERS.length)}/{LAYERS.length}
+          {Math.min(built, layers.length)}/{layers.length}
         </em>
       </div>
 
       <ul ref={listRef} className="psh-layers__list">
         {/* Panels list top layer first. */}
-        {[...LAYERS].reverse().map((layer) => {
-          const index = LAYERS.findIndex((l) => l.id === layer.id);
+        {[...layers].reverse().map((layer) => {
+          const index = layers.findIndex((l) => l.id === layer.id);
           const isIn = index < built;
           const isLive = isIn && index === liveIndex;
           const on = !hidden.has(layer.id);

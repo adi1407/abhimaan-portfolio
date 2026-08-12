@@ -10,16 +10,12 @@ import {
 } from "react";
 import { Container } from "@/components/layout/container";
 import { cn } from "@/lib/cn";
-import {
-  getBehanceProfileUrl,
-  WORK_CATEGORIES,
-  WORK_ITEMS,
-  type WorkCategoryId,
-  type WorkItem,
-} from "@/lib/work";
+import { type WorkCategoryId } from "@/lib/work";
 import { ThumbCinema } from "@/features/work/components/thumb-cinema";
 import { BookReader } from "@/features/work/components/book-reader";
-import { BOOK } from "@/lib/book";
+import { useBook, useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
+import { useCms } from "@/lib/cms/provider";
+import type { CmsWorkItem } from "@/lib/cms/types";
 
 type Filter = "all" | WorkCategoryId;
 
@@ -30,12 +26,6 @@ type GalleryWallProps = {
   focus?: boolean;
 };
 
-const FILTERS: readonly { id: Filter; label: string }[] = [
-  { id: "all", label: "All" },
-  ...WORK_CATEGORIES.map((c) => ({ id: c.id, label: c.short })),
-];
-
-/** How many lead cuts rotate in the featured reel. */
 const REEL_LEN = 5;
 const REEL_MS = 3400;
 
@@ -62,7 +52,7 @@ function entrance(i: number) {
   return { x, y, r };
 }
 
-function Placeholder({ item }: { item: WorkItem }) {
+function Placeholder({ item }: { item: CmsWorkItem }) {
   return (
     <span
       className={cn("wall-ph", `wall-ph--${item.category}`)}
@@ -77,6 +67,13 @@ export function GalleryWall({
   initialCategory = null,
   focus = false,
 }: GalleryWallProps) {
+  const categories = useWorkCategories();
+  const workItems = useWorkItems();
+  const book = useBook();
+  const filters: readonly { id: Filter; label: string }[] = [
+    { id: "all", label: "All" },
+    ...categories.map((c) => ({ id: c.id as Filter, label: c.short })),
+  ];
   const [filter, setFilter] = useState<Filter>(initialCategory ?? "all");
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [cinemaOrigin, setCinemaOrigin] = useState<HTMLElement | null>(null);
@@ -117,18 +114,18 @@ export function GalleryWall({
   const visible = useMemo(
     () =>
       filter === "all"
-        ? WORK_ITEMS
-        : WORK_ITEMS.filter((i) => i.category === filter),
-    [filter],
+        ? workItems
+        : workItems.filter((i) => i.category === filter),
+    [filter, workItems],
   );
 
   const counts = useMemo(() => {
-    const map: Record<string, number> = { all: WORK_ITEMS.length };
-    for (const c of WORK_CATEGORIES) {
-      map[c.id] = WORK_ITEMS.filter((i) => i.category === c.id).length;
+    const map: Record<string, number> = { all: workItems.length };
+    for (const c of categories) {
+      map[c.id] = workItems.filter((i) => i.category === c.id).length;
     }
     return map;
-  }, []);
+  }, [categories, workItems]);
 
   // Longer sets need a tighter wave or the tail drags.
   const stagger = visible.length > 8 ? 34 : 56;
@@ -328,10 +325,10 @@ export function GalleryWall({
     };
   }, [isThumbs, thumbsLive, filter]);
 
-  const profile = getBehanceProfileUrl();
+  const profile = useCms().work.behance.profileUrl || null;
   const current = lightbox === null ? null : visible[lightbox];
   const currentCat = current
-    ? WORK_CATEGORIES.find((c) => c.id === current.category)
+    ? categories.find((c) => c.id === current.category)
     : null;
   const featured = reel[reelIndex] ?? reel[0] ?? null;
   const featuredGlobalIndex = featured
@@ -391,7 +388,7 @@ export function GalleryWall({
         </header>
 
         <div className="wall__filters" role="tablist" aria-label="Filter work">
-          {FILTERS.map((f) => (
+          {filters.map((f) => (
             <button
               key={f.id}
               type="button"
@@ -550,12 +547,12 @@ export function GalleryWall({
                 type="button"
                 className="wall-books__cover"
                 onClick={() => setBookOpen(true)}
-                aria-label={`${BOOK.title} — open book reader`}
+                aria-label={`${book?.title ?? "Book"} — open book reader`}
               >
                 <span className="wall-books__media">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={BOOK.cover}
+                    src={book?.cover ?? featured.src}
                     alt=""
                     className="wall-books__img"
                     decoding="async"
@@ -563,8 +560,8 @@ export function GalleryWall({
                   <span className="wall-books__open">Open book ↗</span>
                 </span>
                 <span className="wall-books__meta">
-                  <span className="wall-books__kicker">{BOOK.subtitle}</span>
-                  <span className="wall-books__title">{BOOK.title}</span>
+                  <span className="wall-books__kicker">{book?.subtitle}</span>
+                  <span className="wall-books__title">{book?.title}</span>
                   <span className="wall-books__note">
                     {visible[0].year} · CSS page-turn reader — tap the cover
                     to flip through every spread.

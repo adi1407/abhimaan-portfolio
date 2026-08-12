@@ -8,6 +8,9 @@ import {
   creatorPhotoCandidates,
   type Creator,
 } from "@/lib/creators";
+import { useHome } from "@/lib/cms/hooks";
+
+type CreatorCardData = Creator & { src?: string };
 /* three.js is ~600KB and this canvas is purely decorative, so it is
    split out of the initial bundle and loaded once the strip mounts. */
 const CreatorsParticles = dynamic(
@@ -18,11 +21,10 @@ const CreatorsParticles = dynamic(
   { ssr: false },
 );
 
-/** Repeat the set so each track half is always wider than the viewport. */
-const LOOP_SET = [...CREATORS, ...CREATORS, ...CREATORS];
-
-function CreatorAvatar({ creator }: { creator: Creator }) {
-  const candidates = creatorPhotoCandidates(creator.slug);
+function CreatorAvatar({ creator }: { creator: CreatorCardData }) {
+  const candidates = creator.src
+    ? [creator.src, ...creatorPhotoCandidates(creator.slug)]
+    : [...creatorPhotoCandidates(creator.slug)];
   const [srcIndex, setSrcIndex] = useState(0);
   const src = candidates[srcIndex];
   const showPhoto = srcIndex < candidates.length;
@@ -47,7 +49,7 @@ function CreatorAvatar({ creator }: { creator: Creator }) {
   );
 }
 
-function CreatorCard({ creator }: { creator: Creator }) {
+function CreatorCard({ creator }: { creator: CreatorCardData }) {
   const inner = (
     <>
       <CreatorAvatar creator={creator} />
@@ -74,13 +76,16 @@ function CreatorCard({ creator }: { creator: Creator }) {
 function CreatorsGroup({
   ariaHidden,
   keyPrefix,
+  creators,
 }: {
   ariaHidden?: boolean;
   keyPrefix: string;
+  creators: CreatorCardData[];
 }) {
+  const loop = [...creators, ...creators, ...creators];
   return (
     <div className="creators__group" aria-hidden={ariaHidden || undefined}>
-      {LOOP_SET.map((creator, i) => (
+      {loop.map((creator, i) => (
         <CreatorCard key={`${keyPrefix}-${creator.slug}-${i}`} creator={creator} />
       ))}
     </div>
@@ -88,19 +93,29 @@ function CreatorsGroup({
 }
 
 export function CreatorsStrip() {
+  const home = useHome<{
+    creators?: { eyebrow?: string; title?: string; items?: CreatorCardData[] };
+  }>();
+  const creators: CreatorCardData[] = home.creators?.items?.length
+    ? home.creators.items
+    : [...CREATORS];
   return (
     <section className="creators" aria-label="Creators I've worked with">
       <CreatorsParticles />
 
       <div className="creators__head">
-        <p className="creators__eyebrow">Collaborations</p>
-        <h2 className="creators__title">Creators I&apos;ve worked with</h2>
+        <p className="creators__eyebrow">
+          {home.creators?.eyebrow || "Collaborations"}
+        </p>
+        <h2 className="creators__title">
+          {home.creators?.title || "Creators I've worked with"}
+        </h2>
       </div>
 
       <div className="creators__viewport">
         <div className="creators__track">
-          <CreatorsGroup keyPrefix="a" />
-          <CreatorsGroup keyPrefix="b" ariaHidden />
+          <CreatorsGroup keyPrefix="a" creators={creators} />
+          <CreatorsGroup keyPrefix="b" ariaHidden creators={creators} />
         </div>
       </div>
     </section>

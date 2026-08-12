@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { TOOLS, type Tool } from "@/lib/about";
+import { useAbout } from "@/lib/cms/hooks";
 
 /* ================================================================== *
  * Toolbox — four brand cubes with real weight.
@@ -56,6 +57,8 @@ function ToolFaces({ tool }: { tool: Tool }) {
 }
 
 export function AboutToolkit() {
+  const about = useAbout<{ tools?: Tool[] }>();
+  const tools = about.tools?.length ? about.tools : TOOLS;
   const [active, setActive] = useState<string | null>(null);
   /**
    * The cubes are always playable — `prefers-reduced-motion` governs *automatic*
@@ -75,7 +78,7 @@ export function AboutToolkit() {
   const grab = useRef({ x: 0, y: 0 });
   const downAt = useRef({ x: 0, y: 0, moved: false });
 
-  const current = TOOLS.find((t) => t.id === active) ?? null;
+  const current = tools.find((t) => t.id === active) ?? null;
 
   /**
    * Place the cubes. Normally they start above the tray so they can fall in;
@@ -89,8 +92,8 @@ export function AboutToolkit() {
     size.current = r.width < 560 ? 68 : 96;
 
     const s = size.current;
-    const slot = tray.current.w / TOOLS.length;
-    bodies.current = TOOLS.map((_, i) => ({
+    const slot = tray.current.w / tools.length;
+    bodies.current = tools.map((_, i) => ({
       x: slot * i + slot / 2 - s / 2 + (reduced ? 0 : (Math.random() - 0.5) * 18),
       y: reduced ? r.height - s : -s - i * 140 - 80,
       vx: 0,
@@ -404,7 +407,7 @@ export function AboutToolkit() {
       >
         <span className="tk__tray-rule" aria-hidden />
 
-        {TOOLS.map((tool, i) => (
+        {tools.map((tool, i) => (
           <button
             key={tool.id}
             ref={(el) => {
@@ -437,7 +440,7 @@ export function AboutToolkit() {
       <div className="tk__readout">
         <p className="tk__readout-name">{current ? current.name : "Toolkit"}</p>
         <ul className="tk__readout-list">
-          {(current ? current.skills : TOOLS.flatMap((t) => t.skills)).map(
+          {(current ? current.skills : tools.flatMap((t) => t.skills)).map(
             (skill, i) => (
               <li key={skill} style={{ ["--i" as string]: i }}>
                 {skill}

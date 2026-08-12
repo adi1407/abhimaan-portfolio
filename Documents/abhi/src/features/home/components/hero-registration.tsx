@@ -5,7 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { HeroInkPlate } from "@/features/home/components/hero-ink-plate";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ROUTES, SITE } from "@/lib/constants";
-import { getCategory, getItemsByCategory, type WorkCategoryId } from "@/lib/work";
+import { type WorkCategoryId } from "@/lib/work";
+import { useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -67,15 +68,17 @@ export function HeroRegistration() {
   const reduced = useReducedMotion();
   const [index, setIndex] = useState(0);
   const plateRefs = useRef<(HTMLElement | null)[]>([]);
+  const workItems = useWorkItems();
+  const categories = useWorkCategories();
 
   const entry = TERMS[index];
   const term = entry.label;
   const loose = index === TERMS.length - 1;
 
-  // Resolve the still from real work data so the caption never lies.
-  const items = getItemsByCategory(entry.category);
+  const items = workItems.filter((item) => item.category === entry.category);
   const item = items[entry.pick % Math.max(items.length, 1)];
-  const categoryLabel = getCategory(entry.category)?.short ?? entry.category;
+  const categoryLabel =
+    categories.find((c) => c.id === entry.category)?.short ?? entry.category;
 
   /* --- Advance the line ----------------------------------------- */
   useEffect(() => {

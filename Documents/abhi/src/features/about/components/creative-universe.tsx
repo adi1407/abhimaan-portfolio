@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { UNIVERSE } from "@/lib/about";
 import { ROUTES } from "@/lib/constants";
+import { useAbout } from "@/lib/cms/hooks";
 
 /**
  * The dark act — the site's own navy pushed near-black so the tonal shift is
@@ -15,6 +16,8 @@ import { ROUTES } from "@/lib/constants";
  * off-screen, and is skipped entirely under reduced motion.
  */
 export function CreativeUniverse() {
+  const about = useAbout<{ universe?: typeof UNIVERSE }>();
+  const pieces = about.universe?.length ? about.universe : UNIVERSE;
   const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -80,7 +83,7 @@ export function CreativeUniverse() {
         <span className="uni__glow" aria-hidden />
 
         <ul className="uni__pieces">
-          {UNIVERSE.map((p) => (
+          {pieces.map((p) => (
             <li
               key={p.id}
               className={`uni__piece uni__piece--d${p.depth} uni__piece--${p.kind}`}

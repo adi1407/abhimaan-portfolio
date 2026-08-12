@@ -10,14 +10,10 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
-import {
-  BOOK,
-  BOOK_BACK_COVER,
-  BOOK_LAST_SPREAD,
-  BOOK_SPREAD_COUNT,
-  BOOK_SPREADS,
-  type BookSpread,
-} from "@/lib/book";
+import { useBook } from "@/lib/cms/hooks";
+import type { CmsBookPage } from "@/lib/cms/types";
+
+type BookSpread = { left: CmsBookPage; right: CmsBookPage };
 
 type Phase =
   | "closed"
@@ -44,18 +40,24 @@ function unlockPageScroll() {
   window.__lenis?.start();
 }
 
-function preloadAround(index: number) {
+function preloadAround(
+  spreads: BookSpread[],
+  backSrc: string,
+  index: number,
+) {
   for (const offset of [-2, -1, 0, 1, 2]) {
     const i = index + offset;
-    if (i < 0 || i >= BOOK_SPREAD_COUNT) continue;
-    const spread = BOOK_SPREADS[i];
+    if (i < 0 || i >= spreads.length) continue;
+    const spread = spreads[i];
     const left = new Image();
     left.src = spread.left.src;
     const right = new Image();
     right.src = spread.right.src;
   }
-  const back = new Image();
-  back.src = BOOK_BACK_COVER.src;
+  if (backSrc) {
+    const back = new Image();
+    back.src = backSrc;
+  }
 }
 
 function PageFace({
@@ -129,6 +131,10 @@ function CoverBlock({
 }
 
 export function BookReader({ onClose }: { onClose: () => void }) {
+  const book = useBook();
+  const spreads = book?.spreads ?? [];
+  const lastSpread = Math.max(spreads.length - 1, 0);
+  const backSrc = book?.backCover?.src ?? "";
   const [phase, setPhase] = useState<Phase>(() =>
     typeof window !== "undefined" && prefersReducedMotion() ? "ready" : "closed",
   );
@@ -146,12 +152,12 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     phase === "opening-back";
   const ready = phase === "ready";
   const onBack = phase === "back";
-  const current = BOOK_SPREADS[index];
+  const current = spreads[index];
   const nextSpread =
-    index < BOOK_LAST_SPREAD ? BOOK_SPREADS[index + 1] : null;
-  const prevSpread = index > 0 ? BOOK_SPREADS[index - 1] : null;
+    index < lastSpread ? spreads[index + 1] : null;
+  const prevSpread = index > 0 ? spreads[index - 1] : null;
   const canPrev = !busy && (onBack || (ready && index > 0));
-  const canNext = !busy && ready && index <= BOOK_LAST_SPREAD;
+  const canNext = !busy && ready && spreads.length > 0 && index <= lastSpread;
 
   useEffect(() => {
     lockPageScroll();
@@ -172,7 +178,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   }, [phase]);
 
   useEffect(() => {
-    preloadAround(index);
+    preloadAround(spreads, backSrc, index);
   }, [index]);
 
   const beginOpening = useCallback(() => {
@@ -194,10 +200,10 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       if (flipLock.current) return;
       flipLock.current = true;
       if (dir === "next") {
-        if (index >= BOOK_LAST_SPREAD) {
+        if (index >= lastSpread) {
           setPhase("back");
         } else {
-          setIndex((i) => Math.min(i + 1, BOOK_LAST_SPREAD));
+          setIndex((i) => Math.min(i + 1, lastSpread));
         }
       } else if (dir === "prev") {
         setIndex((i) => Math.max(i - 1, 0));
@@ -205,7 +211,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       setFlip(null);
       setFlipArmed(false);
     },
-    [index],
+    [index, lastSpread],
   );
 
   useEffect(() => {
@@ -217,21 +223,21 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   const goNext = useCallback(() => {
     if (!canNext) return;
     if (prefersReducedMotion()) {
-      if (index >= BOOK_LAST_SPREAD) setPhase("back");
+      if (index >= lastSpread) setPhase("back");
       else setIndex((i) => i + 1);
       return;
     }
     setFlipArmed(false);
-    if (index >= BOOK_LAST_SPREAD) setPhase("closing-back");
+    if (index >= lastSpread) setPhase("closing-back");
     setFlip("next");
     flipLock.current = false;
     requestAnimationFrame(() => setFlipArmed(true));
-  }, [canNext, index]);
+  }, [canNext, index, lastSpread]);
 
   const goPrev = useCallback(() => {
     if (!canPrev) return;
     if (onBack) {
-      setIndex(BOOK_LAST_SPREAD);
+      setIndex(lastSpread);
       if (prefersReducedMotion()) {
         setPhase("ready");
         return;
@@ -288,7 +294,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     [goNext, goPrev],
   );
 
-  if (!portalReady) return null;
+  if (!portalReady || !book || !current) return null;
 
   const showFrontCover = phase === "closed" || phase === "opening";
   const showBackCover = phase === "back" || phase === "opening-back";
@@ -300,7 +306,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     ? "Back"
     : showFrontCover
       ? "Cover"
-      : `${String(index + 1).padStart(2, "0")} / ${String(BOOK_SPREAD_COUNT).padStart(2, "0")}`;
+      : `${String(index + 1).padStart(2, "0")} / ${String(spreads.length).padStart(2, "0")}`;
 
   const hint = onBack
     ? "Prev to reopen"
@@ -311,7 +317,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         : "Opening…";
 
   const leafBackSrc = closingToBack
-    ? BOOK_BACK_COVER.src
+    ? backSrc
     : nextSpread
       ? nextSpread.left.src
       : null;
@@ -331,7 +337,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       )}
       role="dialog"
       aria-modal="true"
-      aria-label={BOOK.title}
+      aria-label={book?.title ?? "Book"}
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >
@@ -347,8 +353,8 @@ export function BookReader({ onClose }: { onClose: () => void }) {
           className={cn("book__chrome", !chromeLive && "book__chrome--locked")}
         >
           <div className="book__meta">
-            <p className="book__eyebrow">{BOOK.subtitle}</p>
-            <h2 className="book__title">{BOOK.title}</h2>
+            <p className="book__eyebrow">{book?.subtitle}</p>
+            <h2 className="book__title">{book?.title}</h2>
           </div>
           <p className="book__count">{countLabel}</p>
           <button
@@ -373,7 +379,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   disabled={phase === "opening"}
                 >
                   <CoverBlock
-                    src={BOOK.cover}
+                    src={book?.cover ?? ""}
                     opening={phase === "opening"}
                     side="front"
                     onTransitionEnd={onCoverTransitionEnd}
@@ -395,7 +401,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   disabled={phase === "opening-back"}
                 >
                   <CoverBlock
-                    src={BOOK_BACK_COVER.src}
+                    src={backSrc}
                     opening={phase === "opening-back"}
                     side="back"
                     onTransitionEnd={onCoverTransitionEnd}

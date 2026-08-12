@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ROUTES } from "@/lib/constants";
-import { WORK_ITEMS } from "@/lib/work";
+import { useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 type Slot = {
@@ -16,9 +16,9 @@ type Slot = {
   restRot: number;
 };
 
-function buildSlots(): Slot[] {
+function buildSlots(items: { src: string }[]): Slot[] {
   const unique: string[] = [];
-  for (const item of WORK_ITEMS) {
+  for (const item of items) {
     if (!unique.includes(item.src)) unique.push(item.src);
     if (unique.length >= 6) break;
   }
@@ -57,7 +57,8 @@ export function HeroPosterField({
   onPointerNorm,
 }: HeroPosterFieldProps) {
   const reduced = useReducedMotion();
-  const slots = useMemo(() => buildSlots(), []);
+  const workItems = useWorkItems();
+  const slots = useMemo(() => buildSlots(workItems), [workItems]);
   const rootRef = useRef<HTMLDivElement>(null);
   const [hot, setHot] = useState<number | null>(null);
   const hotRef = useRef<number | null>(null);

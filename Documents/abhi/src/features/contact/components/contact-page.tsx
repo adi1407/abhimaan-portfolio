@@ -8,6 +8,7 @@ import {
   type InquiryStatus,
 } from "@/features/contact/components/inquiry-form";
 import { EMAIL, SITE } from "@/lib/constants";
+import { useContactCopy, useSettings } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /* Same reason as the creators canvas: three.js stays out of the route's
@@ -30,6 +31,16 @@ const LINES = [
 const MOBILE_MQ = "(max-width: 900px)";
 
 export function ContactPage() {
+  const settings = useSettings<{ email?: string; name?: string }>();
+  const copy = useContactCopy<{
+    eyebrow?: string;
+    verbs?: string[];
+    lines?: string[];
+    sla?: string;
+  }>();
+  const email = settings.email || EMAIL;
+  const verbs = copy.verbs?.length ? copy.verbs : [...VERBS];
+  const lines = copy.lines?.length ? copy.lines : [...LINES];
   const [copied, setCopied] = useState(false);
   const [focusedField, setFocusedField] = useState<string | null>(null);
   const [formStatus, setFormStatus] = useState<InquiryStatus>("idle");
@@ -65,9 +76,9 @@ export function ContactPage() {
     el.style.transform = `translate(${x * 0.08}px, ${y * 0.18}px)`;
   };
 
-  const copy = async () => {
+  const copyEmail = async () => {
     try {
-      await navigator.clipboard.writeText(EMAIL);
+      await navigator.clipboard.writeText(email);
       setCopied(true);
     } catch {
       setCopied(false);
@@ -97,7 +108,7 @@ export function ContactPage() {
           </div>
         ) : null}
 
-        <p className="contact-page__eyebrow">Brief request</p>
+        <p className="contact-page__eyebrow">{copy.eyebrow || "Brief request"}</p>
 
         <h1 id="contact-page-heading" className="contact-page__title">
           {mobile ? (
@@ -108,9 +119,9 @@ export function ContactPage() {
           ) : (
             <>
               <span className="contact-page__static">Let&apos;s</span>
-              <span className="sr-only">{VERBS.join(", ")}</span>
+              <span className="sr-only">{verbs.join(", ")}</span>
               <RoleCycle
-                roles={VERBS}
+                roles={verbs}
                 className="contact-page__verb"
                 holdMs={2200}
               />
@@ -125,7 +136,7 @@ export function ContactPage() {
           </p>
         ) : (
           <div className="contact-page__lines">
-            {LINES.map((line, i) => (
+            {lines.map((line, i) => (
               <p
                 key={line}
                 className={
@@ -142,28 +153,28 @@ export function ContactPage() {
 
         <a
           ref={mailRef}
-          href={`mailto:${EMAIL}`}
+          href={`mailto:${email}`}
           className="contact-page__mail"
           onMouseMove={onMove}
           onMouseLeave={() => {
             if (mailRef.current) mailRef.current.style.transform = "";
           }}
         >
-          <span className="contact-page__mail-text">{EMAIL}</span>
+          <span className="contact-page__mail-text">{email}</span>
           <span className="contact-page__mail-arrow" aria-hidden>
             ↗
           </span>
         </a>
 
         <div className="contact-page__actions">
-          <button type="button" className="contact-page__copy" onClick={copy}>
+          <button type="button" className="contact-page__copy" onClick={copyEmail}>
             {copied ? "Copied ✓" : "Copy email"}
           </button>
         </div>
 
         <p className="contact-page__note">
-          {SITE.name} replies within two working days — identity, digital and
-          art direction.
+          {copy.sla ||
+            `${settings.name || SITE.name} replies within two working days — identity, digital and art direction.`}
         </p>
 
         <InquiryForm

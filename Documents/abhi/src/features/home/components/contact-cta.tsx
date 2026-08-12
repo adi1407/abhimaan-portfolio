@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import { ROUTES, SITE } from "@/lib/constants";
+import { useHome, useSettings } from "@/lib/cms/hooks";
 
 const VERBS = ["make", "create", "craft", "build"] as const;
 
@@ -16,6 +17,18 @@ const SOCIALS = [
 ];
 
 export function ContactCta() {
+  const home = useHome<{
+    cta?: { verbs?: string[]; line?: string; note?: string };
+  }>();
+  const settings = useSettings<{
+    name?: string;
+    socials?: { label: string; href: string }[];
+  }>();
+  const verbs = home.cta?.verbs?.length ? home.cta.verbs : [...VERBS];
+  const socials = settings.socials?.length ? settings.socials : SOCIALS;
+  const line = home.cta?.line || "something worth looking at";
+  const note =
+    home.cta?.note || "Currently taking on selected projects";
   const [time, setTime] = useState("");
 
   useEffect(() => {
@@ -49,11 +62,11 @@ export function ContactCta() {
         <h2 id="contact-heading" className="contact__title">
           <span className="contact__title-row">
             <span className="contact__title-static">Let&rsquo;s</span>{" "}
-            <span className="sr-only">{VERBS.join(", ")}</span>
-            <RoleCycle roles={VERBS} className="contact__verb" holdMs={2200} />
+            <span className="sr-only">{verbs.join(", ")}</span>
+            <RoleCycle roles={verbs} className="contact__verb" holdMs={2200} />
           </span>
           <span className="contact__title-static contact__title-static--break">
-            something worth looking at
+            {line}
           </span>
         </h2>
 
@@ -66,7 +79,7 @@ export function ContactCta() {
           </Link>
           <span className="contact__sep" aria-hidden />
           <ul className="contact__socials">
-            {SOCIALS.map((social) => (
+            {socials.map((social) => (
               <li key={social.label}>
                 <a href={social.href} target="_blank" rel="noreferrer noopener">
                   {social.label}
@@ -77,9 +90,9 @@ export function ContactCta() {
         </div>
 
         <p className="contact__note">
-          Currently taking on selected projects for {new Date().getFullYear()} —
-          identity, digital and art direction. {SITE.name} replies within two
-          working days.
+          {note} for {new Date().getFullYear()} — identity, digital and art
+          direction. {settings.name || SITE.name} replies within two working
+          days.
         </p>
       </Container>
     </section>

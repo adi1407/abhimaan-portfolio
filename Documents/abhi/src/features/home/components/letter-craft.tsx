@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
+import { useHome } from "@/lib/cms/hooks";
 
 /* ================================================================== *
  * Letter craft — bridge between cinema hero and the Photoshop poster.
@@ -12,13 +13,22 @@ import { cn } from "@/lib/cn";
  * sweeps the type, then spacing settles into place.
  * ================================================================== */
 
-const LINE = ["L", "E", "T", "T", "E", "R"];
-const SUB = ["C", "R", "A", "F", "T"];
-
 const clamp = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, v));
 
 export function LetterCraft() {
+  const home = useHome<{
+    letterCraft?: { title?: string; lede?: string };
+  }>();
+  const title = (home.letterCraft?.title || "LETTER CRAFT").trim();
+  const [lineWord, subWord] = title.includes(" ")
+    ? [title.slice(0, title.indexOf(" ")), title.slice(title.indexOf(" ") + 1)]
+    : [title, ""];
+  const lineChars = lineWord.split("");
+  const subChars = subWord.split("");
+  const lede =
+    home.letterCraft?.lede ||
+    "Spacing, weight, and hierarchy — the decisions that make a poster hold together before a single layer is drawn.";
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLElement>(null);
   const [inView, setInView] = useState(false);
@@ -102,7 +112,7 @@ export function LetterCraft() {
 
         <h2 id="craft-title" className="craft__title">
           <span className="craft__line" aria-hidden>
-            {LINE.map((ch, i) => (
+            {lineChars.map((ch, i) => (
               <span
                 key={`a-${i}`}
                 className="craft__char"
@@ -112,25 +122,22 @@ export function LetterCraft() {
               </span>
             ))}
           </span>
-          <span className="sr-only">Letter </span>
+          <span className="sr-only">{lineWord} </span>
           <span className="craft__line craft__line--sub" aria-hidden>
-            {SUB.map((ch, i) => (
+            {subChars.map((ch, i) => (
               <span
                 key={`b-${i}`}
                 className="craft__char"
-                style={{ ["--i" as string]: i + LINE.length }}
+                style={{ ["--i" as string]: i + lineChars.length }}
               >
                 {ch}
               </span>
             ))}
           </span>
-          <span className="sr-only">Craft</span>
+          <span className="sr-only">{subWord}</span>
         </h2>
 
-        <p className="craft__lede">
-          Spacing, weight, and hierarchy — the decisions that make a poster
-          hold together before a single layer is drawn.
-        </p>
+        <p className="craft__lede">{lede}</p>
 
         <ul className="craft__metrics" aria-hidden>
           <li>

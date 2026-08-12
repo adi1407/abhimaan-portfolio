@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { DNA } from "@/lib/about";
+import { useAbout } from "@/lib/cms/hooks";
 
 /**
  * Creative DNA — principles, not percentages. Each row unrolls its rule as a
@@ -9,6 +10,8 @@ import { DNA } from "@/lib/about";
  * hairline draws across) so the four ideas read as a system.
  */
 export function CreativeDna() {
+  const about = useAbout<{ dna?: typeof DNA }>();
+  const dna = about.dna?.length ? about.dna : DNA;
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export function CreativeDna() {
       </div>
 
       <ol className="dna__list">
-        {DNA.map((p, i) => (
+        {dna.map((p, i) => (
           <li
             key={p.id}
             ref={(el) => {

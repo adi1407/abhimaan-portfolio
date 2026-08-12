@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { SITE } from "@/lib/constants";
-import { WORK_ITEMS } from "@/lib/work";
+import { useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -21,17 +21,14 @@ const WORD = SITE.name.toUpperCase();
 /** How much the window lags the pointer. Lower = heavier. */
 const LERP = 0.18;
 
-function artwork() {
-  for (const item of WORK_ITEMS) if (item.src) return item.src;
-  return "/work/p-01.jpg";
-}
-
 type HeroWordmarkProps = {
   className?: string;
   ready?: boolean;
 };
 
 export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
+  const workItems = useWorkItems();
+  const art = workItems.find((item) => item.src)?.src || "/work/p-01.jpg";
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLParagraphElement>(null);
 
@@ -145,7 +142,7 @@ export function HeroWordmark({ className, ready = false }: HeroWordmarkProps) {
     <p
       ref={rootRef}
       className={cn("ch__wm", ready && "is-ready", className)}
-      style={{ ["--wm-art" as string]: `url("${artwork()}")` }}
+      style={{ ["--wm-art" as string]: `url("${art}")` }}
       aria-hidden
     >
       <span className="ch__wm-glow" />

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { WORK_EXPERIENCES } from "@/lib/works";
+import { useExperience } from "@/lib/cms/hooks";
 
 /**
  * Split case-study: a sticky left panel whose giant year + role morph as you
@@ -12,7 +13,9 @@ import { WORK_EXPERIENCES } from "@/lib/works";
  * navigation and reduced-motion cleanly.
  */
 export function ExperienceSplit() {
-  const count = WORK_EXPERIENCES.length;
+  const page = useExperience<{ roles?: typeof WORK_EXPERIENCES }>();
+  const roles = page.roles?.length ? page.roles : WORK_EXPERIENCES;
+  const count = roles.length;
   const [active, setActive] = useState(0);
   const blockRefs = useRef<(HTMLElement | null)[]>([]);
 
@@ -57,7 +60,7 @@ export function ExperienceSplit() {
     };
   }, []);
 
-  const cur = WORK_EXPERIENCES[active];
+  const cur = roles[active];
 
   return (
     <section className="exp" aria-label="Work experience timeline">
@@ -97,7 +100,7 @@ export function ExperienceSplit() {
 
         {/* Right — scrolling detail blocks */}
         <ol className="exp__list">
-          {WORK_EXPERIENCES.map((xp, i) => (
+          {roles.map((xp, i) => (
             <li
               key={xp.id}
               data-index={i}

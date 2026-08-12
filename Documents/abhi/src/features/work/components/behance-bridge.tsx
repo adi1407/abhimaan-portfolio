@@ -1,19 +1,13 @@
 import { Container } from "@/components/layout/container";
-import {
-  BEHANCE,
-  getBehanceCollectionUrl,
-  getBehanceProfileUrl,
-  isBehanceLinked,
-  WORK_CATEGORIES,
-} from "@/lib/work";
+import { useWorkCategories } from "@/lib/cms/hooks";
+import { useCms } from "@/lib/cms/provider";
 
-/**
- * Dedicated “connection desk” under the Work plate.
- * Behance is linked / curated — never presented as a live autofetch feed.
- */
 export function BehanceBridge() {
-  const profile = getBehanceProfileUrl();
-  const linked = isBehanceLinked();
+  const cms = useCms();
+  const categories = useWorkCategories();
+  const behance = cms.work.behance;
+  const profile = behance.profileUrl || null;
+  const linked = Boolean(profile || behance.username);
 
   return (
     <section className="bb" aria-label="Behance bridge">
@@ -25,11 +19,11 @@ export function BehanceBridge() {
 
           <div className="bb__main">
             <p className="bb__eyebrow">Bridge</p>
-            <h2 className="bb__title">{BEHANCE.displayName}</h2>
+            <h2 className="bb__title">{behance.displayName || "Behance"}</h2>
             <p className="bb__copy">
               Projects are curated on this site. Behance is the public case-study
-              home for {BEHANCE.displayName} — linked here, not auto-fetched
-              (Adobe no longer issues Behance API keys for new apps).
+              home for {behance.displayName || "this studio"} — linked here, not
+              auto-fetched.
             </p>
 
             <div className="bb__status">
@@ -40,8 +34,8 @@ export function BehanceBridge() {
               >
                 {linked ? "Linked · curated" : "Not linked yet"}
               </span>
-              {BEHANCE.username ? (
-                <span className="bb__handle">@{BEHANCE.username}</span>
+              {behance.username ? (
+                <span className="bb__handle">@{behance.username}</span>
               ) : null}
             </div>
 
@@ -57,17 +51,14 @@ export function BehanceBridge() {
                   <span aria-hidden>↗</span>
                 </a>
               ) : (
-                <p className="bb__hint">
-                  Set <code>BEHANCE.profileUrl</code> in{" "}
-                  <code>src/lib/work.ts</code> to connect.
-                </p>
+                <p className="bb__hint">Add a Behance URL in Admin → Work.</p>
               )}
             </div>
           </div>
 
           <ul className="bb__cuts">
-            {WORK_CATEGORIES.map((cat) => {
-              const url = getBehanceCollectionUrl(cat.id);
+            {categories.map((cat) => {
+              const url = behance.collections[cat.id];
               return (
                 <li key={cat.id} className="bb__cut">
                   <span className="bb__cut-label">{cat.short}</span>

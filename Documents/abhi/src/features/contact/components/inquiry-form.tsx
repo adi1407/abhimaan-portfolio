@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { INQUIRY_SERVICES, type InquiryService } from "@/lib/inquiries/types";
 import { LayersPanel, type LayerIconType, type LayerItem } from "@/features/contact/components/layers-panel";
+import { useContactCopy } from "@/lib/cms/hooks";
 
 type FormState = {
   name: string;
@@ -50,6 +51,11 @@ export function InquiryForm({
   onFieldFocus?: (key: string | null) => void;
   onStatusChange?: (status: InquiryStatus) => void;
 } = {}) {
+  const copy = useContactCopy<{
+    success?: string;
+    services?: { id: string; label: string }[];
+  }>();
+  const services = copy.services?.length ? copy.services : INQUIRY_SERVICES;
   const [form, setForm] = useState<FormState>(INITIAL);
   const [status, setStatus] = useState<InquiryStatus>("idle");
   const [error, setError] = useState("");
@@ -243,7 +249,7 @@ export function InquiryForm({
                       <option value="" disabled>
                         Select…
                       </option>
-                      {INQUIRY_SERVICES.map((s) => (
+                      {services.map((s) => (
                         <option key={s.id} value={s.id}>
                           {s.label}
                         </option>
@@ -339,7 +345,8 @@ export function InquiryForm({
                 className="inquiry-form__status inquiry-form__status--ok"
                 role="status"
               >
-                Sent — I&apos;ll get back within two working days.
+                {copy.success ||
+                  "Sent — I'll get back within two working days."}
               </p>
             ) : null}
             {status === "error" ? (

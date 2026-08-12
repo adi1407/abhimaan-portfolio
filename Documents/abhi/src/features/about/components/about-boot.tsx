@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
+import { useAbout } from "@/lib/cms/hooks";
 
 const LINES = ["Creative profile", "Loading…", "Designer found."] as const;
 
@@ -16,6 +17,14 @@ const HOLD = 300;
  * prefers-reduced-motion, where it simply lands on the final state.
  */
 export function AboutBoot() {
+  const about = useAbout<{
+    boot?: { lines?: string[]; title?: string; sub?: string };
+  }>();
+  const lines = about.boot?.lines?.length ? about.boot.lines : LINES;
+  const title = about.boot?.title || "Behind the pixels";
+  const sub =
+    about.boot?.sub ||
+    "Art direction, identity & visual systems — the thinking under the surface.";
   const [step, setStep] = useState(-1);
   const [scanned, setScanned] = useState(false);
   const [titled, setTitled] = useState(false);
@@ -23,21 +32,21 @@ export function AboutBoot() {
 
   useEffect(() => {
     const t = timers.current;
-    LINES.forEach((_, i) => {
+    lines.forEach((_, i) => {
       t.push(window.setTimeout(() => setStep(i), 120 + i * STEP));
     });
-    t.push(window.setTimeout(() => setScanned(true), 120 + LINES.length * STEP));
+    t.push(window.setTimeout(() => setScanned(true), 120 + lines.length * STEP));
     t.push(
       window.setTimeout(
         () => setTitled(true),
-        120 + LINES.length * STEP + HOLD,
+        120 + lines.length * STEP + HOLD,
       ),
     );
     return () => {
       t.forEach((id) => window.clearTimeout(id));
       timers.current = [];
     };
-  }, []);
+  }, [lines]);
 
   return (
     <section className="ab-boot" aria-labelledby="about-title">
@@ -45,10 +54,14 @@ export function AboutBoot() {
 
       {/* Creative-system readout */}
       <div className="ab-boot__readout" aria-hidden>
-        {LINES.map((line, i) => (
+        {lines.map((line, i) => (
           <p
             key={line}
-            className={cn("ab-boot__line", step >= i && "is-on", i === 2 && "is-found")}
+            className={cn(
+              "ab-boot__line",
+              step >= i && "is-on",
+              i === lines.length - 1 && "is-found",
+            )}
           >
             <span className="ab-boot__caret">›</span>
             {line}
@@ -63,9 +76,9 @@ export function AboutBoot() {
         <h1
           id="about-title"
           className={cn("ab-boot__title", titled && "is-in")}
-          aria-label="Behind the pixels"
+          aria-label={title}
         >
-          {"Behind the pixels".split(" ").map((word, i) => (
+          {title.split(" ").map((word, i) => (
             <span key={word} className="ab-boot__mask">
               <span
                 className="ab-boot__word"
@@ -80,8 +93,7 @@ export function AboutBoot() {
 
         <p className={cn("ab-boot__sub", titled && "is-in")}>
           <span className="ab-boot__tick" aria-hidden />
-          Art direction, identity &amp; visual systems — the thinking under the
-          surface.
+          {sub}
         </p>
       </div>
 

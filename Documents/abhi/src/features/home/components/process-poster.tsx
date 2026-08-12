@@ -8,6 +8,7 @@ import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import { cn } from "@/lib/cn";
 import { PROCESS_STEPS } from "@/lib/process";
+import { useHome } from "@/lib/cms/hooks";
 
 /** Reads across the two bottom seal pieces — only resolves once assembled. */
 const STATEMENT = "Waste nothing that argues";
@@ -58,6 +59,11 @@ function pieceLocal(progress: number, index: number) {
 }
 
 export function ProcessPoster() {
+  const home = useHome<{
+    process?: { steps?: typeof PROCESS_STEPS; seal?: string };
+  }>();
+  const steps = home.process?.steps?.length ? home.process.steps : PROCESS_STEPS;
+  const seal = home.process?.seal || STATEMENT;
   const soft = useReducedMotion();
   const sheetRef = useRef<HTMLDivElement>(null);
   const [assembled, setAssembled] = useState(false);
@@ -156,7 +162,7 @@ export function ProcessPoster() {
             className={cn("poster__sheet", isWhole && "is-whole")}
           >
             {PIECES.map((piece, i) => {
-              const step = PROCESS_STEPS[i];
+              const step = steps[i];
 
               return (
                 <article
@@ -203,7 +209,7 @@ export function ProcessPoster() {
                         )}
                       </div>
                     ) : (
-                      <span className="piece__statement">{STATEMENT}</span>
+                      <span className="piece__statement">{seal}</span>
                     )}
                   </div>
                 </article>
@@ -211,7 +217,7 @@ export function ProcessPoster() {
             })}
           </div>
 
-          <p className="poster__a11y">{STATEMENT}</p>
+          <p className="poster__a11y">{seal}</p>
         </Container>
       </div>
     </section>

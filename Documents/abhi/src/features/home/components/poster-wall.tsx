@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ROUTES } from "@/lib/constants";
-import { WORK_ITEMS, type WorkItem } from "@/lib/work";
+import { type WorkItem } from "@/lib/work";
+import { useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /** Six tiles — posters first, then fill from remaining stills. */
-function pickHeroPosters(): WorkItem[] {
-  const posters = WORK_ITEMS.filter((w) => w.category === "posters");
-  const rest = WORK_ITEMS.filter((w) => w.category !== "posters");
+function pickHeroPosters(items: WorkItem[]): WorkItem[] {
+  const posters = items.filter((w) => w.category === "posters");
+  const rest = items.filter((w) => w.category !== "posters");
   const seen = new Set<string>();
   const out: WorkItem[] = [];
   for (const item of [...posters, ...rest]) {
@@ -32,7 +33,8 @@ type PosterWallProps = {
 export function PosterWall({ className, idle = false }: PosterWallProps) {
   const reduced = useReducedMotion();
   const rootRef = useRef<HTMLDivElement>(null);
-  const items = useMemo(() => pickHeroPosters(), []);
+  const workItems = useWorkItems();
+  const items = useMemo(() => pickHeroPosters(workItems), [workItems]);
   const [ready, setReady] = useState(false);
   const [active, setActive] = useState<number | null>(null);
   const activeRef = useRef<number | null>(null);

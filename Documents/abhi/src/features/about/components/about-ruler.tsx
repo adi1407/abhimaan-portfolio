@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/cn";
 import { ACTS } from "@/lib/about";
+import { useAbout } from "@/lib/cms/hooks";
 
 const TICKS = 44;
 
@@ -12,11 +13,13 @@ const TICKS = 44;
  * by a centre-line scroll-spy over the sections themselves.
  */
 export function AboutRuler() {
+  const about = useAbout<{ acts?: typeof ACTS }>();
+  const acts = about.acts?.length ? about.acts : ACTS;
   const [active, setActive] = useState(0);
   const fillRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    const sections = ACTS.map((a) => document.getElementById(`act-${a.id}`))
+    const sections = acts.map((a) => document.getElementById(`act-${a.id}`))
       .filter(Boolean) as HTMLElement[];
 
     const spy = new IntersectionObserver(
@@ -50,7 +53,7 @@ export function AboutRuler() {
       spy.disconnect();
       window.removeEventListener("scroll", onScroll);
     };
-  }, []);
+  }, [acts]);
 
   return (
     <aside className="rule" aria-label="Section progress">
@@ -58,7 +61,7 @@ export function AboutRuler() {
         <span className="rule__head-label">About</span>
         <span className="rule__head-count">
           {String(active + 1).padStart(2, "0")}
-          <em>/ {String(ACTS.length).padStart(2, "0")}</em>
+          <em>/ {String(acts.length).padStart(2, "0")}</em>
         </span>
       </p>
 
@@ -73,7 +76,7 @@ export function AboutRuler() {
       </div>
 
       <ol className="rule__acts">
-        {ACTS.map((act, i) => (
+        {acts.map((act, i) => (
           <li
             key={act.id}
             className={cn("rule__act", i === active && "is-on")}

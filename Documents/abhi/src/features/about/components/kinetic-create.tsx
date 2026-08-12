@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { CREATE_WORDS } from "@/lib/about";
+import { CREATE_WORDS, type CreateWord } from "@/lib/about";
+import { useAbout } from "@/lib/cms/hooks";
 
 /**
  * "I create …" — each word enters with a transition that argues its own
@@ -13,6 +14,8 @@ import { CREATE_WORDS } from "@/lib/about";
  * so there is no per-frame JS and reduced-motion can neutralise it wholesale.
  */
 export function KineticCreate() {
+  const about = useAbout<{ createWords?: CreateWord[] }>();
+  const words = about.createWords?.length ? about.createWords : CREATE_WORDS;
   const rowRefs = useRef<(HTMLLIElement | null)[]>([]);
 
   useEffect(() => {
@@ -47,7 +50,7 @@ export function KineticCreate() {
       </h2>
 
       <ul className="kc__list">
-        {CREATE_WORDS.map((item, i) => (
+        {words.map((item, i) => (
           <li
             key={item.word}
             ref={(el) => {

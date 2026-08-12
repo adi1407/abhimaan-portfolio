@@ -3,14 +3,15 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef } from "react";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
-import { WORK_ITEMS, type WorkItem } from "@/lib/work";
+import { type WorkItem } from "@/lib/work";
+import { useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /** Unique stills for the exhibition (dedupe by src). */
-export function pickExhibitionItems(limit = 6): WorkItem[] {
+export function pickExhibitionItems(items: WorkItem[], limit = 6): WorkItem[] {
   const seen = new Set<string>();
   const out: WorkItem[] = [];
-  for (const item of WORK_ITEMS) {
+  for (const item of items) {
     if (seen.has(item.src)) continue;
     seen.add(item.src);
     out.push(item);
@@ -43,9 +44,10 @@ export function HeroExhibition({
   items: itemsProp,
 }: HeroExhibitionProps) {
   const reduced = useReducedMotion();
+  const workItems = useWorkItems();
   const items = useMemo(
-    () => itemsProp ?? pickExhibitionItems(6),
-    [itemsProp],
+    () => itemsProp ?? pickExhibitionItems(workItems, 6),
+    [itemsProp, workItems],
   );
   const stageRef = useRef<HTMLDivElement>(null);
   const stackRef = useRef<HTMLDivElement>(null);

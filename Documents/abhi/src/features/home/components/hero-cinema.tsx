@@ -6,7 +6,7 @@ import { HeroCargo } from "@/features/home/components/hero-cargo";
 import { HeroWordmark } from "@/features/home/components/hero-wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ROUTES, SITE } from "@/lib/constants";
-import { WORK_ITEMS } from "@/lib/work";
+import { useHome, useWorkItems } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
 
 /* ================================================================== *
@@ -35,10 +35,10 @@ const clamp = (v: number, lo: number, hi: number) =>
  * point in it. That way no column repeats a still within itself, and
  * neighbouring columns never show the same frame side by side.
  */
-function buildColumns() {
+function buildColumns(items: { src: string }[]) {
   const srcs: string[] = [];
-  for (const item of WORK_ITEMS) {
-    if (!srcs.includes(item.src)) srcs.push(item.src);
+  for (const item of items) {
+    if (item.src && !srcs.includes(item.src)) srcs.push(item.src);
   }
   const pool = srcs.length ? srcs : ["/work/p-01.jpg"];
   const rotate = (offset: number) =>
@@ -48,12 +48,23 @@ function buildColumns() {
 }
 
 export function HeroCinema() {
+  const workItems = useWorkItems();
+  const home = useHome<{
+    hero?: {
+      eyebrow?: string;
+      roles?: string[];
+      lede?: string;
+      ctaWork?: string;
+      ctaContact?: string;
+    };
+  }>();
+  const terms = home.hero?.roles?.length ? home.hero.roles : TERMS;
   const reduced = useReducedMotion();
   const [term, setTerm] = useState(0);
   const [lit, setLit] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const wallRef = useRef<HTMLDivElement>(null);
-  const columns = useMemo(() => buildColumns(), []);
+  const columns = useMemo(() => buildColumns(workItems), [workItems]);
 
   /* Kick the entrance on the frame after mount so the mask animation
      always has a clean starting state to run from. */
@@ -64,11 +75,11 @@ export function HeroCinema() {
 
   useEffect(() => {
     const id = window.setInterval(
-      () => setTerm((n) => (n + 1) % TERMS.length),
+      () => setTerm((n) => (n + 1) % Math.max(terms.length, 1)),
       TERM_MS,
     );
     return () => window.clearInterval(id);
-  }, []);
+  }, [terms.length]);
 
   /* Exit glow — intensifies as the hero scrolls out toward letter craft. */
   useEffect(() => {
@@ -182,7 +193,7 @@ export function HeroCinema() {
       <div className="ch__inner">
         <p className="ch__eyebrow">
           <span className="ch__dot" aria-hidden />
-          Portfolio — 2026
+          {home.hero?.eyebrow || "Portfolio — 2026"}
           <span className="ch__rule" aria-hidden />
         </p>
 
@@ -195,27 +206,28 @@ export function HeroCinema() {
 
         <p className="ch__role" aria-hidden>
           <span className="ch__role-sizer">
-            {TERMS.map((t) => (
+            {terms.map((t) => (
               <span key={t}>{t}</span>
             ))}
           </span>
           <span key={term} className="ch__role-live">
-            {TERMS[term]}
+            {terms[term] ?? terms[0]}
           </span>
         </p>
-        <span className="sr-only">{TERMS.join(", ")}</span>
+        <span className="sr-only">{terms.join(", ")}</span>
 
         <p className="ch__lead">
-          Identity, editorial &amp; visual systems — composed, never templated.
+          {home.hero?.lede ||
+            "Identity, editorial & visual systems — composed, never templated."}
         </p>
 
         <div className="ch__cta">
           <Link href={ROUTES.work} className="ch__btn ch__btn--solid">
-            <span>Enter the work</span>
+            <span>{home.hero?.ctaWork || "Enter the work"}</span>
             <em aria-hidden>→</em>
           </Link>
           <Link href={ROUTES.contact} className="ch__btn ch__btn--ghost">
-            <span>Start a brief</span>
+            <span>{home.hero?.ctaContact || "Start a brief"}</span>
           </Link>
         </div>
       </div>

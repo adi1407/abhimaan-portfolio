@@ -10,11 +10,8 @@ import {
 } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/cn";
-import {
-  WORK_CATEGORIES,
-  getItemsByCategory,
-  type WorkCategoryId,
-} from "@/lib/work";
+import { type WorkCategoryId } from "@/lib/work";
+import { useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
 
 const VIDEO = "/abhi.mp4";
 const FRAME_MANIFEST = "/film-frames/manifest.json";
@@ -49,7 +46,7 @@ type FrameManifest = {
 };
 
 const PANEL_FEATURE: Record<
-  WorkCategoryId,
+  string,
   { tag: string; glyph: string; className: string }
 > = {
   posters: { tag: "Impact type", glyph: "P", className: "quad--fx-poster" },
@@ -92,6 +89,8 @@ export function WorkFilm({
   onSelectCategory,
   intro = "full",
 }: WorkFilmProps) {
+  const categories = useWorkCategories();
+  const workItems = useWorkItems();
   const router = useRouter();
   const trackRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -575,9 +574,9 @@ export function WorkFilm({
       return;
     }
     const timers: number[] = [];
-    for (const cat of WORK_CATEGORIES) {
+    for (const cat of categories) {
       if (cat.id !== "thumbnails") continue;
-      const items = getItemsByCategory(cat.id).slice(0, 4);
+      const items = workItems.filter((i) => i.category === cat.id).slice(0, 4);
       if (items.length < 2) continue;
       let i = 0;
       const id = window.setInterval(() => {
@@ -591,7 +590,7 @@ export function WorkFilm({
       timers.push(id);
     }
     return () => timers.forEach((t) => window.clearInterval(t));
-  }, [panelsReady]);
+  }, [panelsReady, categories, workItems]);
 
   const activate = useCallback(
     (id: WorkCategoryId, btn: HTMLButtonElement) => {
@@ -751,9 +750,13 @@ export function WorkFilm({
           className={cn("film__quads", panelsReady && "is-live")}
           aria-label="Work disciplines"
         >
-          {WORK_CATEGORIES.map((cat, i) => {
-            const fx = PANEL_FEATURE[cat.id];
-            const items = getItemsByCategory(cat.id);
+          {categories.map((cat, i) => {
+            const fx = PANEL_FEATURE[cat.id] ?? {
+              tag: cat.short,
+              glyph: cat.short.slice(0, 1),
+              className: "quad--fx-poster",
+            };
+            const items = workItems.filter((it) => it.category === cat.id);
             const featured = items[0];
             const flip =
               cat.id === "thumbnails"

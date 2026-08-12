@@ -40,13 +40,15 @@ export function ImageReplace({
 }) {
   return (
     <label className="admin-media">
-      {src ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={src} alt="" className="admin-media__img" />
-      ) : (
-        <span className="admin-media__ph">No image</span>
-      )}
-      <span className="admin-media__btn">{label}</span>
+      <span className="admin-media__frame">
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={src} alt="" className="admin-media__img" />
+        ) : (
+          <span className="admin-media__ph">Drop or click</span>
+        )}
+        <span className="admin-media__veil">{label}</span>
+      </span>
       <input
         type="file"
         accept="image/*,video/mp4"

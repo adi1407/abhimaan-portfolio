@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function AdminRoute() {
   return (
-    <main className="flex flex-1 flex-col">
+    <main className="admin-root">
       <AdminPage />
     </main>
   );

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { fontVariables } from "@/app/fonts";
+import { ChromeGate } from "@/components/layout/chrome-gate";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { NavProvider } from "@/components/layout/nav-provider";
@@ -49,9 +50,13 @@ export default function RootLayout({
         <SmoothScroll>
           <CmsProvider>
           <NavProvider>
-            <SiteHeader />
+            <ChromeGate>
+              <SiteHeader />
+            </ChromeGate>
             <div className="flex min-h-full flex-1 flex-col">{children}</div>
-            <SiteFooter />
+            <ChromeGate>
+              <SiteFooter />
+            </ChromeGate>
             <OffscreenPause />
           </NavProvider>
           </CmsProvider>

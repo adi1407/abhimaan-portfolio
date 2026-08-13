@@ -4147,7 +4147,7 @@ a.creators__card:hover .creators__avatar {
 .wall__grid {
   margin-top: clamp(2rem, 4vw, 3rem);
   columns: 4;
-  column-gap: clamp(0.8rem, 1.6vw, 1.25rem);
+  column-gap: clamp(1.4rem, 2.6vw, 2.25rem);
   list-style: none;
   padding: 0;
 }
@@ -4173,7 +4173,7 @@ a.creators__card:hover .creators__avatar {
 
 .wall-item {
   break-inside: avoid;
-  margin-bottom: clamp(0.8rem, 1.6vw, 1.25rem);
+  margin-bottom: clamp(1.4rem, 2.6vw, 2.25rem);
 }
 
 /* Scatter → register.
@@ -4287,14 +4287,14 @@ a.creators__card:hover .creators__avatar {
 .wall--thumbs .wall__canvas {
   display: flex;
   flex-direction: column;
-  gap: clamp(1.25rem, 3vw, 2rem);
+  gap: clamp(1.75rem, 3.5vw, 2.75rem);
   perspective: 1200px;
 }
 
 .wall-thumbs {
   display: flex;
   flex-direction: column;
-  gap: clamp(1.25rem, 3vw, 2rem);
+  gap: clamp(1.75rem, 3.5vw, 2.75rem);
   width: 100%;
 }
 
@@ -4304,7 +4304,7 @@ a.creators__card:hover .creators__avatar {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(12rem, 0.7fr);
-  gap: clamp(1rem, 2.5vw, 1.75rem);
+  gap: clamp(1.35rem, 3vw, 2.25rem);
   align-items: end;
   width: 100%;
   margin: 0;
@@ -4519,7 +4519,7 @@ a.creators__card:hover .creators__avatar {
 .wall-thumbs__grid {
   display: grid !important;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
-  gap: clamp(0.85rem, 2vw, 1.25rem) clamp(0.75rem, 1.6vw, 1.1rem);
+  gap: clamp(1.25rem, 2.5vw, 2rem) clamp(1.1rem, 2vw, 1.75rem);
 }
 
 .wall-item--thumb .wall-item__media {
@@ -4704,7 +4704,7 @@ a.creators__card:hover .creators__avatar {
 @media (max-width: 640px) {
   .wall-thumbs__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.75rem 0.65rem;
+    gap: 1.15rem 1rem;
   }
 
   .wall-item--thumb .wall-item__name {
@@ -15087,6 +15087,96 @@ a.creators__card:hover .creators__avatar {
   pointer-events: auto;
 }
 
+.book.is-portrait-gate .book__shell {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.book__rotate {
+  position: relative;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 0.85rem;
+  width: min(22rem, 100%);
+  padding: 1.75rem 1.35rem;
+  border: 1px solid rgba(232, 228, 219, 0.14);
+  background: rgba(8, 12, 22, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  text-align: center;
+  pointer-events: auto;
+  animation: book-rotate-in 480ms var(--ease-editorial) both;
+}
+
+.book__rotate-icon {
+  width: 2.75rem;
+  height: 1.85rem;
+  border: 2px solid rgba(232, 228, 219, 0.7);
+  border-radius: 0.35rem;
+  transform: rotate(-90deg);
+  animation: book-rotate-nudge 1.8s var(--ease-editorial) infinite;
+}
+
+.book__rotate-title {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.book__rotate-copy {
+  margin: 0;
+  max-width: 18rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(232, 228, 219, 0.62);
+}
+
+.book__rotate-close {
+  margin-top: 0.35rem;
+  border: 1px solid rgba(232, 228, 219, 0.28);
+  background: transparent;
+  color: #e8e4db;
+  padding: 0.55rem 1rem;
+  font-size: 0.68rem;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+@keyframes book-rotate-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes book-rotate-nudge {
+  0%,
+  100% {
+    transform: rotate(-90deg);
+  }
+  40% {
+    transform: rotate(0deg);
+  }
+  70% {
+    transform: rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .book__rotate,
+  .book__rotate-icon {
+    animation: none;
+  }
+}
+
 .book__scrim {
   position: fixed;
   inset: 0;
@@ -15106,7 +15196,7 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-direction: column;
   gap: clamp(0.65rem, 2vw, 1rem);
-  width: min(100%, 920px);
+  width: min(100%, 1400px);
   max-height: 100dvh;
   pointer-events: auto;
 }
@@ -15193,7 +15283,8 @@ a.creators__card:hover .creators__avatar {
 .book.is-ready .book__book-tilt,
 .book.is-closing-back .book__book-tilt,
 .book.is-opening-back .book__book-tilt {
-  width: min(100%, calc(70svh * 28 / 22));
+  width: min(96vw, calc(92svh * 28 / 22));
+  max-height: 92svh;
   aspect-ratio: 28 / 22;
 }
 
@@ -15677,8 +15768,8 @@ a.creators__card:hover .creators__avatar {
   .book.is-ready .book__book-tilt,
   .book.is-closing-back .book__book-tilt,
   .book.is-opening-back .book__book-tilt {
-    width: 100%;
-    max-height: min(62svh, 420px);
+    width: min(96vw, calc(88svh * 28 / 22));
+    max-height: 88svh;
   }
 
   .book__stack,

@@ -24,6 +24,8 @@ type GalleryWallProps = {
   initialCategory?: WorkCategoryId | null;
   /** Scroll this section into view when deep-linking. */
   focus?: boolean;
+  /** Open the book reader as soon as Books is selected (film / deep-link). */
+  autoOpenBook?: boolean;
 };
 
 const REEL_LEN = 5;
@@ -66,6 +68,7 @@ function Placeholder({ item }: { item: CmsWorkItem }) {
 export function GalleryWall({
   initialCategory = null,
   focus = false,
+  autoOpenBook = false,
 }: GalleryWallProps) {
   const categories = useWorkCategories();
   const workItems = useWorkItems();
@@ -78,6 +81,7 @@ export function GalleryWall({
   const [lightbox, setLightbox] = useState<number | null>(null);
   const [cinemaOrigin, setCinemaOrigin] = useState<HTMLElement | null>(null);
   const [bookOpen, setBookOpen] = useState(false);
+  const bookAutoOpenedRef = useRef(false);
 
   // Follow a deep-link (/work/[category]) even if the route re-renders this
   // component without remounting — adjusted during render, not in an effect.
@@ -147,13 +151,24 @@ export function GalleryWall({
   const thumbsRootRef = useRef<HTMLDivElement>(null);
   const booksRootRef = useRef<HTMLDivElement>(null);
 
-  // Reset reel when entering the thumbnails filter.
+  // Reset reel when entering the thumbnails filter; close book when leaving Books.
   useEffect(() => {
     setReelIndex(0);
     setReelPaused(false);
     setThumbsLive(false);
-    setBookOpen(false);
+    if (filter !== "books") {
+      setBookOpen(false);
+      bookAutoOpenedRef.current = false;
+    }
   }, [filter]);
+
+  // Film / /work/books → open the reader once per entry into Books.
+  useEffect(() => {
+    if (filter !== "books" || !autoOpenBook || bookAutoOpenedRef.current) return;
+    bookAutoOpenedRef.current = true;
+    const id = window.setTimeout(() => setBookOpen(true), 160);
+    return () => window.clearTimeout(id);
+  }, [filter, autoOpenBook]);
 
   // Featured reel auto-advance (paused on hover / reduced motion / lightbox).
   useEffect(() => {

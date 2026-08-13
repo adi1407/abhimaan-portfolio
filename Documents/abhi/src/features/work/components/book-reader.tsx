@@ -28,6 +28,29 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
+function isPortraitViewport() {
+  return window.matchMedia("(orientation: portrait)").matches;
+}
+
+async function tryLockLandscape() {
+  try {
+    const orient = screen.orientation as ScreenOrientation & {
+      lock?: (orientation: string) => Promise<void>;
+    };
+    await orient.lock?.("landscape");
+  } catch {
+    /* iOS / unsupported — rotate gate handles UX */
+  }
+}
+
+function tryUnlockOrientation() {
+  try {
+    screen.orientation?.unlock?.();
+  } catch {
+    /* ignore */
+  }
+}
+
 function lockPageScroll() {
   window.__lenis?.stop();
   document.documentElement.style.overflow = "hidden";
@@ -142,6 +165,9 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   const [flip, setFlip] = useState<FlipDir>(null);
   const [flipArmed, setFlipArmed] = useState(false);
   const [portalReady] = useState(() => typeof document !== "undefined");
+  const [portrait, setPortrait] = useState(() =>
+    typeof window !== "undefined" ? isPortraitViewport() : false,
+  );
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const flipLock = useRef(false);
 
@@ -152,16 +178,31 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     phase === "opening-back";
   const ready = phase === "ready";
   const onBack = phase === "back";
+  const gated = portrait;
   const current = spreads[index];
   const nextSpread =
     index < lastSpread ? spreads[index + 1] : null;
   const prevSpread = index > 0 ? spreads[index - 1] : null;
-  const canPrev = !busy && (onBack || (ready && index > 0));
-  const canNext = !busy && ready && spreads.length > 0 && index <= lastSpread;
+  const canPrev =
+    !gated && !busy && (onBack || (ready && index > 0));
+  const canNext =
+    !gated && !busy && ready && spreads.length > 0 && index <= lastSpread;
 
   useEffect(() => {
     lockPageScroll();
-    return () => unlockPageScroll();
+    void tryLockLandscape();
+    return () => {
+      unlockPageScroll();
+      tryUnlockOrientation();
+    };
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(orientation: portrait)");
+    const sync = () => setPortrait(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -266,21 +307,24 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
+      else if (gated) return;
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
       else if (e.key === "Enter" && phase === "closed") beginOpening();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goNext, goPrev, phase, beginOpening]);
+  }, [onClose, goNext, goPrev, phase, beginOpening, gated]);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
+    if (gated) return;
     const t = e.changedTouches[0];
     touchRef.current = { x: t.clientX, y: t.clientY };
-  }, []);
+  }, [gated]);
 
   const onTouchEnd = useCallback(
     (e: TouchEvent) => {
+      if (gated) return;
       const start = touchRef.current;
       touchRef.current = null;
       if (!start) return;
@@ -291,7 +335,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       if (dx < 0) goNext();
       else goPrev();
     },
-    [goNext, goPrev],
+    [goNext, goPrev, gated],
   );
 
   if (!portalReady || !book || !current) return null;
@@ -334,6 +378,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         (onBack || phase === "opening-back") && "is-back",
         phase === "opening-back" && "is-opening-back",
         phase === "closed" && "is-closed",
+        gated && "is-portrait-gate",
       )}
       role="dialog"
       aria-modal="true"
@@ -348,7 +393,24 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         onClick={onClose}
       />
 
-      <div className="book__shell">
+      {gated ? (
+        <div className="book__rotate" role="status">
+          <span className="book__rotate-icon" aria-hidden />
+          <p className="book__rotate-title">Rotate to landscape</p>
+          <p className="book__rotate-copy">
+            The book opens fullest sideways. Turn your device to keep reading.
+          </p>
+          <button
+            type="button"
+            className="book__rotate-close"
+            onClick={onClose}
+          >
+            Close
+          </button>
+        </div>
+      ) : null}
+
+      <div className="book__shell" aria-hidden={gated || undefined}>
         <header
           className={cn("book__chrome", !chromeLive && "book__chrome--locked")}
         >

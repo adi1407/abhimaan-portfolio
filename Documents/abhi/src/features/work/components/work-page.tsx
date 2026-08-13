@@ -74,7 +74,10 @@ export function WorkPage({ initialCategory = null }: WorkPageProps) {
             : undefined
         }
       >
-        <GalleryWall initialCategory={category} />
+        <GalleryWall
+          initialCategory={category}
+          autoOpenBook={category === "books"}
+        />
       </div>
       <BehanceBridge />
     </div>

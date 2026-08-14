@@ -25,19 +25,17 @@ export async function POST(req: Request) {
   if (!EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Valid email is required." }, { status: 400 });
   }
-  if (!SERVICES.has(body.service)) {
-    return NextResponse.json(
-      { error: "Choose Photoshop, Post, or Both." },
-      { status: 400 },
-    );
-  }
+  /* The public form asks for name, email and mobile only — service is no
+     longer a required question, so an absent value defaults rather than
+     rejecting the enquiry. An explicit value is still honoured. */
+  const service = SERVICES.has(body.service) ? body.service : "both";
   const { data, error } = await supabaseAdmin()
     .from("inquiries")
     .insert({
       name: (body.name ?? "").trim().slice(0, 120),
       email: email.slice(0, 180),
       phone: (body.phone ?? "").slice(0, 40),
-      service: body.service,
+      service,
       deliverable: (body.deliverable ?? "").slice(0, 160),
       deadline: (body.deadline ?? "").slice(0, 80),
       budget: (body.budget ?? "").slice(0, 80),

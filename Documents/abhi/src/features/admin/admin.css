@@ -531,6 +531,80 @@ body:has(.admin-page--app) {
   justify-content: space-between;
 }
 
+.admin-work__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.admin-work__cat {
+  border: 1px solid rgba(11, 31, 77, 0.12);
+  background: #fff;
+  color: var(--primary);
+  padding: 0.5rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.admin-work__cat span {
+  margin-left: 0.35rem;
+  color: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
+.admin-work__cat.is-on {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+.admin-work__cat.is-on span {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-work__addbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-work__drop {
+  min-height: 16rem;
+  place-items: center;
+  text-align: center;
+  border-style: dashed;
+  cursor: pointer;
+  color: var(--primary);
+}
+
+.admin-work__drop:hover {
+  transform: none;
+  border-color: #2563ff;
+  background: rgba(37, 99, 255, 0.05);
+}
+
+.admin-work__plus {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid currentColor;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.admin-work__drop strong {
+  font-size: 0.92rem;
+  letter-spacing: -0.02em;
+}
+
+.admin-work__drop small {
+  font-size: 0.72rem;
+  color: color-mix(in srgb, var(--primary) 48%, transparent);
+}
+
 .admin-cms__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));

@@ -16243,3 +16243,379 @@ a.creators__card:hover .creators__avatar {
     animation-duration: 200ms;
   }
 }
+
+/* ==================================================================
+   Contact — printer's job ticket
+   Four ruled entries, labels in the margin, marching ants on the live
+   line, a rubber stamp on success.
+   ================================================================== */
+
+.ticket {
+  --tk-ink: #14181f;
+  --tk-rule: rgba(20, 24, 31, 0.16);
+  --tk-mute: rgba(20, 24, 31, 0.5);
+  position: relative;
+  width: min(100%, 44rem);
+  margin: clamp(2rem, 6vw, 3.5rem) 0 0;
+  padding: clamp(1.1rem, 3vw, 1.6rem);
+  background:
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 calc(1.5rem - 1px),
+      rgba(20, 24, 31, 0.04) calc(1.5rem - 1px) 1.5rem
+    ),
+    #f7f6f2;
+  border: 1px solid var(--tk-rule);
+  color: var(--tk-ink);
+  transition: transform 620ms var(--ease-editorial), opacity 620ms ease;
+}
+
+/* Perforated top edge — the ticket was torn off a roll. */
+.ticket::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 8px;
+  background: radial-gradient(circle at 5px 0, transparent 4px, #f7f6f2 4.5px);
+  background-size: 10px 8px;
+  background-repeat: repeat-x;
+  border-top: 1px solid var(--tk-rule);
+}
+
+.ticket__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid var(--tk-rule);
+}
+
+.ticket__title {
+  font-family: var(--font-sf-pro);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.ticket__no {
+  font-family: var(--font-space-grotesk);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  color: var(--tk-mute);
+  font-variant-numeric: tabular-nums;
+}
+
+.ticket__body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- One ruled entry --- */
+
+.ticket__line {
+  display: grid;
+  grid-template-columns: 2.2rem 6.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.6rem;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--tk-rule);
+}
+
+.ticket__margin {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 1.6rem;
+}
+
+.ticket__no-sm {
+  font-family: var(--font-space-grotesk);
+  font-style: normal;
+  font-size: 0.6rem;
+  color: var(--tk-mute);
+  transition: opacity 240ms ease;
+}
+
+.ticket__tick {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 0.85rem;
+  color: var(--ps-accent, #2563ff);
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 260ms var(--ease-spring),
+    transform 260ms var(--ease-spring);
+}
+
+.ticket__line.is-done .ticket__no-sm {
+  opacity: 0;
+}
+
+.ticket__line.is-done .ticket__tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ticket__label {
+  padding-top: 0.3rem;
+  font-family: var(--font-sf-pro);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--tk-mute);
+}
+
+.ticket__entry {
+  position: relative;
+  display: block;
+}
+
+.ticket__entry input,
+.ticket__entry textarea {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0.25rem 0.15rem;
+  color: var(--tk-ink);
+  font-family: var(--font-space-grotesk);
+  /* 16px keeps iOS from zooming the page on focus. */
+  font-size: 16px;
+  line-height: 1.5;
+  outline: none;
+  resize: none;
+}
+
+.ticket__entry textarea {
+  min-height: 4.5rem;
+}
+
+.ticket__entry input::placeholder,
+.ticket__entry textarea::placeholder {
+  color: rgba(20, 24, 31, 0.32);
+}
+
+/* Marching ants around the line being written. */
+.ticket__ants {
+  position: absolute;
+  inset: -3px -5px;
+  pointer-events: none;
+  opacity: 0;
+  background-image:
+    repeating-linear-gradient(90deg, var(--tk-ink) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(90deg, var(--tk-ink) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(0deg, var(--tk-ink) 0 4px, transparent 0 8px),
+    repeating-linear-gradient(0deg, var(--tk-ink) 0 4px, transparent 0 8px);
+  background-size: 8px 1px, 8px 1px, 1px 8px, 1px 8px;
+  background-position: 0 0, 0 100%, 0 0, 100% 0;
+  background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+  transition: opacity 160ms ease;
+}
+
+.ticket__entry:focus-within .ticket__ants {
+  opacity: 0.65;
+  animation: ticket-ants 520ms linear infinite;
+}
+
+@keyframes ticket-ants {
+  to {
+    background-position: 8px 0, -8px 100%, 0 -8px, 100% 8px;
+  }
+}
+
+/* --- Foot --- */
+
+.ticket__foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.2rem;
+  padding-top: 1rem;
+}
+
+.ticket__submit {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0.8rem 1.6rem;
+  border: 1px solid var(--tk-ink);
+  background: var(--tk-ink);
+  color: #f7f6f2;
+  cursor: pointer;
+  font-family: var(--font-sf-pro);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  transition: transform 320ms var(--ease-spring), opacity 200ms ease;
+}
+
+.ticket__submit:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.ticket__submit:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.ticket__note {
+  margin: 0;
+  font-family: var(--font-space-grotesk);
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--tk-mute);
+}
+
+/* --- The stamp --- */
+
+.ticket__stamp {
+  position: absolute;
+  right: clamp(1rem, 6%, 3rem);
+  bottom: clamp(3.5rem, 16%, 6rem);
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  padding: 0.5rem 1.1rem;
+  border: 3px double #b3261e;
+  border-radius: 4px;
+  color: #b3261e;
+  pointer-events: none;
+  opacity: 0;
+  transform: rotate(-14deg) scale(2.6);
+  font-family: var(--font-sf-pro);
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  /* Ink never lands evenly — the mask breaks the edge up. */
+  mask-image: radial-gradient(
+    circle at 30% 30%,
+    #000 55%,
+    rgba(0, 0, 0, 0.75) 75%,
+    #000 100%
+  );
+}
+
+.ticket__stamp-inner {
+  display: grid;
+  gap: 0.15rem;
+  place-items: center;
+}
+
+.ticket__stamp em {
+  font-style: normal;
+  font-size: 0.5rem;
+  letter-spacing: 0.24em;
+  opacity: 0.85;
+}
+
+.ticket.is-filed .ticket__stamp {
+  animation: ticket-stamp 900ms cubic-bezier(0.2, 1.4, 0.3, 1) forwards;
+}
+
+@keyframes ticket-stamp {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(2.6);
+  }
+  /* The thump: overshoot slightly past final size, then settle. */
+  55% {
+    opacity: 1;
+    transform: rotate(-14deg) scale(0.94);
+  }
+  70% {
+    transform: rotate(-14deg) scale(1.04);
+  }
+  100% {
+    opacity: 0.92;
+    transform: rotate(-14deg) scale(1);
+  }
+}
+
+/* The whole ticket flinches when the stamp lands. */
+.ticket.is-filed {
+  animation: ticket-thump 900ms cubic-bezier(0.2, 1.4, 0.3, 1);
+}
+
+@keyframes ticket-thump {
+  0%,
+  48% {
+    transform: none;
+  }
+  56% {
+    transform: translateY(3px) scale(0.995);
+  }
+  70% {
+    transform: translateY(-1px);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+.ticket__status {
+  margin: 0.9rem 0 0;
+  min-height: 1.2em;
+  font-family: var(--font-sf-pro);
+  font-size: 0.85rem;
+}
+
+.ticket__status.is-ok {
+  color: color-mix(in srgb, var(--tk-ink) 70%, #0a7a3e);
+}
+
+.ticket__status.is-err {
+  color: #a11919;
+}
+
+@media (max-width: 640px) {
+  /* Labels move above the entry so the value gets the full width. */
+  .ticket__line {
+    grid-template-columns: 1.8rem minmax(0, 1fr);
+    row-gap: 0.15rem;
+  }
+
+  .ticket__label {
+    grid-column: 2;
+    padding-top: 0;
+  }
+
+  .ticket__entry {
+    grid-column: 2;
+  }
+
+  .ticket__stamp {
+    right: 50%;
+    translate: 50% 0;
+    bottom: auto;
+    top: 38%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The stamp still lands — it just doesn't fly in or shake the page. */
+  .ticket.is-filed,
+  .ticket.is-filed .ticket__stamp {
+    animation: none;
+  }
+
+  .ticket.is-filed .ticket__stamp {
+    opacity: 0.92;
+    transform: rotate(-14deg) scale(1);
+  }
+
+  .ticket__entry:focus-within .ticket__ants {
+    animation: none;
+  }
+}

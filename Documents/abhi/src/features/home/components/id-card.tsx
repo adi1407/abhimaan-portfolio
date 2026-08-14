@@ -602,6 +602,7 @@ export function IdCard({
                   src={photoSrc}
                   alt=""
                   draggable={false}
+                  decoding="async"
                   onError={() => setPhotoOk(false)}
                 />
               ) : (

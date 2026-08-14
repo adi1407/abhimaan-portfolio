@@ -38,6 +38,13 @@ function CreatorAvatar({ creator }: { creator: CreatorCardData }) {
           alt=""
           className="creators__photo"
           draggable={false}
+          /* Rendered at ~90px; the source is 800px square, so these are
+             the heaviest over-serve on the page. Defer and decode off
+             the main thread — the marquee is well below the fold. */
+          loading="lazy"
+          decoding="async"
+          width={200}
+          height={200}
           onError={() => setSrcIndex((i) => i + 1)}
         />
       ) : (

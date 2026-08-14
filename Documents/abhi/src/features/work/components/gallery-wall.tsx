@@ -458,8 +458,7 @@ export function GalleryWall({
                         "wall-thumbs__img",
                         i === reelIndex && "is-active",
                       )}
-                      decoding="async"
-                    />
+                      decoding="async" loading="lazy" />
                   ))}
                   <span className="wall-thumbs__shine" aria-hidden />
                   <span className="wall-thumbs__scan" aria-hidden />
@@ -570,8 +569,7 @@ export function GalleryWall({
                     src={book?.cover ?? featured.src}
                     alt=""
                     className="wall-books__img"
-                    decoding="async"
-                  />
+                    decoding="async" loading="lazy" />
                   <span className="wall-books__open">Open book ↗</span>
                 </span>
                 <span className="wall-books__meta">
@@ -672,7 +670,7 @@ export function GalleryWall({
             <div className="wall-lb__stage">
               {current.src ? (
                 /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={current.src} alt="" className="wall-lb__img" />
+                <img src={current.src} alt="" className="wall-lb__img" decoding="async" loading="lazy" />
               ) : (
                 <Placeholder item={current} />
               )}

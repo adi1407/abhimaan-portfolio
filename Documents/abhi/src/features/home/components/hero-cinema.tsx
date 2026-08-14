@@ -171,6 +171,7 @@ export function HeroCinema() {
                     alt=""
                     draggable={false}
                     loading={ci === 0 && i < 2 ? "eager" : "lazy"}
+                    decoding="async"
                   />
                 </span>
               ))}

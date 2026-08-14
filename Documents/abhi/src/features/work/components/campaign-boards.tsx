@@ -147,8 +147,7 @@ export function CampaignBoards() {
                     src={campaign.cover}
                     alt=""
                     loading="lazy"
-                    draggable={false}
-                  />
+                    draggable={false} decoding="async" />
                   <span className="cboards__shine" aria-hidden />
                 </span>
                 <span className="cboards__caption">

@@ -35,7 +35,7 @@ export function HeroInkPlate({
         : GHOSTS.map((g) => (
             <span key={g} className={`ip__plate ip__plate--${g}`} aria-hidden>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt="" draggable={false} />
+              <img src={src} alt="" draggable={false} decoding="async" />
             </span>
           ))}
 
@@ -44,8 +44,7 @@ export function HeroInkPlate({
         className={`ip__full${reduced ? " is-instant" : ""}`}
         src={src}
         alt={alt}
-        draggable={false}
-      />
+        draggable={false} decoding="async" />
 
       <span className="ip__trim" aria-hidden />
     </figure>

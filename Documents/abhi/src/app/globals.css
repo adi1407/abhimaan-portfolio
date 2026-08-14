@@ -6531,6 +6531,12 @@ a.creators__card:hover .creators__avatar {
   }
 
   .fun__stage {
+    /* The base rule uses `container-type: size`, which contains BOTH
+       axes — contents then cannot contribute height, so `height:auto`
+       collapsed the stage to ~49px while its cards were 280px tall.
+       On mobile the cards are a normal flow column, so drop the
+       containment and let them size their own stage. */
+    container-type: normal;
     height: auto;
     min-height: 0;
     margin-inline: clamp(0.85rem, 3.5vw, 1.35rem);
@@ -14485,10 +14491,13 @@ a.creators__card:hover .creators__avatar {
   pointer-events: none;
 }
 
-@media (max-width: 860px) {
-  .paper-flight__body {
-    /* No ID card on phones — give the plane a clearer presence. */
-    width: clamp(7.75rem, 30vw, 10.5rem);
+@media (max-width: 900px) {
+  /* The plane is a desktop flourish; PaperFlight also returns null at
+     this width so no physics run. This rule covers first paint, before
+     the media-query state has synced — without it the plane would flash
+     in and vanish on a phone. */
+  .paper-flight {
+    display: none;
   }
 }
 
@@ -14808,18 +14817,22 @@ a.creators__card:hover .creators__avatar {
 @media (max-width: 900px) {
   .sdoc,
   .sdoc.sdoc--mobile {
-    height: auto;
-    z-index: 2;
-    padding: 0 0 clamp(2.5rem, 8vw, 4rem);
+    /* Keeps the scroll track on phones so the layer-by-layer build
+       still happens — it just uses a shorter slice per layer than
+       desktop so the section doesn't take forever to pass. */
+    height: calc(100svh + var(--slices, 9) * 24svh);
+    z-index: 3;
+    padding: 0;
   }
 
-  .sdoc__pin {
-    position: relative;
-    top: auto;
-    height: auto;
+  .sdoc__pin,
+  .sdoc--mobile .sdoc__pin {
+    position: sticky;
+    top: 0;
+    height: 100svh;
     min-height: 0;
     display: flex;
-    align-items: stretch;
+    align-items: center;
     justify-content: center;
     padding: calc(var(--nav-h) + 0.75rem) 0.75rem
       calc(1rem + env(safe-area-inset-bottom, 0));
@@ -14954,14 +14967,9 @@ a.creators__card:hover .creators__avatar {
 }
 
 @media (max-width: 720px) {
-  .sdoc {
-    height: auto;
-  }
-
   .sdoc__pin {
     padding: calc(var(--nav-h) + 0.55rem) 0.55rem
       calc(0.85rem + env(safe-area-inset-bottom, 0));
-    align-items: stretch;
   }
 
   .sdoc__doc {
@@ -15955,4 +15963,283 @@ a.creators__card:hover .creators__avatar {
 [data-offscreen] *::before,
 [data-offscreen] *::after {
   animation-play-state: paused !important;
+}
+
+/* ==================================================================
+   TV transition — entering /about through a CRT
+   Phase classes come from the nav transition machine:
+   expand → label → navigate → hold → collapse.
+   ================================================================== */
+
+.tvt {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  overflow: hidden;
+  /* Push-in progress, driven per phase below. 0 = set on a shelf,
+     1 = the glass is the whole viewport. */
+  --push: 0;
+}
+
+.tvt__room {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(80% 60% at 50% 45%, #10131c 0%, #05070d 60%, #03040a 100%);
+  opacity: calc(0.35 + var(--push) * 0.65);
+}
+
+.tvt__set {
+  position: relative;
+  /* Scaling the whole set is what reads as a camera push rather than a
+     screen simply growing. */
+  transform: scale(calc(0.42 + var(--push) * 5.2));
+  transition: transform 900ms cubic-bezier(0.7, 0, 0.3, 1);
+  will-change: transform;
+}
+
+.tvt__shell {
+  position: relative;
+  width: min(58vw, 30rem);
+  aspect-ratio: 4 / 3;
+  padding: 4.5% 4.5% 12%;
+  border-radius: 6% / 8%;
+  background:
+    linear-gradient(180deg, #2b3040 0%, #1a1e29 55%, #0f1219 100%);
+  box-shadow:
+    0 30px 70px rgba(0, 0, 0, 0.6),
+    inset 0 2px 0 rgba(255, 255, 255, 0.08);
+}
+
+.tvt__screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  /* Slight barrel on the corners — a flat rect never reads as a tube. */
+  border-radius: 8% / 10%;
+  background: #05070c;
+  isolation: isolate;
+}
+
+.tvt__feed {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+}
+
+.tvt__static {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.1) 0 1px, transparent 1px 2px);
+  mix-blend-mode: screen;
+}
+
+.tvt__scan {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background: repeating-linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.35) 0 1px,
+    transparent 1px 3px
+  );
+}
+
+.tvt__glass {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 8%, rgba(255,255,255,0.16), transparent 55%),
+    radial-gradient(140% 120% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+}
+
+/* Power-on: a hairline that snaps open to full height. */
+.tvt__flick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  translate: 0 -50%;
+  background: #fff;
+  box-shadow: 0 0 24px 6px rgba(255, 255, 255, 0.8);
+  transform: scaleY(1);
+  opacity: 0;
+}
+
+.tvt__bezel {
+  position: absolute;
+  left: 4.5%;
+  right: 4.5%;
+  bottom: 2.5%;
+  height: 8%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tvt__brand {
+  font-family: var(--font-space-grotesk);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.tvt__knobs {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.tvt__knobs i {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #3a4155, #191d27);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.tvt__glow {
+  position: absolute;
+  inset: -18%;
+  z-index: -1;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ps-accent, #4f7cff) 40%, transparent) 0%,
+    transparent 65%
+  );
+  filter: blur(40px);
+  opacity: 0;
+}
+
+.tvt__cue {
+  position: absolute;
+  left: 50%;
+  bottom: 12%;
+  translate: -50% 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.7rem;
+  margin: 0;
+  font-family: var(--font-space-grotesk);
+  font-size: 0.7rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  opacity: 0;
+}
+
+.tvt__cue em {
+  font-style: normal;
+  color: #fff;
+}
+
+/* --- Phase choreography ------------------------------------------ */
+
+/* expand: set clicks on, channel changes, camera starts moving in. */
+.tvt--expand .tvt__flick {
+  animation: tvt-flick 260ms ease-out both;
+}
+.tvt--expand .tvt__feed,
+.tvt--label .tvt__feed,
+.tvt--navigate .tvt__feed {
+  opacity: 1;
+}
+.tvt--expand .tvt__static,
+.tvt--label .tvt__static {
+  opacity: 0.5;
+  animation: tvt-noise 140ms steps(2) infinite;
+}
+.tvt--expand .tvt__glow,
+.tvt--label .tvt__glow {
+  opacity: 0.8;
+}
+.tvt--expand {
+  --push: 0.16;
+}
+
+.tvt--label {
+  --push: 0.34;
+}
+.tvt--label .tvt__cue,
+.tvt--navigate .tvt__cue {
+  opacity: 1;
+  transition: opacity 240ms ease 60ms;
+}
+
+/* navigate: the glass has to own the viewport before the route swaps. */
+.tvt--navigate {
+  --push: 1;
+}
+.tvt--navigate .tvt__glow {
+  opacity: 1;
+}
+
+.tvt--hold {
+  --push: 1;
+}
+.tvt--hold .tvt__feed {
+  opacity: 0;
+}
+.tvt--hold .tvt__screen {
+  background: #05070c;
+}
+
+/* collapse: the tube powers down and hands the page over. */
+.tvt--collapse {
+  --push: 1;
+  animation: tvt-out 520ms ease-in both;
+}
+
+@keyframes tvt-flick {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.06) scaleX(0.2);
+  }
+  40% {
+    opacity: 1;
+    transform: scaleY(0.06) scaleX(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(160) scaleX(1);
+  }
+}
+
+@keyframes tvt-noise {
+  50% {
+    background-position: 3px 2px, -2px 1px;
+  }
+}
+
+@keyframes tvt-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* No push, no static crawl — the cover still blacks the swap out so
+     the route change is not a raw flash, it just doesn't travel. */
+  .tvt__set {
+    transition: none;
+    transform: scale(4.2);
+  }
+  .tvt__flick,
+  .tvt__static {
+    animation: none;
+  }
+  .tvt--collapse {
+    animation-duration: 200ms;
+  }
 }

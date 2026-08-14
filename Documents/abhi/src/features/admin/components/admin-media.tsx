@@ -43,7 +43,7 @@ export function ImageReplace({
       <span className="admin-media__frame">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={src} alt="" className="admin-media__img" />
+          <img src={src} alt="" className="admin-media__img" decoding="async" loading="lazy" />
         ) : (
           <span className="admin-media__ph">Drop or click</span>
         )}

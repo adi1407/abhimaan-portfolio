@@ -4,6 +4,7 @@ import { SiteNav } from "@/components/layout/site-nav";
 import { NavMenu } from "@/components/layout/nav-menu";
 import { NavCursor } from "@/components/layout/nav-cursor";
 import { PageTransition } from "@/components/layout/page-transition";
+import { TvTransition } from "@/components/layout/tv-transition";
 
 /** Stable chrome while `useSearchParams` suspends — never blank the bar. */
 function NavShellFallback() {
@@ -36,6 +37,7 @@ export function SiteHeader() {
       </Suspense>
       <NavCursor />
       <PageTransition />
+      <TvTransition />
     </>
   );
 }

@@ -129,6 +129,7 @@ function FunCard({
           className="fun__card-img"
           draggable={false}
           loading="lazy"
+          decoding="async"
           onError={() => setFailed(true)}
         />
         <span className="fun__card-open" aria-hidden>

@@ -28,6 +28,8 @@ type TransitionState = {
   cue: string;
   accent: string;
   theme: NavTheme;
+  /** Target route, so a transition can be specific to where it's going. */
+  href: string;
   x: number;
   y: number;
   phase: TransitionPhase;
@@ -62,6 +64,7 @@ const IDLE: TransitionState = {
   cue: "",
   accent: "#2f6bff",
   theme: "home",
+  href: "",
   x: 0,
   y: 0,
   phase: "idle",
@@ -141,6 +144,7 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
         cue: navItem.cue || item.cue,
         accent: navItem.accent || item.accent,
         theme: navItem.theme || item.theme,
+        href: item.href,
         x,
         y,
         phase: "expand",

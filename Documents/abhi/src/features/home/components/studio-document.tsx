@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   HeroLayersPanel,
   LAYERS,
@@ -19,8 +19,8 @@ import { useHome } from "@/lib/cms/hooks";
  * own slice of the travel and fills across it, so the composite
  * assembles one layer at a time and un-assembles on the way back up.
  *
- * On ≤900px the pin is disabled (normal flow after Desk Scraps) and
- * the composite shows fully built — no sticky overlap, no tall scrub.
+ * On ≤900px the pin and scrub are kept — only the slice of travel
+ * per layer is shortened, so the build still reads on a phone.
  * ================================================================== */
 
 const EMPTY_HIDDEN = new Set<LayerId>();
@@ -38,9 +38,14 @@ export function StudioDocument() {
   const home = useHome<{
     studio?: { filename?: string; title?: string; layers?: StudioLayer[] };
   }>();
-  const layers: StudioLayer[] = home.studio?.layers?.length
-    ? home.studio.layers
-    : [...LAYERS];
+  /* Memoised: this array feeds the scroll effect's dependency list, and
+     a fresh one each render re-subscribed the shared frame loop on
+     every single render. */
+  const cmsLayers = home.studio?.layers;
+  const layers: StudioLayer[] = useMemo(
+    () => (cmsLayers?.length ? cmsLayers : [...LAYERS]),
+    [cmsLayers],
+  );
   const filename = home.studio?.filename || "abhimaan-2026.psd";
   const title =
     home.studio?.title || "The poster, composited layer by layer";
@@ -62,16 +67,11 @@ export function StudioDocument() {
   }, []);
 
   useEffect(() => {
-    if (mobileStudio) {
-      for (let i = 0; i < layers.length; i += 1) {
-        const el = layerRefs.current[i];
-        if (el) el.style.setProperty("--t", "1");
-      }
-      if (railRef.current) railRef.current.style.setProperty("--p", "1");
-      setBuilt(layers.length);
-      return;
-    }
-
+    /* The build runs at every width. Phones used to get the composite
+       pre-assembled, which meant the one thing this section exists to
+       show — layers arriving one at a time — never happened on the
+       device most people arrive on. Mobile keeps the scrub and just
+       uses a shorter slice of travel per layer (see the ≤900px CSS). */
     const section = sectionRef.current;
     if (!section) return;
 
@@ -106,7 +106,7 @@ export function StudioDocument() {
     });
   }, [mobileStudio, layers]);
 
-  const done = mobileStudio || built >= layers.length;
+  const done = built >= layers.length;
   const landing = layers[clamp(built, 0, layers.length - 1)];
 
   return (

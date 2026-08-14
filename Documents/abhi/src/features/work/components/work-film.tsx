@@ -811,7 +811,7 @@ export function WorkFilm({
                     ) : null}
                     <span className="quad__meta">
                       <span className="quad__count">
-                        {items.length} pieces
+                        {items.length} {items.length === 1 ? "piece" : "pieces"}
                       </span>
                       <span className="quad__go" aria-hidden>
                         Enter ↗

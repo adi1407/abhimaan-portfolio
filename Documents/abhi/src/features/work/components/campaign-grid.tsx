@@ -266,7 +266,7 @@ export function CampaignGrid({ campaign, onClose }: CampaignGridProps) {
       onClick={() => setLbIndex(i)}
       aria-label={`Open ${img.label}`}
     >
-      <img src={img.src} alt={img.label} loading="lazy" draggable={false} />
+      <img src={img.src} alt={img.label} loading="lazy" draggable={false} decoding="async" />
     </button>
   );
 
@@ -334,7 +334,7 @@ export function CampaignGrid({ campaign, onClose }: CampaignGridProps) {
             ‹
           </button>
           <figure className="cgrid-lb__figure">
-            <img src={lbItem.src} alt={lbItem.label} draggable={false} />
+            <img src={lbItem.src} alt={lbItem.label} draggable={false} decoding="async" loading="lazy" />
             <figcaption>
               {lbItem.label}
               <span>

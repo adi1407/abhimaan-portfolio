@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFlight } from "@/features/home/components/flight-context";
 import {
   PLANE_HITCH,
@@ -202,9 +202,25 @@ function cruisePose(
   return { cx, cy, roll: facing * tilt, scale: CRUISE_SCALE, facing };
 }
 
+/** Phones drop the plane entirely — see the note on `mobile` below. */
+const MOBILE_MQ = "(max-width: 900px)";
+
 export function PaperFlight() {
   const reduced = useReducedMotion();
   const flight = useFlight();
+
+  /* The flight is a desktop flourish. On a phone it crowds the content it
+     flies over, and the physics loop plus its listeners are pure cost on
+     the device least able to absorb them — so it is not rendered at all
+     rather than merely hidden with CSS. */
+  const [mobile, setMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(MOBILE_MQ);
+    const sync = () => setMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   const layerRef = useRef<HTMLDivElement>(null);
   const planeRef = useRef<HTMLDivElement>(null);
@@ -214,6 +230,7 @@ export function PaperFlight() {
   const pointer = useRef({ x: 0, y: 0, roll: 0 });
 
   useEffect(() => {
+    if (mobile) return;
     const layer = layerRef.current;
     const body = planeRef.current;
     if (!layer || !body) return;
@@ -530,7 +547,10 @@ export function PaperFlight() {
       }
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [flight, reduced]);
+  }, [flight, reduced, mobile]);
+
+  /* Nothing rendered on phones — no overlay node, no plane, no shards. */
+  if (mobile) return null;
 
   return (
     <div ref={layerRef} className="paper-flight" aria-hidden>

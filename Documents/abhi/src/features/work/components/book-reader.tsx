@@ -95,7 +95,7 @@ function PageFace({
   return (
     <div className={cn("book__page", `book__page--${side}`, className)}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt="" className="book__page-img" draggable={false} />
+      <img src={src} alt="" className="book__page-img" draggable={false} decoding="async" loading="lazy" />
     </div>
   );
 }
@@ -136,7 +136,7 @@ function CoverBlock({
         onTransitionEnd={onTransitionEnd}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" className="book__cover-img" draggable={false} />
+        <img src={src} alt="" className="book__cover-img" draggable={false} decoding="async" loading="lazy" />
         <span className="book__cover-shine" aria-hidden />
       </div>
       <span className="book__cover-spine" aria-hidden />

@@ -43,6 +43,10 @@ export function PageTransition() {
 
   const exitMeta = transition.phase === "collapse";
 
+  /* About has its own cover — the CRT push-in. Running the circle wipe
+     underneath it would double the transition and fight the push. */
+  if (transition.active && transition.href === "/about") return null;
+
   return (
     <div
       className={cn(

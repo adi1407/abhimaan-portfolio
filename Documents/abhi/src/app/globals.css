@@ -16619,3 +16619,87 @@ a.creators__card:hover .creators__avatar {
     animation: none;
   }
 }
+
+/* ==================================================================
+   Book — landscape only
+   Every page asset is already a full 3:2 spread, so a view is ONE
+   leaf, not two half-width pages. These rules re-frame the reader
+   around that: the stage is a single landscape plate, the gutter
+   becomes a binding on the left edge, and the closed cover shares the
+   same ratio so opening is a clean scale-up rather than a reshape.
+   ================================================================== */
+
+.book__book-tilt {
+  width: min(92vw, calc(56svh * 3 / 2));
+  aspect-ratio: 3 / 2;
+  max-height: min(58svh, 520px);
+}
+
+.book.is-opening .book__book-tilt,
+.book.is-ready .book__book-tilt,
+.book.is-closing-back .book__book-tilt,
+.book.is-opening-back .book__book-tilt {
+  width: min(94vw, calc(86svh * 3 / 2));
+  max-height: 86svh;
+  aspect-ratio: 3 / 2;
+}
+
+/* A leaf fills the whole plate. */
+.book__page {
+  width: 100%;
+  border-radius: 4px;
+}
+
+.book__page--left,
+.book__page--right {
+  left: 0;
+  right: 0;
+  border-radius: 4px;
+  /* Shading hugs the binding edge only. */
+  box-shadow:
+    inset 14px 0 26px -16px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* No centre gutter on a single leaf — the spine is the left binding. */
+.book__spine {
+  left: 0;
+  margin-left: 0;
+  width: 0.55rem;
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.5) 0%,
+    rgba(0, 0, 0, 0.22) 45%,
+    rgba(255, 255, 255, 0.06) 72%,
+    transparent 100%
+  );
+}
+
+/* The page block sits at the fore-edge, opposite the binding. */
+.book__stack {
+  right: -0.26rem;
+}
+
+/* Aspect now matches the artwork, so fill the plate edge to edge. */
+.book__page-img {
+  object-fit: cover;
+}
+
+.book__cover-img {
+  object-fit: cover;
+}
+
+@media (max-width: 720px) {
+  /* Portrait phones get the widest landscape plate that fits, rather
+     than a rotate-your-device gate — the reader works either way. */
+  .book__book-tilt,
+  .book.is-opening .book__book-tilt,
+  .book.is-ready .book__book-tilt,
+  .book.is-closing-back .book__book-tilt,
+  .book.is-opening-back .book__book-tilt {
+    width: min(96vw, calc(78svh * 3 / 2));
+    max-height: 78svh;
+    aspect-ratio: 3 / 2;
+  }
+}

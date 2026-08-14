@@ -12,8 +12,8 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import { useBook } from "@/lib/cms/hooks";
 import type { CmsBookPage } from "@/lib/cms/types";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
-type BookSpread = { left: CmsBookPage; right: CmsBookPage };
 
 type Phase =
   | "closed"
@@ -28,54 +28,16 @@ function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-function isPortraitViewport() {
-  return window.matchMedia("(orientation: portrait)").matches;
-}
-
-async function tryLockLandscape() {
-  try {
-    const orient = screen.orientation as ScreenOrientation & {
-      lock?: (orientation: string) => Promise<void>;
-    };
-    await orient.lock?.("landscape");
-  } catch {
-    /* iOS / unsupported — rotate gate handles UX */
-  }
-}
-
-function tryUnlockOrientation() {
-  try {
-    screen.orientation?.unlock?.();
-  } catch {
-    /* ignore */
-  }
-}
-
-function lockPageScroll() {
-  window.__lenis?.stop();
-  document.documentElement.style.overflow = "hidden";
-  document.body.style.overflow = "hidden";
-}
-
-function unlockPageScroll() {
-  document.documentElement.style.overflow = "";
-  document.body.style.overflow = "";
-  window.__lenis?.start();
-}
-
 function preloadAround(
-  spreads: BookSpread[],
+  leaves: CmsBookPage[],
   backSrc: string,
   index: number,
 ) {
   for (const offset of [-2, -1, 0, 1, 2]) {
     const i = index + offset;
-    if (i < 0 || i >= spreads.length) continue;
-    const spread = spreads[i];
-    const left = new Image();
-    left.src = spread.left.src;
-    const right = new Image();
-    right.src = spread.right.src;
+    if (i < 0 || i >= leaves.length) continue;
+    const img = new Image();
+    img.src = leaves[i].src;
   }
   if (backSrc) {
     const back = new Image();
@@ -101,16 +63,15 @@ function PageFace({
 }
 
 function SpreadPair({
-  spread,
+  page,
   className,
 }: {
-  spread: BookSpread;
+  page: CmsBookPage;
   className?: string;
 }) {
   return (
     <div className={cn("book__spread-pair", className)}>
-      <PageFace src={spread.left.src} side="left" />
-      <PageFace src={spread.right.src} side="right" />
+      <PageFace src={page.src} side="right" />
     </div>
   );
 }
@@ -155,8 +116,13 @@ function CoverBlock({
 
 export function BookReader({ onClose }: { onClose: () => void }) {
   const book = useBook();
-  const spreads = book?.spreads ?? [];
-  const lastSpread = Math.max(spreads.length - 1, 0);
+  /* Every asset is already a full landscape spread (3:2), so a view is
+     ONE leaf. Pairing them left/right — which `book.spreads` does —
+     put two spreads side by side and squashed both. The last page is
+     the back cover, so it is not a turnable leaf. */
+  const pages = book?.pages ?? [];
+  const leaves = pages.length > 1 ? pages.slice(0, -1) : pages;
+  const lastSpread = Math.max(leaves.length - 1, 0);
   const backSrc = book?.backCover?.src ?? "";
   const [phase, setPhase] = useState<Phase>(() =>
     typeof window !== "undefined" && prefersReducedMotion() ? "ready" : "closed",
@@ -165,9 +131,6 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   const [flip, setFlip] = useState<FlipDir>(null);
   const [flipArmed, setFlipArmed] = useState(false);
   const [portalReady] = useState(() => typeof document !== "undefined");
-  const [portrait, setPortrait] = useState(() =>
-    typeof window !== "undefined" ? isPortraitViewport() : false,
-  );
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const flipLock = useRef(false);
 
@@ -178,31 +141,18 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     phase === "opening-back";
   const ready = phase === "ready";
   const onBack = phase === "back";
-  const gated = portrait;
-  const current = spreads[index];
-  const nextSpread =
-    index < lastSpread ? spreads[index + 1] : null;
-  const prevSpread = index > 0 ? spreads[index - 1] : null;
-  const canPrev =
-    !gated && !busy && (onBack || (ready && index > 0));
+  const current = leaves[index];
+  const nextSpread = index < lastSpread ? leaves[index + 1] : null;
+  const prevSpread = index > 0 ? leaves[index - 1] : null;
+  const canPrev = !busy && (onBack || (ready && index > 0));
   const canNext =
-    !gated && !busy && ready && spreads.length > 0 && index <= lastSpread;
+    !busy && ready && leaves.length > 0 && index <= lastSpread;
 
   useEffect(() => {
     lockPageScroll();
-    void tryLockLandscape();
     return () => {
       unlockPageScroll();
-      tryUnlockOrientation();
     };
-  }, []);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(orientation: portrait)");
-    const sync = () => setPortrait(mq.matches);
-    sync();
-    mq.addEventListener("change", sync);
-    return () => mq.removeEventListener("change", sync);
   }, []);
 
   useEffect(() => {
@@ -219,7 +169,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   }, [phase]);
 
   useEffect(() => {
-    preloadAround(spreads, backSrc, index);
+    preloadAround(leaves, backSrc, index);
   }, [index]);
 
   const beginOpening = useCallback(() => {
@@ -307,24 +257,22 @@ export function BookReader({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
-      else if (gated) return;
       else if (e.key === "ArrowRight") goNext();
       else if (e.key === "ArrowLeft") goPrev();
       else if (e.key === "Enter" && phase === "closed") beginOpening();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose, goNext, goPrev, phase, beginOpening, gated]);
+  }, [onClose, goNext, goPrev, phase, beginOpening]);
 
   const onTouchStart = useCallback((e: TouchEvent) => {
-    if (gated) return;
+
     const t = e.changedTouches[0];
     touchRef.current = { x: t.clientX, y: t.clientY };
-  }, [gated]);
+  }, []);
 
   const onTouchEnd = useCallback(
     (e: TouchEvent) => {
-      if (gated) return;
       const start = touchRef.current;
       touchRef.current = null;
       if (!start) return;
@@ -335,7 +283,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
       if (dx < 0) goNext();
       else goPrev();
     },
-    [goNext, goPrev, gated],
+    [goNext, goPrev],
   );
 
   if (!portalReady || !book || !current) return null;
@@ -350,7 +298,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
     ? "Back"
     : showFrontCover
       ? "Cover"
-      : `${String(index + 1).padStart(2, "0")} / ${String(spreads.length).padStart(2, "0")}`;
+      : `${String(index + 1).padStart(2, "0")} / ${String(leaves.length).padStart(2, "0")}`;
 
   const hint = onBack
     ? "Prev to reopen"
@@ -360,12 +308,8 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         ? "Opening…"
         : "Opening…";
 
-  const leafBackSrc = closingToBack
-    ? backSrc
-    : nextSpread
-      ? nextSpread.left.src
-      : null;
-  const prevLeafBackSrc = prevSpread ? prevSpread.right.src : null;
+  const leafBackSrc = closingToBack ? backSrc : (nextSpread?.src ?? null);
+  const prevLeafBackSrc = prevSpread?.src ?? null;
 
   return createPortal(
     <div
@@ -378,7 +322,6 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         (onBack || phase === "opening-back") && "is-back",
         phase === "opening-back" && "is-opening-back",
         phase === "closed" && "is-closed",
-        gated && "is-portrait-gate",
       )}
       role="dialog"
       aria-modal="true"
@@ -393,24 +336,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         onClick={onClose}
       />
 
-      {gated ? (
-        <div className="book__rotate" role="status">
-          <span className="book__rotate-icon" aria-hidden />
-          <p className="book__rotate-title">Rotate to landscape</p>
-          <p className="book__rotate-copy">
-            The book opens fullest sideways. Turn your device to keep reading.
-          </p>
-          <button
-            type="button"
-            className="book__rotate-close"
-            onClick={onClose}
-          >
-            Close
-          </button>
-        </div>
-      ) : null}
-
-      <div className="book__shell" aria-hidden={gated || undefined}>
+      <div className="book__shell">
         <header
           className={cn("book__chrome", !chromeLive && "book__chrome--locked")}
         >
@@ -495,40 +421,25 @@ export function BookReader({ onClose }: { onClose: () => void }) {
               </span>
 
               {flip === "next" && nextSpread ? (
-                <SpreadPair
-                  spread={nextSpread}
-                  className="book__spread-under"
-                />
+                <SpreadPair page={nextSpread} className="book__spread-under" />
               ) : flip === "next" && closingToBack ? (
                 <div className="book__spread-under book__spread-under--close">
-                  <PageFace src={current.left.src} side="left" />
                   <div className="book__page book__page--right book__page--void" />
                 </div>
               ) : flip === "prev" && prevSpread ? (
-                <SpreadPair
-                  spread={prevSpread}
-                  className="book__spread-under"
-                />
+                <SpreadPair page={prevSpread} className="book__spread-under" />
               ) : null}
 
-              {flip === "next" ? (
+              {current ? (
                 <PageFace
-                  src={current.left.src}
-                  side="left"
-                  className="book__pane book__pane--left"
-                />
-              ) : flip === "prev" ? (
-                <PageFace
-                  src={current.right.src}
+                  src={current.src}
                   side="right"
-                  className="book__pane book__pane--right"
+                  className={cn(
+                    flip === "next" && "book__pane book__pane--left",
+                    flip === "prev" && "book__pane book__pane--right",
+                  )}
                 />
-              ) : (
-                <>
-                  <PageFace src={current.left.src} side="left" />
-                  <PageFace src={current.right.src} side="right" />
-                </>
-              )}
+              ) : null}
 
               {flip === "next" && leafBackSrc ? (
                 <div
@@ -540,7 +451,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   onTransitionEnd={onLeafTransitionEnd}
                 >
                   <div className="book__face book__face--front">
-                    <PageFace src={current.right.src} side="right" />
+                    <PageFace src={current.src} side="right" />
                     <span className="book__shade book__shade--next" aria-hidden />
                   </div>
                   <div className="book__face book__face--back">
@@ -560,7 +471,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
                   onTransitionEnd={onLeafTransitionEnd}
                 >
                   <div className="book__face book__face--front">
-                    <PageFace src={current.left.src} side="left" />
+                    <PageFace src={current.src} side="left" />
                     <span className="book__shade book__shade--prev" aria-hidden />
                   </div>
                   <div className="book__face book__face--back">

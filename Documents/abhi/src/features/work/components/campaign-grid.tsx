@@ -9,6 +9,7 @@ import {
 } from "react";
 import { cn } from "@/lib/cn";
 import type { Campaign, CampaignImage } from "@/lib/campaigns";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
 type CampaignGridProps = {
   campaign: Campaign;
@@ -22,18 +23,6 @@ type GsapBundle = {
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function lockPageScroll() {
-  window.__lenis?.stop();
-  document.documentElement.style.overflow = "hidden";
-  document.body.style.overflow = "hidden";
-}
-
-function unlockPageScroll() {
-  document.documentElement.style.overflow = "";
-  document.body.style.overflow = "";
-  window.__lenis?.start();
 }
 
 /**

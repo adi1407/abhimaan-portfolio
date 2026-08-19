@@ -10,6 +10,11 @@
  *
  * Counting the holders fixes both: scrolling is restored exactly when
  * the last overlay lets go, and never before.
+ *
+ * While Lenis is stopped it preventDefaults every wheel/touch unless the
+ * event target sits inside an element marked `data-lenis-prevent` (or the
+ * horizontal/touch/wheel variants). Put that attribute on any overlay
+ * scrollport — campaign grid, thumb strip, etc.
  * ================================================================== */
 
 let holders = 0;

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Lenis from "lenis";
 import { usePathname } from "next/navigation";
+import { forceReleaseScroll } from "@/lib/scroll-lock";
 
 declare global {
   interface Window {
@@ -52,6 +53,7 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
 
   // Route changes should land at the top instantly, not glide there.
   useEffect(() => {
+    forceReleaseScroll();
     window.__lenis?.scrollTo(0, { immediate: true });
   }, [pathname]);
 

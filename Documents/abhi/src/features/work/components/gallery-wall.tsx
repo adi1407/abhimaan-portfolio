@@ -16,6 +16,7 @@ import { BookReader } from "@/features/work/components/book-reader";
 import { useBook, useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
 import { useCms } from "@/lib/cms/provider";
 import type { CmsWorkItem } from "@/lib/cms/types";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
 type Filter = "all" | WorkCategoryId;
 
@@ -272,10 +273,10 @@ export function GalleryWall({
       else if (e.key === "ArrowRight") step(1);
       else if (e.key === "ArrowLeft") step(-1);
     };
-    document.body.style.overflow = "hidden";
+    lockPageScroll();
     window.addEventListener("keydown", onKey);
     return () => {
-      document.body.style.overflow = "";
+      unlockPageScroll();
       window.removeEventListener("keydown", onKey);
     };
   }, [lightbox, isThumbs, isBooks, close, step]);

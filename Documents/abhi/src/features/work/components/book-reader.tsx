@@ -323,6 +323,7 @@ export function BookReader({ onClose }: { onClose: () => void }) {
         phase === "opening-back" && "is-opening-back",
         phase === "closed" && "is-closed",
       )}
+      data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-label={book?.title ?? "Book"}

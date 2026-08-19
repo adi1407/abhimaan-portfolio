@@ -263,6 +263,7 @@ export function CampaignGrid({ campaign, onClose }: CampaignGridProps) {
     <div
       ref={rootRef}
       className="cgrid"
+      data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-label={`${campaign.title} campaign board`}

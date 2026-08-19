@@ -9,6 +9,7 @@ import {
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/cn";
 import type { WorkItem } from "@/lib/work";
+import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
 
 type ThumbCinemaProps = {
   items: readonly WorkItem[];
@@ -24,18 +25,6 @@ type GsapBundle = {
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function lockPageScroll() {
-  window.__lenis?.stop();
-  document.documentElement.style.overflow = "hidden";
-  document.body.style.overflow = "hidden";
-}
-
-function unlockPageScroll() {
-  document.documentElement.style.overflow = "";
-  document.body.style.overflow = "";
-  window.__lenis?.start();
 }
 
 function waitForImage(img: HTMLImageElement, src: string): Promise<void> {
@@ -376,6 +365,7 @@ export function ThumbCinema({
     <div
       ref={rootRef}
       className="tcinema"
+      data-lenis-prevent
       role="dialog"
       aria-modal="true"
       aria-label={item.title}
@@ -419,7 +409,12 @@ export function ThumbCinema({
           </div>
         </div>
 
-        <div ref={stripRef} className="tcinema__strip" aria-label="All cuts">
+        <div
+          ref={stripRef}
+          className="tcinema__strip"
+          data-lenis-prevent-horizontal
+          aria-label="All cuts"
+        >
           {items.map((thumb, i) => (
             <button
               key={thumb.id}

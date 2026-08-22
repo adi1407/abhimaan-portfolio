@@ -1,18 +1,16 @@
 "use client";
 
+import type { MouseEvent } from "react";
+import { FlowingMenu } from "@/components/motion/flowing-menu";
+import {
+  FLOWING_MENU_NAV,
+  NAV_FLOW_IMAGES,
+} from "@/components/motion/flowing-menu-presets";
 import { cn } from "@/lib/cn";
 import { NAV_ITEMS } from "@/lib/nav";
 import { useNav } from "@/components/layout/nav-provider";
 import { usePathname, useSearchParams } from "next/navigation";
 import { getNavItemByHref } from "@/lib/nav";
-
-const PREVIEWS: Record<string, string> = {
-  "/": "Index",
-  "/about": "Portrait",
-  "/work": "Selected",
-  "/works": "Roles",
-  "/contact": "→",
-};
 
 export function NavMenu() {
   const pathname = usePathname();
@@ -21,7 +19,6 @@ export function NavMenu() {
     menuOpen,
     setMenuOpen,
     navigateWithTransition,
-    setCursorExpanded,
     transition,
   } = useNav();
   const locationKey =
@@ -30,6 +27,20 @@ export function NavMenu() {
       : pathname;
   const activeHref = getNavItemByHref(locationKey).href;
   const busy = transition.active;
+
+  const flowingItems = NAV_ITEMS.map((item) => ({
+    text: item.label,
+    image: NAV_FLOW_IMAGES[item.href] ?? NAV_FLOW_IMAGES["/"],
+    disabled: busy,
+    onClick: (e: MouseEvent<HTMLButtonElement>) => {
+      if (busy) return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      navigateWithTransition(item, {
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+      });
+    },
+  }));
 
   return (
     <div
@@ -54,42 +65,19 @@ export function NavMenu() {
         </button>
       </header>
 
-      <nav aria-label="Mobile primary" className="nav-menu__list">
-        {NAV_ITEMS.map((item, i) => {
-          const active = item.href === activeHref;
-
-          return (
-            <button
-              key={item.href}
-              type="button"
-              className={cn(
-                "nav-menu__row",
-                active && "is-active",
-              )}
-              style={{ ["--i" as string]: i }}
-              aria-current={active ? "page" : undefined}
-              disabled={busy}
-              onMouseEnter={() => setCursorExpanded(true)}
-              onMouseLeave={() => setCursorExpanded(false)}
-              onClick={(e) => {
-                if (busy) return;
-                const rect = e.currentTarget.getBoundingClientRect();
-                navigateWithTransition(item, {
-                  x: rect.left + rect.width / 2,
-                  y: rect.top + rect.height / 2,
-                });
-              }}
-            >
-              <span className="nav-menu__index">{item.index}</span>
-              <span className="nav-menu__label">{item.label}</span>
-              <span className="nav-menu__preview">{PREVIEWS[item.href]}</span>
-            </button>
-          );
-        })}
-      </nav>
+      <div className="nav-menu__flow">
+        <FlowingMenu
+          className="nav-menu__flowing"
+          items={flowingItems}
+          {...FLOWING_MENU_NAV}
+        />
+      </div>
 
       <footer className="nav-menu__foot">
-        <p className="nav-menu__foot-note">Selected work · Briefs · Studio</p>
+        <p className="nav-menu__foot-note">
+          {NAV_ITEMS.find((item) => item.href === activeHref)?.cue ??
+            "Selected work · Briefs · Studio"}
+        </p>
       </footer>
     </div>
   );

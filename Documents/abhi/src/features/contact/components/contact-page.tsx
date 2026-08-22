@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { BorderGlow } from "@/components/motion/border-glow";
+import { BORDER_GLOW_LIGHT } from "@/components/motion/border-glow-presets";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import {
   InquiryForm,
@@ -32,11 +34,20 @@ export function ContactPage() {
   const lines = copy.lines?.length ? copy.lines : [...LINES];
   const [copied, setCopied] = useState(false);
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
+  const [reducedMotion, setReducedMotion] = useState(false);
   const mailRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_MQ);
     const sync = () => setIsMobile(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(mq.matches);
     sync();
     mq.addEventListener("change", sync);
     return () => mq.removeEventListener("change", sync);
@@ -77,7 +88,12 @@ export function ContactPage() {
       aria-labelledby="contact-page-heading"
     >
       <div className="contact-page__shell">
-        <div className="contact-page__board">
+        <BorderGlow
+          className="contact-page__board"
+          variant="portfolio-light"
+          animated={!reducedMotion}
+          {...BORDER_GLOW_LIGHT}
+        >
           <p className="contact-page__eyebrow">{copy.eyebrow || "Brief request"}</p>
 
           <h1 id="contact-page-heading" className="contact-page__title">
@@ -148,7 +164,7 @@ export function ContactPage() {
           </p>
 
           <InquiryForm mobile={mobile} />
-        </div>
+        </BorderGlow>
       </div>
     </section>
   );

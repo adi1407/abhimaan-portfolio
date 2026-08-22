@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
+import { BorderGlow } from "@/components/motion/border-glow";
+import { BORDER_GLOW_DARK } from "@/components/motion/border-glow-presets";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import { ROUTES, SITE } from "@/lib/constants";
 import { useHome, useSettings } from "@/lib/cms/hooks";
@@ -30,6 +32,15 @@ export function ContactCta() {
   const note =
     home.cta?.note || "Currently taking on selected projects";
   const [time, setTime] = useState("");
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const sync = () => setReducedMotion(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
 
   useEffect(() => {
     const tick = () => {
@@ -51,6 +62,12 @@ export function ContactCta() {
   return (
     <section className="contact" aria-labelledby="contact-heading">
       <Container>
+        <BorderGlow
+          className="contact__panel"
+          variant="portfolio-dark"
+          animated={!reducedMotion}
+          {...BORDER_GLOW_DARK}
+        >
         <div className="contact__head">
           <p className="contact__eyebrow">03 — Contact</p>
           <p className="contact__clock">
@@ -94,6 +111,7 @@ export function ContactCta() {
           direction. {settings.name || SITE.name} replies within two working
           days.
         </p>
+        </BorderGlow>
       </Container>
     </section>
   );

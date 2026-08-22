@@ -1,0 +1,142 @@
+.flowing-menu {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.flowing-menu__nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.flowing-menu__item {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  text-align: center;
+  border-top: 1px solid;
+}
+
+.flowing-menu__item:first-child {
+  border-top: none;
+}
+
+.flowing-menu__link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  cursor: pointer;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 4vh, 2.75rem);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.flowing-menu__link:hover {
+  color: inherit;
+}
+
+.flowing-menu__link:focus:not(:focus-visible) {
+  color: inherit;
+}
+
+.flowing-menu__link:focus-visible {
+  outline: 2px solid rgba(37, 99, 255, 0.65);
+  outline-offset: -4px;
+}
+
+.flowing-menu__link:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
+.flowing-menu__marquee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: translate3d(0, 101%, 0);
+}
+
+.flowing-menu__marquee-wrap {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.flowing-menu__marquee-inner {
+  display: flex;
+  align-items: center;
+  position: relative;
+  height: 100%;
+  width: fit-content;
+  will-change: transform;
+}
+
+.flowing-menu__part {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.flowing-menu__part span {
+  white-space: nowrap;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: clamp(1.35rem, 4vh, 2.75rem);
+  line-height: 1;
+  padding: 0 1vw;
+}
+
+.flowing-menu__img {
+  width: clamp(120px, 14vw, 200px);
+  height: clamp(2.5rem, 7vh, 3.5rem);
+  margin: 1.5em 2vw;
+  padding: 0;
+  border-radius: 50px;
+  background-size: cover;
+  background-position: 50% 50%;
+}
+
+/* Compact variant — Behance category column */
+.flowing-menu--compact .flowing-menu__link {
+  font-size: clamp(0.72rem, 2.2vh, 0.95rem);
+  letter-spacing: 0.18em;
+}
+
+.flowing-menu--compact .flowing-menu__part span {
+  font-size: clamp(0.72rem, 2.2vh, 0.95rem);
+  letter-spacing: 0.18em;
+  font-weight: 600;
+}
+
+.flowing-menu--compact .flowing-menu__img {
+  width: clamp(72px, 10vw, 120px);
+  height: clamp(1.5rem, 4vh, 2rem);
+  margin: 1em 1.25vw;
+}
+
+.flowing-menu--compact .flowing-menu__item {
+  min-height: 3.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flowing-menu__marquee {
+    transition: transform 0.2s ease-out;
+  }
+}

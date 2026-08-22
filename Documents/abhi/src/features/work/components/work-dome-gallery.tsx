@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Container } from "@/components/layout/container";
+import { BorderGlow } from "@/components/motion/border-glow";
+import { BORDER_GLOW_BOOK } from "@/components/motion/border-glow-presets";
 import { BookReader } from "@/features/work/components/book-reader";
 import type { DomeGalleryImage } from "@/features/work/components/dome-gallery";
 import { useBook, useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
@@ -224,17 +226,22 @@ export function WorkDomeGallery({
               onClick={() => setBookOpen(true)}
               aria-label={`${book?.title ?? "Book"} — open book reader`}
             >
-              <span className="wall-books__media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={book?.cover ?? featured.src}
-                  alt=""
-                  className="wall-books__img"
-                  decoding="async"
-                  loading="lazy"
-                />
-                <span className="wall-books__open">Open book ↗</span>
-              </span>
+              <BorderGlow
+                className="wall-books__glow"
+                {...BORDER_GLOW_BOOK}
+              >
+                <span className="wall-books__media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={book?.cover ?? featured.src}
+                    alt=""
+                    className="wall-books__img"
+                    decoding="async"
+                    loading="lazy"
+                  />
+                  <span className="wall-books__open">Open book ↗</span>
+                </span>
+              </BorderGlow>
               <span className="wall-books__meta">
                 <span className="wall-books__kicker">{book?.subtitle}</span>
                 <span className="wall-books__title">{book?.title}</span>

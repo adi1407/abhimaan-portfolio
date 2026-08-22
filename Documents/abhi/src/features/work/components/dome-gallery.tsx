@@ -8,6 +8,7 @@ import {
   type CSSProperties,
 } from "react";
 import { useGesture } from "@use-gesture/react";
+import { cn } from "@/lib/cn";
 import "./dome-gallery.css";
 
 export type DomeGalleryImage = {
@@ -33,6 +34,8 @@ type DomeGalleryProps = {
   imageBorderRadius?: string;
   openedImageBorderRadius?: string;
   grayscale?: boolean;
+  /** When set, tile taps delegate to the parent instead of built-in enlarge. */
+  onImageOpen?: (image: DomeGalleryImage) => void;
 };
 
 const DEFAULTS = {
@@ -149,6 +152,7 @@ export function DomeGallery({
   imageBorderRadius = "6px",
   openedImageBorderRadius = "8px",
   grayscale = false,
+  onImageOpen,
 }: DomeGalleryProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const mainRef = useRef<HTMLElement>(null);
@@ -638,15 +642,30 @@ export function DomeGallery({
     ],
   );
 
+  const onTileActivate = useCallback(
+    (el: HTMLElement) => {
+      if (onImageOpen) {
+        const parent = el.parentElement;
+        const src =
+          parent?.dataset.src || el.querySelector("img")?.src || "";
+        const alt = el.getAttribute("aria-label") ?? "";
+        if (src) onImageOpen({ src, alt });
+        return;
+      }
+      openItemFromElement(el);
+    },
+    [onImageOpen, openItemFromElement],
+  );
+
   const onTileClick = useCallback(
     (e: React.MouseEvent<HTMLElement>) => {
       if (draggingRef.current) return;
       if (movedRef.current) return;
       if (performance.now() - lastDragEndAt.current < 80) return;
       if (openingRef.current) return;
-      openItemFromElement(e.currentTarget);
+      onTileActivate(e.currentTarget);
     },
-    [openItemFromElement],
+    [onTileActivate],
   );
 
   const onTilePointerUp = useCallback(
@@ -656,9 +675,9 @@ export function DomeGallery({
       if (movedRef.current) return;
       if (performance.now() - lastDragEndAt.current < 80) return;
       if (openingRef.current) return;
-      openItemFromElement(e.currentTarget);
+      onTileActivate(e.currentTarget);
     },
-    [openItemFromElement],
+    [onTileActivate],
   );
 
   useEffect(() => {
@@ -678,7 +697,11 @@ export function DomeGallery({
   } as CSSProperties;
 
   return (
-    <div ref={rootRef} className="sphere-root" style={rootStyle}>
+    <div
+      ref={rootRef}
+      className={cn("sphere-root", onImageOpen && "sphere-root--external")}
+      style={rootStyle}
+    >
       <main ref={mainRef} className="sphere-main">
         <div className="stage">
           <div ref={sphereRef} className="sphere">
@@ -729,10 +752,12 @@ export function DomeGallery({
         <div className="edge-fade edge-fade--top" />
         <div className="edge-fade edge-fade--bottom" />
 
-        <div className="viewer" ref={viewerRef}>
-          <div ref={scrimRef} className="scrim" />
-          <div ref={frameRef} className="frame" />
-        </div>
+        {!onImageOpen ? (
+          <div className="viewer" ref={viewerRef}>
+            <div ref={scrimRef} className="scrim" />
+            <div ref={frameRef} className="frame" />
+          </div>
+        ) : null}
       </main>
     </div>
   );

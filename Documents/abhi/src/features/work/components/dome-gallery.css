@@ -229,3 +229,7 @@ html.dg-scroll-lock,
 body.dg-scroll-lock {
   overflow: hidden;
 }
+
+.sphere-root--external .viewer {
+  display: none;
+}

@@ -2,7 +2,6 @@ import dynamic from "next/dynamic";
 import {
   CreatorsStrip,
   HomeHero,
-  LetterCraft,
   PaperFlight,
 } from "@/features/home";
 
@@ -35,7 +34,6 @@ export default function HomePage() {
   return (
     <main className="home-page flex flex-1 flex-col">
       <HomeHero />
-      <LetterCraft />
       <CreatorsStrip />
       <ProcessPoster />
       <FunPlayground />

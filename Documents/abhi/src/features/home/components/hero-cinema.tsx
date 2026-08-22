@@ -80,7 +80,7 @@ export function HeroCinema() {
     return () => window.clearInterval(id);
   }, [terms.length]);
 
-  /* Exit glow — intensifies as the hero scrolls out toward letter craft. */
+  /* Exit glow — intensifies as the hero scrolls out. */
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;

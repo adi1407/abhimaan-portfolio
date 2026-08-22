@@ -97,7 +97,6 @@ export function AdminPages() {
   const manifesto = (body.manifesto ?? {}) as Record<string, unknown>;
   const hero = (body.hero ?? {}) as Record<string, unknown>;
   const cta = (body.cta ?? {}) as Record<string, unknown>;
-  const letterCraft = (body.letterCraft ?? {}) as Record<string, unknown>;
   const scraps = (body.scraps ?? {}) as Record<string, unknown>;
   const studio = (body.studio ?? {}) as Record<string, unknown>;
   const creators = (body.creators ?? {}) as Record<string, unknown>;
@@ -198,17 +197,6 @@ export function AdminPages() {
             label="Hero CTA — contact"
             value={str(hero.ctaContact)}
             onChange={(v) => setPath(["hero", "ctaContact"], v)}
-          />
-          <Field
-            label="Letter craft title"
-            value={str(letterCraft.title)}
-            onChange={(v) => setPath(["letterCraft", "title"], v)}
-          />
-          <Field
-            label="Letter craft lede"
-            value={str(letterCraft.lede)}
-            onChange={(v) => setPath(["letterCraft", "lede"], v)}
-            area
           />
           <Field
             label="CTA verbs (one per line)"

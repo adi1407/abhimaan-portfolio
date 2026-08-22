@@ -5,9 +5,9 @@ import { useId } from "react";
 /* ================================================================== *
  * Paper plane — shared silhouette
  *
- * One folded dart drawn as flat polygons so the hero carrier and any
- * other glider are unmistakably the same object at any size. Purely
- * presentational: no state, no effects, tones come from CSS vars.
+ * One folded dart drawn as flat polygons so the page glider is the
+ * same object at any size. Purely presentational: no state, no effects,
+ * tones come from CSS vars.
  *
  * Built as a proper multi-fold dart rather than a four-facet blank: a
  * spine ridge that catches the light, two wing facets on a gradient
@@ -19,23 +19,6 @@ import { useId } from "react";
  * ================================================================== */
 
 export const PLANE_VIEWBOX = { w: 120, h: 84 } as const;
-
-/**
- * Where the tail fold's hinge sits, as a fraction of the viewBox — the
- * vertex the tail-tip crease and highlight share. Exposed so the flight
- * layer can target this exact point when something arrives at the tail
- * (the origin-shard flourish lands here, not at a guessed coordinate).
- */
-export const PLANE_TAIL = { x: 24 / 120, y: 24 / 84 } as const;
-
-/**
- * Point on the dart's underbelly, as a fraction of the viewBox — where the
- * lanyard hitches. Sits on the lower edge (not the far tail, which the hero
- * fades out over the headline) so the strap visibly leaves the plane. Kept
- * here so carriers resolve it from their own transform instead of measuring
- * the DOM every frame.
- */
-export const PLANE_HITCH = { x: 54 / 120, y: 56 / 84 } as const;
 
 type PaperPlaneProps = {
   className?: string;

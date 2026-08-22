@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { HeroCargo } from "@/features/home/components/hero-cargo";
 import { HeroWordmark } from "@/features/home/components/hero-wordmark";
 import { useReducedMotion } from "@/hooks/use-reduced-motion";
 import { ROUTES, SITE } from "@/lib/constants";
@@ -13,8 +12,8 @@ import { cn } from "@/lib/cn";
  * Cinema hero
  *
  * A tilted wall of work scrolls behind the name. The wordmark uses a
- * magnetic spotlight hover. On the right, the paper plane holds the
- * lanyard ID card (same flight system as before) over this background.
+ * magnetic spotlight hover. A paper plane glides over the page on its
+ * own — no ID card hitch.
  * ================================================================== */
 
 const TERMS = [
@@ -185,11 +184,6 @@ export function HeroCinema() {
       <span className="ch__exit-glow" aria-hidden />
       <span className="ch__exit-beam" aria-hidden />
       <span className="ch__grain" aria-hidden />
-
-      {/* Plane-hitched ID card — hangs in the right gutter */}
-      <div className="ch__cargo">
-        <HeroCargo />
-      </div>
 
       <div className="ch__inner">
         <p className="ch__eyebrow">

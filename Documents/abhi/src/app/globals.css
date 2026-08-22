@@ -12144,44 +12144,15 @@ a.creators__card:hover .creators__avatar {
 
 /* --- Type --- */
 
-/* ID card + plane hitch stage — right side over the cinema wall */
-.ch__cargo {
-  position: absolute;
-  inset: 0;
-  z-index: 5;
-  pointer-events: none;
-}
-
-.ch__cargo .lanyard {
-  z-index: 5;
-}
-
-.ch__cargo .lanyard__flip {
-  pointer-events: auto;
-}
-
 .ch__inner {
   position: relative;
   z-index: 3;
   width: min(100% - 3rem, 1240px);
   margin-inline: auto;
-  /* Keep copy clear of the hanging credential on desktop. */
-  padding-right: min(34vw, 17rem);
   filter: brightness(calc(1 + var(--exit) * 0.18))
     saturate(calc(1 + var(--exit) * 0.12));
   transform: translate3d(0, calc(var(--exit) * -12px), 0)
     scale(calc(1 - var(--exit) * 0.02));
-}
-
-@media (max-width: 899px) {
-  .ch__inner {
-    padding-right: 0;
-  }
-
-  /* ID card is off on phones — plane flies alone. */
-  .ch__cargo {
-    display: none;
-  }
 }
 
 .ch__eyebrow {
@@ -14468,49 +14439,23 @@ a.creators__card:hover .creators__avatar {
   transform-origin: 50% 50%;
   will-change: transform, opacity;
   filter: drop-shadow(0 18px 30px rgba(11, 31, 77, 0.14));
-}
-
-/* The origin shard — a torn corner of the card's own paper stock, thrown to
-   the plane's tail the instant it lets go. Card-matching tones so the
-   material reads as continuous between the two objects, not a random spark. */
-.pp-shard {
-  position: absolute;
-  width: 15px;
-  height: 15px;
-  margin: -7px 0 0 -7px;
-  background: linear-gradient(155deg, #f7f5ee 0%, #efece1 100%);
-  box-shadow: 0 4px 10px -2px rgba(11, 31, 77, 0.35);
-  clip-path: polygon(6% 0%, 100% 12%, 82% 100%, 0% 78%);
-  pointer-events: none;
-}
-
-/* Zero-size probe: gives the cargo its stage offset without extra paint */
-.hero-cargo-mark {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
+  transition: filter 400ms ease;
 }
 
 @media (max-width: 900px) {
-  /* The plane is a desktop flourish; PaperFlight also returns null at
-     this width so no physics run. This rule covers first paint, before
-     the media-query state has synced — without it the plane would flash
-     in and vanish on a phone. */
-  .paper-flight {
-    display: none;
+  .paper-flight__body {
+    width: clamp(7.25rem, 28vw, 9.5rem);
+    filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
+  }
+
+  .home-page .paper-flight__body {
+    filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.4));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .paper-flight__body {
     filter: none;
-  }
-
-  /* Belt and suspenders: JS never spawns one under reduced motion, but if a
-     shard is ever mid-flight when the preference changes, don't leave it
-     hanging mid-air. */
-  .pp-shard {
-    display: none;
   }
 }
 

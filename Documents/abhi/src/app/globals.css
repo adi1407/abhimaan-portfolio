@@ -6943,7 +6943,7 @@ a.creators__card:hover .creators__avatar {
    ================================================================== */
 
 /* ==================================================================
-   Contact — Floating Tools Hero (dark pasteboard + glass artboard)
+   Contact — centered board + form particle drift
    ================================================================== */
 
 .contact-page {
@@ -6951,57 +6951,26 @@ a.creators__card:hover .creators__avatar {
   --contact-spark: #2563ff;
   --contact-cream: #f7f4ec;
   position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(20rem, 0.95fr);
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  align-items: stretch;
+  align-items: center;
   min-height: 100svh;
-  padding: 0;
+  padding:
+    calc(var(--nav-h) + clamp(1.25rem, 3vw, 2rem))
+    clamp(0.85rem, 3vw, 2rem)
+    calc(1.5rem + env(safe-area-inset-bottom, 0));
   background:
-    radial-gradient(70% 55% at 22% 40%, rgba(37, 99, 255, 0.16) 0%, transparent 55%),
-    radial-gradient(50% 40% at 70% 80%, rgba(11, 31, 77, 0.55) 0%, transparent 60%),
-    linear-gradient(160deg, #12161f 0%, #1a2233 42%, #0d121c 100%);
-  color: var(--contact-ink);
-  overflow: clip;
+    radial-gradient(72% 58% at 18% 22%, rgba(37, 99, 255, 0.2) 0%, transparent 58%),
+    radial-gradient(55% 45% at 88% 78%, rgba(11, 31, 77, 0.45) 0%, transparent 62%),
+    linear-gradient(165deg, #0e1420 0%, #151c2b 46%, #0a0f18 100%);
+  color: var(--contact-cream);
+  overflow-x: clip;
 }
 
-.contact-page__stage {
-  position: sticky;
-  top: 0;
-  z-index: 0;
-  height: 100svh;
-  min-height: 100svh;
-  pointer-events: auto;
-}
-
-.contact-page__stage-tag {
-  position: absolute;
-  left: 1.25rem;
-  bottom: 1.25rem;
-  margin: 0;
-  z-index: 1;
-  font-family: var(--font-sf-pro);
-  font-size: 0.65rem;
-  font-weight: 500;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: rgba(247, 244, 236, 0.42);
-  pointer-events: none;
-}
-
-.contact-scene {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-}
-
-.contact-scene canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
+.contact-page__shell {
+  width: min(100%, 44rem);
+  margin: 0 auto;
 }
 
 .contact-page__board {
@@ -7012,37 +6981,21 @@ a.creators__card:hover .creators__avatar {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  min-height: 100svh;
   min-width: 0;
-  margin: calc(var(--nav-h) + 1rem) 1rem 1.25rem 0;
   padding: var(--board-pad-y) var(--board-pad-x)
     clamp(1.75rem, 4vw, 2.75rem);
   border: 1px solid rgba(247, 244, 236, 0.14);
+  border-radius: 1.25rem;
   background:
-    linear-gradient(165deg, rgba(247, 244, 236, 0.94) 0%, rgba(255, 255, 255, 0.9) 100%);
+    linear-gradient(165deg, rgba(247, 244, 236, 0.96) 0%, rgba(255, 255, 255, 0.92) 100%);
   box-shadow:
     0 28px 80px -28px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(11, 31, 77, 0.06) inset;
   backdrop-filter: blur(18px) saturate(1.15);
   -webkit-backdrop-filter: blur(18px) saturate(1.15);
   color: var(--contact-ink);
-  overflow: auto;
+  overflow: visible;
   box-sizing: border-box;
-}
-
-.contact-page__board-chrome {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin: -0.35rem 0 1.15rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid color-mix(in srgb, var(--contact-ink) 12%, transparent);
-  font-family: var(--font-sf-pro);
-  font-size: 0.62rem;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: color-mix(in srgb, var(--contact-ink) 48%, transparent);
 }
 
 .contact-page__eyebrow {
@@ -7232,41 +7185,23 @@ a.creators__card:hover .creators__avatar {
 @media (max-width: 900px) {
   .contact-page,
   .contact-page.contact-page--mobile {
-    display: block;
-    grid-template-columns: none;
-    grid-template-rows: none;
-    min-height: 100svh;
-    overflow-x: clip;
     padding:
-      calc(var(--nav-h) + 1rem)
-      0
+      calc(var(--nav-h) + 0.85rem)
+      0.75rem
       calc(1.25rem + env(safe-area-inset-bottom, 0));
     background:
       radial-gradient(90% 50% at 50% -10%, rgba(37, 99, 255, 0.22) 0%, transparent 55%),
       linear-gradient(165deg, #0e1420 0%, #151c2b 48%, #0b1018 100%);
   }
 
-  .contact-page__stage {
-    display: none;
+  .contact-page__shell {
+    width: 100%;
   }
 
   .contact-page__board {
     --board-pad-x: 1.15rem;
     --board-pad-y: 1.5rem;
-    margin: 0 0.85rem calc(1rem + env(safe-area-inset-bottom, 0));
-    min-height: 0;
-    max-width: none;
-    width: auto;
     border-radius: 1.15rem;
-    box-sizing: border-box;
-  }
-
-  .contact-page__board-chrome {
-    display: none;
-  }
-
-  .contact-page__stage-tag {
-    display: none;
   }
 
   .contact-page__title {
@@ -7302,7 +7237,6 @@ a.creators__card:hover .creators__avatar {
 @media (max-width: 640px) {
   .contact-page__board {
     --board-pad-x: 0.9rem;
-    margin-inline: 0.55rem;
   }
 
   .contact-page__title {
@@ -8343,7 +8277,7 @@ a.creators__card:hover .creators__avatar {
   }
 
   .contact-page__board {
-    margin-bottom: calc(1rem + env(safe-area-inset-bottom, 0));
+    margin-bottom: 0;
   }
 
   .contact-page__mail,
@@ -15660,13 +15594,35 @@ a.creators__card:hover .creators__avatar {
    line, a rubber stamp on success.
    ================================================================== */
 
+.ticket-wrap {
+  position: relative;
+  width: 100%;
+  margin: clamp(2rem, 6vw, 3.5rem) 0 0;
+  isolation: isolate;
+}
+
+.form-particles {
+  position: absolute;
+  inset: -18% -8% -6% -8%;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.form-particles__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .ticket {
   --tk-ink: #14181f;
   --tk-rule: rgba(20, 24, 31, 0.16);
   --tk-mute: rgba(20, 24, 31, 0.5);
   position: relative;
-  width: min(100%, 44rem);
-  margin: clamp(2rem, 6vw, 3.5rem) 0 0;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
   padding: clamp(1.1rem, 3vw, 1.6rem);
   background:
     repeating-linear-gradient(
@@ -16027,6 +15983,10 @@ a.creators__card:hover .creators__avatar {
 
   .ticket__entry:focus-within .ticket__ants {
     animation: none;
+  }
+
+  .form-particles {
+    opacity: 0.45;
   }
 }
 

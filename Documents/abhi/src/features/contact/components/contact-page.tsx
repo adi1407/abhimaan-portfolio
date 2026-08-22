@@ -1,6 +1,5 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import {
@@ -10,16 +9,6 @@ import {
 import { EMAIL, SITE } from "@/lib/constants";
 import { useContactCopy, useSettings } from "@/lib/cms/hooks";
 import { cn } from "@/lib/cn";
-
-/* Same reason as the creators canvas: three.js stays out of the route's
-   first load and arrives after the form is interactive. */
-const ContactScene = dynamic(
-  () =>
-    import("@/features/contact/components/contact-scene").then(
-      (m) => m.ContactScene,
-    ),
-  { ssr: false },
-);
 
 const VERBS = ["build", "create", "link", "craft", "design"] as const;
 
@@ -42,9 +31,6 @@ export function ContactPage() {
   const verbs = copy.verbs?.length ? copy.verbs : [...VERBS];
   const lines = copy.lines?.length ? copy.lines : [...LINES];
   const [copied, setCopied] = useState(false);
-  const [focusedField, setFocusedField] = useState<string | null>(null);
-  const [formStatus, setFormStatus] = useState<InquiryStatus>("idle");
-  /** null until client media sync — avoids mounting Three.js on phones. */
   const [isMobile, setIsMobile] = useState<boolean | null>(null);
   const mailRef = useRef<HTMLAnchorElement>(null);
 
@@ -90,98 +76,79 @@ export function ContactPage() {
       className={cn("contact-page", mobile && "contact-page--mobile")}
       aria-labelledby="contact-page-heading"
     >
-      {desktop ? (
-        <div className="contact-page__stage">
-          <ContactScene focusedField={focusedField} formStatus={formStatus} />
-          <p className="contact-page__stage-tag" aria-hidden>
-            Untitled-1 · Tools
-          </p>
-        </div>
-      ) : null}
+      <div className="contact-page__shell">
+        <div className="contact-page__board">
+          <p className="contact-page__eyebrow">{copy.eyebrow || "Brief request"}</p>
 
-      <div className="contact-page__board">
-        {desktop ? (
-          <div className="contact-page__board-chrome" aria-hidden>
-            <span>RGB/8</span>
-            <span>05 — Contact</span>
-            <span>100%</span>
-          </div>
-        ) : null}
+          <h1 id="contact-page-heading" className="contact-page__title">
+            {mobile ? (
+              <>
+                <span className="contact-page__static">Let&apos;s work</span>
+                <span className="contact-page__static">together</span>
+              </>
+            ) : (
+              <>
+                <span className="contact-page__static">Let&apos;s</span>
+                <span className="sr-only">{verbs.join(", ")}</span>
+                <RoleCycle
+                  roles={verbs}
+                  className="contact-page__verb"
+                  holdMs={2200}
+                />
+                <span className="contact-page__static">together</span>
+              </>
+            )}
+          </h1>
 
-        <p className="contact-page__eyebrow">{copy.eyebrow || "Brief request"}</p>
-
-        <h1 id="contact-page-heading" className="contact-page__title">
           {mobile ? (
-            <>
-              <span className="contact-page__static">Let&apos;s work</span>
-              <span className="contact-page__static">together</span>
-            </>
+            <p className="contact-page__line contact-page__line--accent">
+              Identity, stories &amp; visual systems — send a brief.
+            </p>
           ) : (
-            <>
-              <span className="contact-page__static">Let&apos;s</span>
-              <span className="sr-only">{verbs.join(", ")}</span>
-              <RoleCycle
-                roles={verbs}
-                className="contact-page__verb"
-                holdMs={2200}
-              />
-              <span className="contact-page__static">together</span>
-            </>
+            <div className="contact-page__lines">
+              {lines.map((line, i) => (
+                <p
+                  key={line}
+                  className={
+                    i === 0
+                      ? "contact-page__line contact-page__line--accent"
+                      : "contact-page__line"
+                  }
+                >
+                  {line}
+                </p>
+              ))}
+            </div>
           )}
-        </h1>
 
-        {mobile ? (
-          <p className="contact-page__line contact-page__line--accent">
-            Identity, stories &amp; visual systems — send a brief.
-          </p>
-        ) : (
-          <div className="contact-page__lines">
-            {lines.map((line, i) => (
-              <p
-                key={line}
-                className={
-                  i === 0
-                    ? "contact-page__line contact-page__line--accent"
-                    : "contact-page__line"
-                }
-              >
-                {line}
-              </p>
-            ))}
+          <a
+            ref={mailRef}
+            href={`mailto:${email}`}
+            className="contact-page__mail"
+            onMouseMove={onMove}
+            onMouseLeave={() => {
+              if (mailRef.current) mailRef.current.style.transform = "";
+            }}
+          >
+            <span className="contact-page__mail-text">{email}</span>
+            <span className="contact-page__mail-arrow" aria-hidden>
+              ↗
+            </span>
+          </a>
+
+          <div className="contact-page__actions">
+            <button type="button" className="contact-page__copy" onClick={copyEmail}>
+              {copied ? "Copied ✓" : "Copy email"}
+            </button>
           </div>
-        )}
 
-        <a
-          ref={mailRef}
-          href={`mailto:${email}`}
-          className="contact-page__mail"
-          onMouseMove={onMove}
-          onMouseLeave={() => {
-            if (mailRef.current) mailRef.current.style.transform = "";
-          }}
-        >
-          <span className="contact-page__mail-text">{email}</span>
-          <span className="contact-page__mail-arrow" aria-hidden>
-            ↗
-          </span>
-        </a>
+          <p className="contact-page__note">
+            {copy.sla ||
+              `${settings.name || SITE.name} replies within two working days — identity, digital and art direction.`}
+          </p>
 
-        <div className="contact-page__actions">
-          <button type="button" className="contact-page__copy" onClick={copyEmail}>
-            {copied ? "Copied ✓" : "Copy email"}
-          </button>
+          <InquiryForm mobile={mobile} />
         </div>
-
-        <p className="contact-page__note">
-          {copy.sla ||
-            `${settings.name || SITE.name} replies within two working days — identity, digital and art direction.`}
-        </p>
-
-        <InquiryForm
-          mobile={mobile}
-          onFieldFocus={mobile ? undefined : setFocusedField}
-          onStatusChange={setFormStatus}
-        />
       </div>
     </section>
   );

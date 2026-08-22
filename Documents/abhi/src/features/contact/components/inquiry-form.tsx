@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { FormParticles } from "@/features/contact/components/form-particles";
 
 /* ================================================================== *
  * Inquiry form — a printer's job ticket.
@@ -59,16 +60,15 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function InquiryForm({
   onStatusChange,
-  onFieldFocus,
   mobile,
 }: {
   onStatusChange?: (s: InquiryStatus) => void;
-  onFieldFocus?: (key: string | null) => void;
   mobile?: boolean;
 } = {}) {
   const [form, setForm] = useState<FormState>(INITIAL);
   const [status, setStatus] = useState<InquiryStatus>("idle");
   const [error, setError] = useState("");
+  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   useEffect(() => {
     onStatusChange?.(status);
@@ -121,7 +121,9 @@ export function InquiryForm({
   };
 
   return (
-    <form
+    <div className="ticket-wrap">
+      <FormParticles activeField={focusedField} status={status} />
+      <form
       /* `is-filed` both runs the stamp animation and holds its landed
          state. Because the class is removed on the next send and added
          again on success, a second enquiry replays it — no timer or
@@ -163,8 +165,8 @@ export function InquiryForm({
                   required
                   value={form[line.key]}
                   onChange={set(line.key)}
-                  onFocus={() => onFieldFocus?.(line.key)}
-                  onBlur={() => onFieldFocus?.(null)}
+                  onFocus={() => setFocusedField(line.key)}
+                  onBlur={() => setFocusedField(null)}
                   placeholder={line.placeholder}
                 />
               ) : (
@@ -175,8 +177,8 @@ export function InquiryForm({
                   required={line.key !== "phone"}
                   value={form[line.key]}
                   onChange={set(line.key)}
-                  onFocus={() => onFieldFocus?.(line.key)}
-                  onBlur={() => onFieldFocus?.(null)}
+                  onFocus={() => setFocusedField(line.key)}
+                  onBlur={() => setFocusedField(null)}
                   placeholder={line.placeholder}
                 />
               )}
@@ -221,5 +223,6 @@ export function InquiryForm({
             : ""}
       </p>
     </form>
+    </div>
   );
 }

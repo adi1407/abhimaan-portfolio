@@ -4032,8 +4032,139 @@ a.creators__card:hover .creators__avatar {
 
 
 /* ==================================================================
-   Work â€” gallery wall (mosaic + filters + lightbox)
+   Work — gallery wall (mosaic + filters + lightbox)
    ================================================================== */
+
+/* --- Work dome gallery (replaces masonry wall) --- */
+
+.work-dome {
+  position: relative;
+  z-index: 2;
+  padding: clamp(4rem, 9vw, 6.5rem) 0 clamp(4rem, 8vw, 6rem);
+  background:
+    radial-gradient(70% 55% at 22% 40%, rgba(37, 99, 255, 0.14) 0%, transparent 55%),
+    radial-gradient(50% 40% at 70% 80%, rgba(11, 31, 77, 0.45) 0%, transparent 60%),
+    linear-gradient(160deg, #0e1420 0%, #151c2b 42%, #0a0f18 100%);
+  color: #f7f4ec;
+}
+
+.work-dome__head {
+  margin-bottom: 0.25rem;
+}
+
+.work-dome .wall__eyebrow,
+.work-dome__eyebrow {
+  color: rgba(247, 244, 236, 0.52);
+}
+
+.work-dome .wall__title,
+.work-dome__title {
+  color: #f7f4ec;
+}
+
+.work-dome .wall__title-serif {
+  color: rgba(247, 244, 236, 0.88);
+}
+
+.work-dome .wall__behance,
+.work-dome__behance {
+  color: rgba(247, 244, 236, 0.72);
+  border-color: rgba(247, 244, 236, 0.22);
+}
+
+.work-dome .wall__behance:hover {
+  color: #f7f4ec;
+  border-color: rgba(247, 244, 236, 0.45);
+  background: rgba(247, 244, 236, 0.06);
+}
+
+.work-dome__filters {
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.work-dome .wall__chip,
+.work-dome__chip {
+  color: rgba(247, 244, 236, 0.72);
+  border-color: rgba(247, 244, 236, 0.18);
+  background: rgba(247, 244, 236, 0.04);
+}
+
+.work-dome .wall__chip:hover {
+  color: #f7f4ec;
+  border-color: rgba(247, 244, 236, 0.35);
+  background: rgba(247, 244, 236, 0.08);
+}
+
+.work-dome .wall__chip.is-on,
+.work-dome__chip.is-on {
+  color: #f7f4ec;
+  border-color: rgba(37, 99, 255, 0.55);
+  background: rgba(37, 99, 255, 0.18);
+}
+
+.work-dome .wall__chip-count {
+  color: rgba(247, 244, 236, 0.45);
+}
+
+.work-dome .wall__chip.is-on .wall__chip-count {
+  color: rgba(247, 244, 236, 0.65);
+}
+
+.work-dome__stage {
+  position: relative;
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+  min-height: clamp(32rem, 75svh, 52rem);
+  height: clamp(32rem, 75svh, 52rem);
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid rgba(247, 244, 236, 0.08);
+  background: rgba(4, 8, 16, 0.35);
+}
+
+.work-dome__hint {
+  position: absolute;
+  bottom: clamp(0.75rem, 2vw, 1.25rem);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  margin: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-family: var(--font-sf-pro);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(247, 244, 236, 0.42);
+  background: rgba(8, 12, 20, 0.45);
+  pointer-events: none;
+}
+
+.work-dome__empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  margin: 0;
+  font-family: var(--font-sf-pro);
+  font-size: 0.92rem;
+  color: rgba(247, 244, 236, 0.5);
+}
+
+.work-dome--books .wall-books {
+  margin-top: clamp(2rem, 5vw, 3rem);
+}
+
+@media (max-width: 900px) {
+  .work-dome__stage {
+    min-height: clamp(28rem, 68svh, 44rem);
+    height: clamp(28rem, 68svh, 44rem);
+    border-radius: 0.85rem;
+  }
+
+  .work-dome__hint {
+    font-size: 0.62rem;
+  }
+}
 
 .wall {
   position: relative;

@@ -8,7 +8,7 @@ import { useCampaigns } from "@/lib/cms/hooks";
 import { CampaignGrid } from "@/features/work/components/campaign-grid";
 
 /**
- * Cover strip for campaign mosaics — sits between WorkFilm and GalleryWall.
+ * Cover strip for campaign mosaics — sits between WorkFilm and WorkDomeGallery.
  * Click a cover → fullscreen CampaignGrid.
  */
 export function CampaignBoards() {

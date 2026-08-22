@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { GalleryWall } from "@/features/work/components/gallery-wall";
+import { WorkDomeGallery } from "@/features/work/components/work-dome-gallery";
 import type { WorkCategoryId } from "@/lib/work";
 
 type WorkSectionProps = {
@@ -28,7 +28,7 @@ export function WorkSection({
 
   return (
     <div ref={wallRef}>
-      <GalleryWall initialCategory={initialCategory} />
+      <WorkDomeGallery initialCategory={initialCategory} focus={focus} />
     </div>
   );
 }

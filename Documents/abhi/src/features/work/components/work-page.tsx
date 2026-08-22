@@ -9,7 +9,7 @@ import {
 } from "react";
 import { WorkFilm } from "@/features/work/components/work-film";
 import { CampaignBoards } from "@/features/work/components/campaign-boards";
-import { GalleryWall } from "@/features/work/components/gallery-wall";
+import { WorkDomeGallery } from "@/features/work/components/work-dome-gallery";
 import { BehanceBridge } from "@/features/work/components/behance-bridge";
 import type { WorkCategoryId } from "@/lib/work";
 
@@ -74,7 +74,7 @@ export function WorkPage({ initialCategory = null }: WorkPageProps) {
             : undefined
         }
       >
-        <GalleryWall
+        <WorkDomeGallery
           initialCategory={category}
           autoOpenBook={category === "books"}
         />

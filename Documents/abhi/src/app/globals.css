@@ -6208,6 +6208,11 @@ a.creators__card:hover .creators__avatar {
 
 .bb__actions {
   margin-top: 1.35rem;
+  overflow: visible;
+}
+
+.bb__neon {
+  overflow: visible;
 }
 
 .bb__cta {
@@ -6990,6 +6995,11 @@ a.creators__card:hover .creators__avatar {
   align-items: center;
   gap: 1.5rem;
   margin-top: 3.5rem;
+  overflow: visible;
+}
+
+.contact__neon {
+  overflow: visible;
 }
 
 .contact__copy {
@@ -10087,7 +10097,7 @@ a.creators__card:hover .creators__avatar {
   color: rgba(11, 31, 77, 0.55);
 }
 
-/* The tray is the physics world: cubes are positioned inside it. */
+/* The tray is the physics world: gravity tiles land here. */
 .tk__tray {
   position: relative;
   margin-top: clamp(2rem, 4vw, 3rem);
@@ -10098,9 +10108,75 @@ a.creators__card:hover .creators__avatar {
     linear-gradient(180deg, rgba(11, 31, 77, 0.015), rgba(11, 31, 77, 0.05)),
     #fff;
   overflow: hidden;
-  perspective: 900px;
-  /* Let the page scroll through empty tray; cubes own the drag lock. */
-  touch-action: pan-y;
+}
+
+.tk__tray--gravity {
+  touch-action: none;
+  cursor: grab;
+}
+
+.tk__tray--gravity:active {
+  cursor: grabbing;
+}
+
+.tk__gravity {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.tk__pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 1.35rem;
+}
+
+.tk__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+  border: 1px solid rgba(11, 31, 77, 0.12);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  cursor: pointer;
+  font-family: var(--font-satoshi);
+  transition:
+    border-color 220ms ease,
+    box-shadow 220ms ease,
+    transform 220ms ease;
+}
+
+.tk__chip:hover {
+  border-color: rgba(37, 99, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.tk__chip.is-on {
+  border-color: transparent;
+  box-shadow: 0 0 0 2px var(--spark);
+}
+
+.tk__chip-glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  background: var(--bg, #0b1f4d);
+  color: var(--fg, #fff);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tk__chip-name {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
 }
 
 /* Shelf line the cubes land on */

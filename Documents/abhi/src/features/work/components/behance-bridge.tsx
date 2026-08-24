@@ -8,6 +8,8 @@ import {
   CATEGORY_FLOW_IMAGES,
   FLOWING_MENU_DARK,
 } from "@/components/motion/flowing-menu-presets";
+import { NeonGlowButton } from "@/components/motion/neon-glow-button";
+import { NEON_GLOW_PORTFOLIO } from "@/components/motion/neon-glow-presets";
 import { useWorkCategories } from "@/lib/cms/hooks";
 import { useCms } from "@/lib/cms/provider";
 import { useEffect, useState } from "react";
@@ -66,15 +68,37 @@ export function BehanceBridge() {
 
               <div className="bb__actions">
                 {profile ? (
-                  <a
-                    href={profile}
-                    className="bb__cta"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    Open on Behance
-                    <span aria-hidden>↗</span>
-                  </a>
+                  <NeonGlowButton
+                    className="bb__neon"
+                    label="Open on Behance"
+                    link={profile}
+                    newTab
+                    {...NEON_GLOW_PORTFOLIO}
+                    colors={{
+                      fill: "#ffffff",
+                      hoverFill: "#f7f4ec",
+                      textColor: "#0b1f4d",
+                      hoverTextColor: "#2563ff",
+                    }}
+                    border={{
+                      borderWidth: 1,
+                      borderStyle: "solid",
+                      borderColor: "#2563ff",
+                      borderTopWidth: 1,
+                      borderLeftWidth: 1,
+                      borderRightWidth: 1,
+                      borderBottomWidth: 1,
+                    }}
+                    glow={{ blur: 5, size: 6, color: "#2563ff" }}
+                    icon={{
+                      side: "right",
+                      size: 14,
+                      type: "symbol",
+                      symbol: "↗",
+                      color: "#0b1f4d",
+                      hoverColor: "#2563ff",
+                    }}
+                  />
                 ) : (
                   <p className="bb__hint">Add a Behance URL in Admin → Work.</p>
                 )}

@@ -2,6 +2,8 @@
 
 import { Container } from "@/components/layout/container";
 import { FooterWordmark } from "@/components/layout/footer-wordmark";
+import { NeonGlowButton } from "@/components/motion/neon-glow-button";
+import { NEON_GLOW_PORTFOLIO } from "@/components/motion/neon-glow-presets";
 import { ROUTES } from "@/lib/constants";
 import { useFooterCopy, useSettings } from "@/lib/cms/hooks";
 
@@ -102,9 +104,12 @@ export function SiteFooter() {
 
           <div className="footer__col footer__col--say">
             <p className="footer__col-title">Say hello</p>
-            <a href={ROUTES.contact} className="footer__mail">
-              Get in touch
-            </a>
+            <NeonGlowButton
+              className="footer__neon"
+              label="Get in touch"
+              link={ROUTES.contact}
+              {...NEON_GLOW_PORTFOLIO}
+            />
             <p className="footer__blurb">
               {footer.blurb ||
                 "Design that argues a position — built to outlast a trend cycle."}

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { BorderGlow } from "@/components/motion/border-glow";
 import { BORDER_GLOW_DARK } from "@/components/motion/border-glow-presets";
+import { NeonGlowButton } from "@/components/motion/neon-glow-button";
+import { NEON_GLOW_PORTFOLIO } from "@/components/motion/neon-glow-presets";
 import { RoleCycle } from "@/components/motion/role-cycle";
 import { ROUTES, SITE } from "@/lib/constants";
 import { useHome, useSettings } from "@/lib/cms/hooks";
@@ -88,12 +89,28 @@ export function ContactCta() {
         </h2>
 
         <div className="contact__actions">
-          <Link href={ROUTES.contact} className="contact__cta">
-            Get in touch
-            <span className="contact__cta-arrow" aria-hidden>
-              ↗
-            </span>
-          </Link>
+          <NeonGlowButton
+            className="contact__neon"
+            label="Get in touch"
+            link={ROUTES.contact}
+            {...NEON_GLOW_PORTFOLIO}
+            colors={{
+              fill: "transparent",
+              hoverFill: "rgba(37, 99, 255, 0.18)",
+              textColor: "#ffffff",
+              hoverTextColor: "#93c5fd",
+            }}
+            border={{
+              borderWidth: 1,
+              borderStyle: "solid",
+              borderColor: "rgba(255,255,255,0.35)",
+              borderTopWidth: 1,
+              borderLeftWidth: 1,
+              borderRightWidth: 1,
+              borderBottomWidth: 1,
+            }}
+            glow={{ blur: 6, size: 7, color: "#60a5fa" }}
+          />
           <span className="contact__sep" aria-hidden />
           <ul className="contact__socials">
             {socials.map((social) => (

@@ -14158,19 +14158,30 @@ a.creators__card:hover .creators__avatar {
   position: relative;
   /* Above .fun (2) and .poster (1) so sticky pin never paints under Desk Scraps. */
   z-index: 3;
-  /* One viewport to pin against, plus a slice of travel per layer. */
-  height: calc(100svh + var(--slices, 6) * var(--slice, 46svh));
+  /* One viewport to pin against, plus a short slice of travel per layer. */
+  height: calc(100dvh + var(--slices, 6) * var(--slice, 16svh));
+  max-height: calc(100dvh + 9 * 22svh);
   background: linear-gradient(180deg, #070a11 0%, #0a0e18 50%, #070a11 100%);
+}
+
+.sdoc--static {
+  height: auto;
+  max-height: none;
+  min-height: 100dvh;
 }
 
 .sdoc__pin {
   position: sticky;
   top: 0;
-  height: 100svh;
+  /* dvh avoids mobile URL-bar sticky traps with svh-only pins. */
+  height: 100dvh;
+  max-height: 100svh;
   display: grid;
   place-items: center;
   padding: calc(var(--nav-h) + 1rem) clamp(0.75rem, 3vw, 2rem)
     clamp(1rem, 3vh, 2rem);
+  /* Let vertical page scroll win over nested horizontal strips. */
+  touch-action: pan-y;
 }
 
 /* Reshape the document shell from a full-bleed hero into a framed
@@ -14331,6 +14342,10 @@ a.creators__card:hover .creators__avatar {
     scroll-snap-type: x mandatory;
     scroll-padding-inline: var(--sdoc-pad);
     -webkit-overflow-scrolling: touch;
+    /* Allow vertical page scroll while the finger is on the strip. */
+    touch-action: pan-x pan-y;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     scrollbar-width: none;
     mask-image: linear-gradient(
       90deg,
@@ -14448,25 +14463,33 @@ a.creators__card:hover .creators__avatar {
 @media (max-width: 900px) {
   .sdoc,
   .sdoc.sdoc--mobile {
-    /* Keeps the scroll track on phones so the layer-by-layer build
-       still happens — it just uses a shorter slice per layer than
-       desktop so the section doesn't take forever to pass. */
-    height: calc(100svh + var(--slices, 9) * 24svh);
+    /* Short scrub track so phones can exit the pin quickly. */
+    height: calc(100dvh + var(--slices, 9) * 12svh);
+    max-height: calc(100dvh + 9 * 14svh);
     z-index: 3;
     padding: 0;
+  }
+
+  .sdoc--static,
+  .sdoc--static.sdoc--mobile {
+    height: auto;
+    max-height: none;
+    min-height: 100dvh;
   }
 
   .sdoc__pin,
   .sdoc--mobile .sdoc__pin {
     position: sticky;
     top: 0;
-    height: 100svh;
+    height: 100dvh;
+    max-height: 100svh;
     min-height: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: calc(var(--nav-h) + 0.75rem) 0.75rem
       calc(1rem + env(safe-area-inset-bottom, 0));
+    touch-action: pan-y;
   }
 
   .sdoc .psh-tools {

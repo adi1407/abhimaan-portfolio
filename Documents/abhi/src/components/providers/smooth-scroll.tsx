@@ -27,6 +27,9 @@ export function SmoothScroll({ children }: { children: React.ReactNode }) {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
       touchMultiplier: 1.6,
+      // Nested overflow strips (studio filmstrip, etc.) must not swallow
+      // vertical wheel — keep page scroll authoritative.
+      syncTouch: true,
     });
 
     window.__lenis = lenis;

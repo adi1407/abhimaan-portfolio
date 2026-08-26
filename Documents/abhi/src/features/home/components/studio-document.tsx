@@ -10,17 +10,15 @@ import {
 import { onViewport } from "@/lib/frame";
 import { cn } from "@/lib/cn";
 import { useHome } from "@/lib/cms/hooks";
+import { useReducedMotion } from "@/hooks/use-reduced-motion";
 
 /* ================================================================== *
  * Studio document — nine uploaded plates composite on scroll.
  *
  * The section is taller than the viewport and pins its artboard. The
- * scroll distance through that pin IS the build: every layer gets its
- * own slice of the travel and fills across it, so the composite
- * assembles one layer at a time and un-assembles on the way back up.
- *
- * On ≤900px the pin and scrub are kept — only the slice of travel
- * per layer is shortened, so the build still reads on a phone.
+ * scroll distance through that pin IS the build. Keep the scrub short
+ * so sticky never feels like a scroll trap, and always resume Lenis
+ * if another interaction left it stopped.
  * ================================================================== */
 
 const EMPTY_HIDDEN = new Set<LayerId>();
@@ -31,16 +29,14 @@ const clamp = (v: number, lo: number, hi: number) =>
   Math.max(lo, Math.min(hi, v));
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
-/** Scroll room per layer, on top of one viewport for the pin itself. */
-const SLICE_SVH = 38;
+/** Scroll room per layer — short so the pin does not feel stuck. */
+const SLICE_SVH = 16;
+const SLICE_SVH_MOBILE = 12;
 
 export function StudioDocument() {
   const home = useHome<{
     studio?: { filename?: string; title?: string; layers?: StudioLayer[] };
   }>();
-  /* Memoised: this array feeds the scroll effect's dependency list, and
-     a fresh one each render re-subscribed the shared frame loop on
-     every single render. */
   const cmsLayers = home.studio?.layers;
   const layers: StudioLayer[] = useMemo(
     () => (cmsLayers?.length ? cmsLayers : [...LAYERS]),
@@ -52,9 +48,8 @@ export function StudioDocument() {
   const sectionRef = useRef<HTMLElement>(null);
   const layerRefs = useRef<(HTMLElement | null)[]>([]);
   const railRef = useRef<HTMLSpanElement>(null);
+  const reduced = useReducedMotion();
 
-  /* Integer count for the panel readout only — written when it changes
-     so ordinary scroll frames stay pure DOM writes. */
   const [built, setBuilt] = useState(0);
   const [mobileStudio, setMobileStudio] = useState(false);
 
@@ -66,22 +61,43 @@ export function StudioDocument() {
     return () => mq.removeEventListener("change", sync);
   }, []);
 
+  /* If Lenis was left stopped elsewhere, resume when this section shows. */
   useEffect(() => {
-    /* The build runs at every width. Phones used to get the composite
-       pre-assembled, which meant the one thing this section exists to
-       show — layers arriving one at a time — never happened on the
-       device most people arrive on. Mobile keeps the scrub and just
-       uses a shorter slice of travel per layer (see the ≤900px CSS). */
     const section = sectionRef.current;
     if (!section) return;
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) window.__lenis?.start();
+      },
+      { threshold: 0.05 },
+    );
+    io.observe(section);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+
+    if (reduced) {
+      for (let i = 0; i < layers.length; i += 1) {
+        layerRefs.current[i]?.style.setProperty("--t", "1");
+      }
+      railRef.current?.style.setProperty("--p", "1");
+      setBuilt(layers.length);
+      return;
+    }
 
     let lastBuilt = -1;
 
     return onViewport(({ vh: viewportH }) => {
       const rect = section.getBoundingClientRect();
       const vh = viewportH || 1;
-      const travel = rect.height - vh;
-      const p = travel > 0 ? clamp(-rect.top / travel, 0, 1) : 0;
+      const travel = Math.max(1, rect.height - vh);
+      /* Finish the composite a bit before the pin releases. */
+      const raw = clamp(-rect.top / travel, 0, 1);
+      const p = raw >= 0.92 ? 1 : raw / 0.92;
 
       const stepped = p * layers.length;
 
@@ -104,18 +120,23 @@ export function StudioDocument() {
         setBuilt(count);
       }
     });
-  }, [mobileStudio, layers]);
+  }, [mobileStudio, layers, reduced]);
 
   const done = built >= layers.length;
   const landing = layers[clamp(built, 0, layers.length - 1)];
+  const slice = mobileStudio ? SLICE_SVH_MOBILE : SLICE_SVH;
 
   return (
     <section
       ref={sectionRef}
-      className={cn("sdoc", mobileStudio && "sdoc--mobile")}
+      className={cn(
+        "sdoc",
+        mobileStudio && "sdoc--mobile",
+        reduced && "sdoc--static",
+      )}
       aria-labelledby="sdoc-title"
       style={{
-        ["--slice" as string]: `${SLICE_SVH}svh`,
+        ["--slice" as string]: `${slice}svh`,
         ["--slices" as string]: layers.length,
       }}
     >
@@ -135,7 +156,7 @@ export function StudioDocument() {
               {done
                 ? "Composite complete"
                 : mobileStudio
-                  ? "Layer stack"
+                  ? "Scroll to build"
                   : "Scroll to composite"}
             </span>
           </div>

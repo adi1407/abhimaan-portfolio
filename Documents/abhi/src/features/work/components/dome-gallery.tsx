@@ -341,15 +341,10 @@ export function DomeGallery({
 
   useGesture(
     {
-      onDragStart: ({ event, direction }) => {
+      onDragStart: ({ event }) => {
         if (focusedElRef.current) return;
-        /* On touch, a mostly-vertical first move is page scroll — don't steal it. */
-        const evt = event as PointerEvent;
-        if (evt.pointerType === "touch") {
-          const [dx, dy] = direction;
-          if (Math.abs(dy) > Math.abs(dx) * 1.15) return;
-        }
         stopInertia();
+        const evt = event as PointerEvent;
         draggingRef.current = true;
         movedRef.current = false;
         startRotRef.current = { ...rotationRef.current };
@@ -364,19 +359,25 @@ export function DomeGallery({
         movement,
         cancel,
       }) => {
-        if (focusedElRef.current) return;
+        if (focusedElRef.current || !draggingRef.current || !startPosRef.current)
+          return;
 
         const evt = event as PointerEvent;
-        if (!draggingRef.current || !startPosRef.current) {
-          /* Late vertical swipe on touch — abort so Lenis can scroll. */
-          if (evt.pointerType === "touch" && Array.isArray(movement)) {
-            const [mx, my] = movement;
-            if (Math.abs(my) > Math.abs(mx) * 1.25 && Math.abs(my) > 10) {
-              cancel();
-              window.__lenis?.start();
-            }
+
+        /* Touch: if the gesture is clearly vertical, release so the page can scroll. */
+        if (
+          evt.pointerType === "touch" &&
+          Array.isArray(movement) &&
+          !movedRef.current
+        ) {
+          const [mx, my] = movement;
+          if (Math.abs(my) > 12 && Math.abs(my) > Math.abs(mx) * 1.35) {
+            draggingRef.current = false;
+            startPosRef.current = null;
+            cancel();
+            window.__lenis?.start();
+            return;
           }
-          return;
         }
 
         const dxTotal = evt.clientX - startPosRef.current.x;
@@ -432,7 +433,7 @@ export function DomeGallery({
       drag: {
         filterTaps: true,
         threshold: 8,
-        /* Critical: do not call preventDefault on touch — page must stay scrollable. */
+        /* Do not preventDefault on touch — page scroll must keep working. */
         preventScroll: false,
         pointer: { touch: true },
       },

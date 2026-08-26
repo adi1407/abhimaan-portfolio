@@ -187,6 +187,7 @@ export function DomeGallery({
     scrollLockedRef.current = false;
     document.body.classList.remove("dg-scroll-lock");
     document.documentElement.classList.remove("dg-scroll-lock");
+    window.__lenis?.start();
   }, []);
 
   const items = useMemo(() => buildItems(images, segments), [images, segments]);
@@ -340,19 +341,44 @@ export function DomeGallery({
 
   useGesture(
     {
-      onDragStart: ({ event }) => {
+      onDragStart: ({ event, direction }) => {
         if (focusedElRef.current) return;
-        stopInertia();
+        /* On touch, a mostly-vertical first move is page scroll — don't steal it. */
         const evt = event as PointerEvent;
+        if (evt.pointerType === "touch") {
+          const [dx, dy] = direction;
+          if (Math.abs(dy) > Math.abs(dx) * 1.15) return;
+        }
+        stopInertia();
         draggingRef.current = true;
         movedRef.current = false;
         startRotRef.current = { ...rotationRef.current };
         startPosRef.current = { x: evt.clientX, y: evt.clientY };
+        window.__lenis?.stop();
       },
-      onDrag: ({ event, last, velocity = [0, 0], direction = [0, 0], movement }) => {
-        if (focusedElRef.current || !draggingRef.current || !startPosRef.current)
-          return;
+      onDrag: ({
+        event,
+        last,
+        velocity = [0, 0],
+        direction = [0, 0],
+        movement,
+        cancel,
+      }) => {
+        if (focusedElRef.current) return;
+
         const evt = event as PointerEvent;
+        if (!draggingRef.current || !startPosRef.current) {
+          /* Late vertical swipe on touch — abort so Lenis can scroll. */
+          if (evt.pointerType === "touch" && Array.isArray(movement)) {
+            const [mx, my] = movement;
+            if (Math.abs(my) > Math.abs(mx) * 1.25 && Math.abs(my) > 10) {
+              cancel();
+              window.__lenis?.start();
+            }
+          }
+          return;
+        }
+
         const dxTotal = evt.clientX - startPosRef.current.x;
         const dyTotal = evt.clientY - startPosRef.current.y;
         if (!movedRef.current) {
@@ -376,6 +402,7 @@ export function DomeGallery({
         }
         if (last) {
           draggingRef.current = false;
+          window.__lenis?.start();
           let [vMagX, vMagY] = velocity;
           const [dirX, dirY] = direction;
           let vx = vMagX * dirX;
@@ -394,8 +421,22 @@ export function DomeGallery({
           movedRef.current = false;
         }
       },
+      onDragEnd: () => {
+        draggingRef.current = false;
+        window.__lenis?.start();
+      },
     },
-    { target: mainRef, eventOptions: { passive: true } },
+    {
+      target: mainRef,
+      eventOptions: { passive: true },
+      drag: {
+        filterTaps: true,
+        threshold: 8,
+        /* Critical: do not call preventDefault on touch — page must stay scrollable. */
+        preventScroll: false,
+        pointer: { touch: true },
+      },
+    },
   );
 
   useEffect(() => {
@@ -684,6 +725,7 @@ export function DomeGallery({
     return () => {
       document.body.classList.remove("dg-scroll-lock");
       document.documentElement.classList.remove("dg-scroll-lock");
+      window.__lenis?.start();
     };
   }, []);
 

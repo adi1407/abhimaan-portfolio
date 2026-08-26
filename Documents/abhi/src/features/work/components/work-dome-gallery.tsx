@@ -10,7 +10,11 @@ import type { DomeGalleryImage } from "@/features/work/components/dome-gallery";
 import { useBook, useWorkCategories, useWorkItems } from "@/lib/cms/hooks";
 import { useCms } from "@/lib/cms/provider";
 import { cn } from "@/lib/cn";
-import { lockPageScroll, unlockPageScroll } from "@/lib/scroll-lock";
+import {
+  forceReleaseScroll,
+  lockPageScroll,
+  unlockPageScroll,
+} from "@/lib/scroll-lock";
 import { type WorkCategoryId } from "@/lib/work";
 
 const DomeGallery = dynamic(
@@ -159,9 +163,39 @@ export function WorkDomeGallery({
     window.addEventListener("keydown", onKey);
     return () => {
       unlockPageScroll();
+      /* Belt-and-suspenders: never leave Lenis / overflow locked after lightbox. */
+      document.body.classList.remove("dg-scroll-lock");
+      document.documentElement.classList.remove("dg-scroll-lock");
+      window.__lenis?.start();
       window.removeEventListener("keydown", onKey);
     };
   }, [lightbox, closeLightbox, stepLightbox]);
+
+  /* If a prior drag / lock left scroll dead, revive it when the orbit is on screen. */
+  useEffect(() => {
+    const section = document.getElementById("work");
+    if (!section) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        if (lightbox !== null) return;
+        document.body.classList.remove("dg-scroll-lock");
+        document.documentElement.classList.remove("dg-scroll-lock");
+        window.__lenis?.start();
+      },
+      { threshold: 0.08 },
+    );
+    io.observe(section);
+    return () => io.disconnect();
+  }, [lightbox]);
+
+  useEffect(() => {
+    return () => {
+      forceReleaseScroll();
+      document.body.classList.remove("dg-scroll-lock");
+      document.documentElement.classList.remove("dg-scroll-lock");
+    };
+  }, []);
 
   return (
     <section

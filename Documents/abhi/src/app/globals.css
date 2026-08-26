@@ -4063,10 +4063,14 @@ a.creators__card:hover .creators__avatar {
   position: relative;
   width: 100vw;
   max-width: 100%;
-  min-height: 100svh;
-  height: 100svh;
+  min-height: 100dvh;
+  height: 100dvh;
+  max-height: 100svh;
   margin: 0;
   overflow: hidden;
+  /* Let vertical wheel/touch leave the orbit for Behance below. */
+  touch-action: pan-y;
+  overscroll-behavior-y: auto;
   background:
     radial-gradient(70% 55% at 22% 40%, rgba(37, 99, 255, 0.16) 0%, transparent 55%),
     radial-gradient(50% 40% at 70% 80%, rgba(11, 31, 77, 0.5) 0%, transparent 60%),
@@ -4196,8 +4200,10 @@ a.creators__card:hover .creators__avatar {
 
 @media (max-width: 900px) {
   .work-dome__stage {
-    min-height: 100svh;
-    height: 100svh;
+    min-height: 100dvh;
+    height: 100dvh;
+    max-height: 100svh;
+    touch-action: pan-y;
   }
 
   .work-dome__chrome {

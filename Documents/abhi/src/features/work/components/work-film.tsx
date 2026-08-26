@@ -449,6 +449,17 @@ export function WorkFilm({
     return () => window.clearTimeout(id);
   }, [intro, mobilePanels]);
 
+  /* After reveal the CSS collapses the tall scrub track — tell Lenis to remeasure. */
+  useEffect(() => {
+    if (!revealed) return;
+    const id = window.requestAnimationFrame(() => {
+      window.__lenis?.resize?.();
+      window.__lenis?.start();
+      window.dispatchEvent(new Event("resize"));
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [revealed]);
+
   useEffect(() => {
     const track = trackRef.current;
     if (!track || !ready || intro === "splash" || mobilePanels) return;

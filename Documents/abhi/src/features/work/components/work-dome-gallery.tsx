@@ -171,22 +171,41 @@ export function WorkDomeGallery({
     };
   }, [lightbox, closeLightbox, stepLightbox]);
 
-  /* If a prior drag / lock left scroll dead, revive it when the orbit is on screen. */
+  /* If a prior drag / lock left scroll dead, revive it while the orbit is on screen. */
   useEffect(() => {
     const section = document.getElementById("work");
     if (!section) return;
+
+    const revive = () => {
+      if (lightbox !== null) return;
+      document.body.classList.remove("dg-scroll-lock");
+      document.documentElement.classList.remove("dg-scroll-lock");
+      if (document.body.style.overflow === "hidden") {
+        forceReleaseScroll();
+      } else {
+        window.__lenis?.start();
+      }
+    };
+
     const io = new IntersectionObserver(
       ([entry]) => {
-        if (!entry?.isIntersecting) return;
-        if (lightbox !== null) return;
-        document.body.classList.remove("dg-scroll-lock");
-        document.documentElement.classList.remove("dg-scroll-lock");
-        window.__lenis?.start();
+        if (entry?.isIntersecting) revive();
       },
-      { threshold: 0.08 },
+      { threshold: [0, 0.05, 0.2] },
     );
     io.observe(section);
-    return () => io.disconnect();
+
+    window.addEventListener("pointerup", revive, true);
+    window.addEventListener("wheel", revive, { passive: true, capture: true });
+    window.addEventListener("touchend", revive, true);
+    revive();
+
+    return () => {
+      io.disconnect();
+      window.removeEventListener("pointerup", revive, true);
+      window.removeEventListener("wheel", revive, true);
+      window.removeEventListener("touchend", revive, true);
+    };
   }, [lightbox]);
 
   useEffect(() => {

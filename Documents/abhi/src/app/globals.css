@@ -4041,7 +4041,7 @@ a.creators__card:hover .creators__avatar {
   position: relative;
   z-index: 2;
   width: 100%;
-  padding: 0;
+  padding: 0 0 clamp(2.5rem, 6vw, 4rem);
   background: #0a0f18;
   color: #f7f4ec;
 }
@@ -4063,12 +4063,12 @@ a.creators__card:hover .creators__avatar {
   position: relative;
   width: 100vw;
   max-width: 100%;
-  min-height: 100dvh;
-  height: 100dvh;
-  max-height: 100svh;
+  /* Leave room under the orbit so Behance is reachable without fighting the sphere. */
+  min-height: min(88dvh, 900px);
+  height: min(88dvh, 900px);
+  max-height: 88svh;
   margin: 0;
   overflow: hidden;
-  /* Let vertical wheel/touch leave the orbit for Behance below. */
   touch-action: pan-y;
   overscroll-behavior-y: auto;
   background:
@@ -4200,9 +4200,9 @@ a.creators__card:hover .creators__avatar {
 
 @media (max-width: 900px) {
   .work-dome__stage {
-    min-height: 100dvh;
-    height: 100dvh;
-    max-height: 100svh;
+    min-height: min(82dvh, 780px);
+    height: min(82dvh, 780px);
+    max-height: 82svh;
     touch-action: pan-y;
   }
 
@@ -12630,6 +12630,14 @@ a.creators__card:hover .creators__avatar {
   background: #05080f;
 }
 
+/* Once panels are up, drop the tall scrub track so the page can leave the pin. */
+.film.is-revealed,
+.film.is-panels {
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
+}
+
 .film--splash-only {
   height: 100svh;
   min-height: 100svh;
@@ -12670,10 +12678,20 @@ a.creators__card:hover .creators__avatar {
 .film__stage {
   position: sticky;
   top: 0;
-  height: 100svh;
+  height: 100dvh;
+  max-height: 100svh;
   overflow: hidden;
   isolation: isolate;
   background: #05080f;
+  /* Never trap vertical scroll on the film pin. */
+  touch-action: pan-y;
+}
+
+.film.is-revealed .film__stage,
+.film.is-panels .film__stage {
+  position: relative;
+  height: 100dvh;
+  max-height: 100svh;
 }
 
 .film__video {

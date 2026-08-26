@@ -349,7 +349,7 @@ export function DomeGallery({
         movedRef.current = false;
         startRotRef.current = { ...rotationRef.current };
         startPosRef.current = { x: evt.clientX, y: evt.clientY };
-        window.__lenis?.stop();
+        /* Never stop Lenis here — a missed drag-end left the whole page stuck. */
       },
       onDrag: ({
         event,
@@ -357,83 +357,50 @@ export function DomeGallery({
         velocity = [0, 0],
         direction = [0, 0],
         movement,
-        cancel,
       }) => {
         if (focusedElRef.current || !draggingRef.current || !startPosRef.current)
           return;
 
         const evt = event as PointerEvent;
-
-        /* Touch: if the gesture is clearly vertical, release so the page can scroll. */
-        if (
-          evt.pointerType === "touch" &&
-          Array.isArray(movement) &&
-          !movedRef.current
-        ) {
-          const [mx, my] = movement;
-          if (Math.abs(my) > 12 && Math.abs(my) > Math.abs(mx) * 1.35) {
-            draggingRef.current = false;
-            startPosRef.current = null;
-            cancel();
-            window.__lenis?.start();
-            return;
-          }
-        }
-
+        /* Horizontal-only orbit: ignore vertical so page scroll is never stolen. */
         const dxTotal = evt.clientX - startPosRef.current.x;
-        const dyTotal = evt.clientY - startPosRef.current.y;
         if (!movedRef.current) {
-          const dist2 = dxTotal * dxTotal + dyTotal * dyTotal;
-          if (dist2 > 16) movedRef.current = true;
+          const [mx = 0, my = 0] = Array.isArray(movement) ? movement : [0, 0];
+          if (mx * mx + my * my > 16) movedRef.current = true;
         }
-        const nextX = clamp(
-          startRotRef.current.x - dyTotal / dragSensitivity,
-          -maxVerticalRotationDeg,
-          maxVerticalRotationDeg,
-        );
+
         const nextY = wrapAngleSigned(
           startRotRef.current.y + dxTotal / dragSensitivity,
         );
-        if (
-          rotationRef.current.x !== nextX ||
-          rotationRef.current.y !== nextY
-        ) {
-          rotationRef.current = { x: nextX, y: nextY };
-          applyTransform(nextX, nextY);
+        if (rotationRef.current.y !== nextY) {
+          rotationRef.current = { x: rotationRef.current.x, y: nextY };
+          applyTransform(rotationRef.current.x, nextY);
         }
+
         if (last) {
           draggingRef.current = false;
-          window.__lenis?.start();
-          let [vMagX, vMagY] = velocity;
-          const [dirX, dirY] = direction;
+          const [vMagX] = velocity;
+          const [dirX] = direction;
           let vx = vMagX * dirX;
-          let vy = vMagY * dirY;
-          if (
-            Math.abs(vx) < 0.001 &&
-            Math.abs(vy) < 0.001 &&
-            Array.isArray(movement)
-          ) {
-            const [mx, my] = movement;
-            vx = clamp((mx / dragSensitivity) * 0.02, -1.2, 1.2);
-            vy = clamp((my / dragSensitivity) * 0.02, -1.2, 1.2);
+          if (Math.abs(vx) < 0.001 && Array.isArray(movement)) {
+            vx = clamp((movement[0] / dragSensitivity) * 0.02, -1.2, 1.2);
           }
-          if (Math.abs(vx) > 0.005 || Math.abs(vy) > 0.005) startInertia(vx, vy);
+          if (Math.abs(vx) > 0.005) startInertia(vx, 0);
           if (movedRef.current) lastDragEndAt.current = performance.now();
           movedRef.current = false;
         }
       },
       onDragEnd: () => {
         draggingRef.current = false;
-        window.__lenis?.start();
       },
     },
     {
       target: mainRef,
       eventOptions: { passive: true },
       drag: {
+        axis: "x",
         filterTaps: true,
-        threshold: 8,
-        /* Do not preventDefault on touch — page scroll must keep working. */
+        threshold: 10,
         preventScroll: false,
         pointer: { touch: true },
       },
@@ -726,7 +693,25 @@ export function DomeGallery({
     return () => {
       document.body.classList.remove("dg-scroll-lock");
       document.documentElement.classList.remove("dg-scroll-lock");
+    };
+  }, []);
+
+  /* Keep page scroll alive while the orbit is mounted — never leave Lenis stopped. */
+  useEffect(() => {
+    const revive = () => {
+      if (document.body.classList.contains("dg-scroll-lock")) return;
       window.__lenis?.start();
+    };
+    window.addEventListener("pointerup", revive, true);
+    window.addEventListener("pointercancel", revive, true);
+    window.addEventListener("touchend", revive, true);
+    window.addEventListener("wheel", revive, { passive: true, capture: true });
+    revive();
+    return () => {
+      window.removeEventListener("pointerup", revive, true);
+      window.removeEventListener("pointercancel", revive, true);
+      window.removeEventListener("touchend", revive, true);
+      window.removeEventListener("wheel", revive, true);
     };
   }, []);
 
